@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Platform, StatusBar, ActivityIndicator } from 'react-native';
 
 import { theme } from './src/theme';
 import { initialListings, initialBookings } from './src/data/mockData';
@@ -10,6 +10,10 @@ import CreateEditListing from './src/screens/CreateEditListing';
 import BookingsManager   from './src/screens/BookingsManager';
 import Payouts           from './src/screens/Payouts';
 import ReviewsRatings    from './src/screens/ReviewsRatings';
+import RegisterScreen    from './src/screens/RegisterScreen';
+import LoginScreen       from './src/screens/LoginScreen';
+
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 
 const TABS = [
   { id: 'home',     label: 'Home',     icon: '⊞' },
@@ -19,11 +23,32 @@ const TABS = [
   { id: 'reviews',  label: 'Reviews',  icon: '⭐' },
 ];
 
-export default function App() {
+function MainApp() {
+  const { user, loading, logout } = useAuth();
   const [activeTab, setActiveTab]   = useState('home');
   const [listings, setListings]     = useState(initialListings);
   const [bookings, setBookings]     = useState(initialBookings);
   const [editListing, setEditListing] = useState(null);
+  
+  // Toggle between register and login screens
+  const [authScreen, setAuthScreen] = useState('register'); // 'register' or 'login'
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#156b4e" />
+      </View>
+    );
+  }
+
+  // Gate the app behind authentication
+  if (!user) {
+    if (authScreen === 'register') {
+      return <RegisterScreen onToggleScreen={() => setAuthScreen('login')} />;
+    } else {
+      return <LoginScreen onToggleScreen={() => setAuthScreen('register')} />;
+    }
+  }
 
   const renderScreen = () => {
     switch (activeTab) {
@@ -67,15 +92,20 @@ export default function App() {
       <View style={{ paddingTop: Platform.OS === 'android' ? StatusBar.currentHeight : 44 }}>
         {/* Screen Title Bar */}
         <View style={styles.topBar}>
-          {activeTab === 'create' && (
-            <TouchableOpacity
-              onPress={() => setActiveTab('listings')}
-              style={styles.backBtn}
-            >
-              <Text style={{ color: theme.accent, fontSize: 16 }}>← Back</Text>
-            </TouchableOpacity>
-          )}
-          <Text style={styles.appName}>Wildvora</Text>
+          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+            {activeTab === 'create' && (
+              <TouchableOpacity
+                onPress={() => setActiveTab('listings')}
+                style={styles.backBtn}
+              >
+                <Text style={{ color: theme.accent, fontSize: 16 }}>← Back</Text>
+              </TouchableOpacity>
+            )}
+            <Text style={styles.appName}>Wildvora Operator</Text>
+          </View>
+          <TouchableOpacity onPress={logout} style={styles.logoutBtn}>
+            <Text style={styles.logoutText}>Sign Out</Text>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -110,14 +140,29 @@ export default function App() {
   );
 }
 
+export default function App() {
+  return (
+    <AuthProvider>
+      <MainApp />
+    </AuthProvider>
+  );
+}
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: theme.bg,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: '#f6f3ed',
+  },
   topBar: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderBottomWidth: 1,
@@ -131,6 +176,17 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '800',
     letterSpacing: 0.5,
+  },
+  logoutBtn: {
+    paddingVertical: 4,
+    paddingHorizontal: 10,
+    borderRadius: 6,
+    backgroundColor: theme.danger + '22',
+  },
+  logoutText: {
+    color: theme.danger,
+    fontSize: 12,
+    fontWeight: '700',
   },
   tabBar: {
     flexDirection: 'row',
