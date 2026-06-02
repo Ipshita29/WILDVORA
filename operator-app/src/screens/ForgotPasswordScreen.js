@@ -6,33 +6,30 @@ import {
 } from 'react-native';
 import { Feather } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useAuth } from '../context/AuthContext';
 import Alert from '../utils/alert';
 
-export default function LoginScreen({ navigation, onToggleScreen }) {
-  const { login } = useAuth();
+export default function ForgotPasswordScreen({ onToggleScreen }) {
   const { width } = useWindowDimensions();
   const isLargeScreen = width > 768;
 
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password.trim()) {
-      Alert.alert('Error', 'Please enter email and password');
+  const handleSubmit = () => {
+    if (!email.trim()) {
+      Alert.alert('Error', 'Please enter your email address');
       return;
     }
     setLoading(true);
-    try {
-      await login(email.trim().toLowerCase(), password);
-      Alert.alert('Success', 'Logged in successfully!');
-    } catch (err) {
-      Alert.alert('Login Failed', err.response?.data?.message || 'Invalid email or password');
-    } finally {
+    // Simulate API call
+    setTimeout(() => {
       setLoading(false);
-    }
+      Alert.alert(
+        'Email Sent',
+        'If an account exists for this email, you will receive a reset link shortly.',
+        [{ text: 'OK', onPress: () => onToggleScreen('login') }]
+      );
+    }, 1200);
   };
 
   const Logo = ({ light }) => (
@@ -53,15 +50,17 @@ export default function LoginScreen({ navigation, onToggleScreen }) {
         <Logo light={false} />
       </View>
 
-      <Text style={styles.cardTitle}>Welcome Back</Text>
-      <Text style={styles.cardSubtitle}>Sign in to manage your operator portal.</Text>
+      <Text style={styles.cardTitle}>Forgot Password</Text>
+      <Text style={styles.cardSubtitle}>
+        Enter your email and we'll send you a reset link.
+      </Text>
 
       {/* Email Address */}
       <View style={styles.inputGroup}>
         <Text style={styles.label}>Email Address</Text>
         <TextInput
           style={styles.input}
-          placeholder="john@example.com"
+          placeholder="hello@operator.com"
           placeholderTextColor="#a0a8a3"
           value={email}
           onChangeText={setEmail}
@@ -70,36 +69,10 @@ export default function LoginScreen({ navigation, onToggleScreen }) {
         />
       </View>
 
-      {/* Password */}
-      <View style={styles.inputGroup}>
-        <Text style={styles.label}>Password</Text>
-        <View style={styles.passwordWrapper}>
-          <TextInput
-            style={styles.passwordInput}
-            placeholder="••••••••"
-            placeholderTextColor="#a0a8a3"
-            secureTextEntry={!showPassword}
-            value={password}
-            onChangeText={setPassword}
-          />
-          <TouchableOpacity onPress={() => setShowPassword(!showPassword)} style={styles.eyeIcon}>
-            <Feather name={showPassword ? 'eye-off' : 'eye'} size={16} color="#6f7a73" />
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      {/* Forgot Password Link */}
-      <TouchableOpacity 
-        onPress={() => onToggleScreen('forgot')} 
-        style={{ alignSelf: 'flex-end', marginTop: -8, marginBottom: 20 }}
-      >
-        <Text style={{ color: '#156b4e', fontSize: 13, fontWeight: '600' }}>Forgot Password?</Text>
-      </TouchableOpacity>
-
       {/* Submit CTA */}
       <TouchableOpacity
         style={styles.btnPrimary}
-        onPress={handleLogin}
+        onPress={handleSubmit}
         disabled={loading}
         activeOpacity={0.9}
       >
@@ -107,30 +80,25 @@ export default function LoginScreen({ navigation, onToggleScreen }) {
           <ActivityIndicator color="#fff" />
         ) : (
           <View style={styles.btnContent}>
-            <Text style={styles.btnText}>Sign In</Text>
+            <Text style={styles.btnText}>Send Reset Link</Text>
             <Feather name="arrow-right" size={16} color="#fff" />
           </View>
         )}
       </TouchableOpacity>
 
-      {/* Divider */}
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerText}>OR</Text>
-        <View style={styles.dividerLine} />
-      </View>
-
-      {/* Google Login */}
-      <TouchableOpacity style={styles.btnGoogle} activeOpacity={0.8}>
-        <View style={styles.gLogoContainer}>
-          <Text style={styles.gLogoText}>G</Text>
-        </View>
-        <Text style={styles.googleBtnText}>Sign In with Google</Text>
+      {/* Back to Login Link */}
+      <TouchableOpacity
+        style={styles.backToLoginRow}
+        onPress={() => onToggleScreen('login')}
+        activeOpacity={0.8}
+      >
+        <Feather name="arrow-left" size={16} color="#156b4e" style={{ marginRight: 6 }} />
+        <Text style={styles.backToLoginText}>Back to Login</Text>
       </TouchableOpacity>
 
       {/* Footer Link */}
       <View style={styles.footer}>
-        <Text style={styles.footerText}>Don't have an account? </Text>
+        <Text style={styles.footerText}>New to Wildvora? </Text>
         <TouchableOpacity onPress={() => onToggleScreen('register')}>
           <Text style={styles.footerLink}>Create Account</Text>
         </TouchableOpacity>
@@ -143,7 +111,7 @@ export default function LoginScreen({ navigation, onToggleScreen }) {
       <View style={styles.desktopContainer}>
         {/* Left column: Image banner */}
         <ImageBackground
-          source={require('../../assets/register-hero.png')}
+          source={require('../../assets/forgot-password-hero.png')}
           style={styles.leftBanner}
           resizeMode="cover"
         >
@@ -330,7 +298,7 @@ const styles = StyleSheet.create({
 
   // Form styles
   inputGroup: {
-    marginBottom: 16,
+    marginBottom: 20,
     width: '100%',
   },
   label: {
@@ -349,27 +317,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#181d1a',
   },
-  passwordWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderWidth: 1,
-    borderColor: '#e5e2dc',
-    borderRadius: 10,
-    backgroundColor: '#ffffff',
-    height: 46,
-  },
-  passwordInput: {
-    flex: 1,
-    height: '100%',
-    paddingHorizontal: 14,
-    fontSize: 14,
-    color: '#181d1a',
-  },
-  eyeIcon: {
-    paddingHorizontal: 12,
-    height: '100%',
-    justifyContent: 'center',
-  },
 
   // Buttons
   btnPrimary: {
@@ -385,6 +332,7 @@ const styles = StyleSheet.create({
     shadowRadius: 6,
     elevation: 3,
     marginTop: 8,
+    marginBottom: 20,
   },
   btnContent: {
     flexDirection: 'row',
@@ -397,54 +345,17 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
 
-  // Divider
-  dividerRow: {
+  // Back to login row
+  backToLoginRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginVertical: 18,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: '#e5e2dc',
-  },
-  dividerText: {
-    marginHorizontal: 12,
-    color: '#a0a8a3',
-    fontSize: 12,
-    fontWeight: '700',
-  },
-
-  // Google button
-  btnGoogle: {
-    flexDirection: 'row',
-    borderWidth: 1,
-    borderColor: '#e5e2dc',
-    borderRadius: 24,
-    height: 46,
     justifyContent: 'center',
-    alignItems: 'center',
-    width: '100%',
-    backgroundColor: '#ffffff',
+    marginVertical: 12,
   },
-  gLogoContainer: {
-    width: 20,
-    height: 20,
-    backgroundColor: '#EA4335',
-    borderRadius: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginRight: 10,
-  },
-  gLogoText: {
-    color: '#ffffff',
-    fontWeight: '900',
-    fontSize: 12,
-  },
-  googleBtnText: {
+  backToLoginText: {
+    color: '#156b4e',
     fontSize: 14,
-    fontWeight: '600',
-    color: '#181d1a',
+    fontWeight: '700',
   },
 
   // Footer links
@@ -452,6 +363,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     marginTop: 22,
+    borderTopWidth: 1,
+    borderTopColor: '#e5e2dc',
+    paddingTop: 18,
   },
   footerText: {
     color: '#6f7a73',

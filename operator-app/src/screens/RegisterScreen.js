@@ -204,7 +204,7 @@ export default function RegisterScreen({ navigation, onToggleScreen }) {
       {/* Footer Link */}
       <View style={styles.footer}>
         <Text style={styles.footerText}>Already have an account? </Text>
-        <TouchableOpacity onPress={onToggleScreen}>
+        <TouchableOpacity onPress={() => onToggleScreen('login')}>
           <Text style={styles.footerLink}>Sign In</Text>
         </TouchableOpacity>
       </View>

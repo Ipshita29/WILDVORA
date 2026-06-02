@@ -15,6 +15,7 @@ import Payouts           from './src/screens/Payouts';
 import ReviewsRatings    from './src/screens/ReviewsRatings';
 import RegisterScreen    from './src/screens/RegisterScreen';
 import LoginScreen       from './src/screens/LoginScreen';
+import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
 
 import { AuthProvider, useAuth } from './src/context/AuthContext';
 
@@ -53,9 +54,11 @@ function MainApp() {
   // Gate the app behind authentication
   if (!user) {
     if (authScreen === 'register') {
-      return <RegisterScreen onToggleScreen={() => setAuthScreen('login')} />;
+      return <RegisterScreen onToggleScreen={(target) => setAuthScreen(target)} />;
+    } else if (authScreen === 'forgot') {
+      return <ForgotPasswordScreen onToggleScreen={(target) => setAuthScreen(target)} />;
     } else {
-      return <LoginScreen onToggleScreen={() => setAuthScreen('register')} />;
+      return <LoginScreen onToggleScreen={(target) => setAuthScreen(target)} />;
     }
   }
 
