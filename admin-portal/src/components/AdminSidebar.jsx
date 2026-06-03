@@ -6,7 +6,7 @@ const WildvoraLogo = ({ light = false }) => (
       <polygon points="14,2 26,22 2,22" fill={light ? '#fff' : '#1A5F45'} opacity="0.95"/>
       <polygon points="14,6 22,20 6,20" fill={light ? 'rgba(255,255,255,0.4)' : '#C4A482'} />
     </svg>
-    <span className={`text-xl font-bold tracking-wide ${light ? 'text-white' : 'text-gray-900'}`}>WildReserve</span>
+    <span className={`text-xl font-bold tracking-wide ${light ? 'text-white' : 'text-gray-900'}`}>WildVora</span>
   </div>
 );
 

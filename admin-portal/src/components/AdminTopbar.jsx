@@ -7,7 +7,7 @@ export default function AdminTopbar() {
     <header className="bg-white border-b border-gray-200 h-16 min-h-16 px-8 flex items-center justify-between sticky top-0 z-40 select-none font-sans">
       {/* Left: Branding & Search */}
       <div className="flex items-center gap-8 flex-1 max-w-xl">
-        <span className="text-xl font-bold tracking-wide text-gray-900 flex-shrink-0">WildReserve Admin</span>
+        <span className="text-xl font-bold tracking-wide text-gray-900 flex-shrink-0">WildVora Admin</span>
         
         {/* Search Input Container */}
         <div className="relative w-full">
