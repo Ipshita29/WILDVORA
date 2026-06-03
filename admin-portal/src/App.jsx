@@ -60,9 +60,9 @@ function AppRoutes() {
       <Route path="/settings"        element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Settings</h1><p className="text-gray-500 mt-2">Global system configuration and API credentials.</p></div></ProtectedLayout>} />
       <Route path="/help"            element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Help Center</h1><p className="text-gray-500 mt-2">Internal documentation and support ticket console.</p></div></ProtectedLayout>} />
 
-      {/* Self-contained layout routes (mockup exact matches) */}
-      <Route path="/customers"       element={<ProtectedRoute><Customers /></ProtectedRoute>} />
-      <Route path="/payouts"         element={<ProtectedRoute><Payouts /></ProtectedRoute>} />
+      {/* Self-contained layout routes aligned to common layout */}
+      <Route path="/customers"       element={<ProtectedLayout><Customers /></ProtectedLayout>} />
+      <Route path="/payouts"         element={<ProtectedLayout><Payouts /></ProtectedLayout>} />
 
       {/* Fallback */}
       <Route path="*" element={<Navigate to="/" replace />} />

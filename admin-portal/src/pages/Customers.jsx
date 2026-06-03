@@ -244,130 +244,42 @@ export default function Customers() {
   const paginatedCustomers = filteredCustomers.slice(startIndex, startIndex + pageSize);
 
   return (
-    <div className="bg-background text-on-surface antialiased min-h-screen flex">
+    <div className="p-margin-desktop max-w-container-max w-full mx-auto flex-grow">
       
-      {/* SideNavBar */}
-      <aside className="fixed left-0 top-0 h-screen w-[280px] bg-primary dark:bg-primary-container shadow-sm flex flex-col p-6 space-y-2 z-50">
-        <div className="mb-10">
-          <h1 className="font-headline-lg text-headline-lg font-bold text-on-primary tracking-tight">WildReserve</h1>
-          <p className="font-label-md text-label-md text-on-primary/60">Admin Console</p>
+      {/* Header Section */}
+      <div className="mb-stack-lg flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg text-primary">Customer Directory</h2>
+          <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">Manage and monitor community engagement and safety.</p>
         </div>
-        <nav className="flex-grow space-y-2">
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" to="/">
-            <span className="material-symbols-outlined">dashboard</span>
-            <span className="font-label-md text-label-md">Overview</span>
-          </Link>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined">fact_check</span>
-            <span className="font-label-md text-label-md">Listings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined">event_available</span>
-            <span className="font-label-md text-label-md">Bookings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined">badge</span>
-            <span className="font-label-md text-label-md">Hosts</span>
-          </a>
-          {/* Active Tab: Customers */}
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary-fixed bg-primary-fixed rounded-lg transition-colors scale-95 duration-150 ease-in-out" to="/customers">
-            <span className="material-symbols-outlined">group</span>
-            <span className="font-label-md text-label-md">Customers</span>
-          </Link>
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" to="/payouts">
-            <span className="material-symbols-outlined">payments</span>
-            <span className="font-label-md text-label-md">Payouts</span>
-          </Link>
-        </nav>
-        <div className="pt-6 border-t border-on-primary/10 space-y-2">
-          <button className="w-full py-3 px-4 bg-on-primary text-primary font-bold rounded-lg mb-4 hover:bg-primary-fixed transition-all cursor-pointer">
-            New Support Ticket
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Relocated Search Bar */}
+          <div className="relative group">
+            <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant text-[20px]">search</span>
+            <input 
+              className="pl-10 pr-4 py-1.5 bg-surface-container-low border border-outline-variant/30 rounded-full text-body-md focus:ring-2 focus:ring-primary/20 w-64 transition-all focus:w-80" 
+              placeholder="Search customers..." 
+              type="text"
+              value={filterText}
+              onChange={(e) => {
+                setFilterText(e.target.value);
+                setCurrentPage(1);
+              }}
+            />
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-outline text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md cursor-pointer">
+            <span className="material-symbols-outlined text-[20px]">filter_list</span>
+            Filters
           </button>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span class="material-symbols-outlined">settings</span>
-            <span className="font-label-md text-label-md">Settings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined">help</span>
-            <span className="font-label-md text-label-md">Help Center</span>
-          </a>
+          <button 
+            onClick={() => alert('CSV Export Started...')}
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-on-secondary hover:opacity-90 transition-all font-label-md text-label-md cursor-pointer"
+          >
+            <span className="material-symbols-outlined text-[20px]">file_download</span>
+            Export CSV
+          </button>
         </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="ml-[280px] flex-1 min-h-screen flex flex-col">
-        
-        {/* TopNavBar */}
-        <header className="sticky top-0 right-0 z-40 flex items-center justify-between h-16 px-gutter border-b border-outline-variant/30 bg-surface/80 backdrop-blur-md">
-          <div className="flex items-center gap-6">
-            <span className="font-headline-md text-headline-md font-black text-primary">WildReserve Admin</span>
-            <div className="relative group">
-              <span className="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-on-surface-variant">search</span>
-              <input 
-                className="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-body-md focus:ring-2 focus:ring-primary/20 w-64 transition-all focus:w-80" 
-                placeholder="Search customers..." 
-                type="text"
-                value={filterText}
-                onChange={(e) => {
-                  setFilterText(e.target.value);
-                  setCurrentPage(1);
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center gap-6 mr-6">
-              <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Dashboard</a>
-              <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Logs</a>
-              <a className="text-on-surface-variant hover:text-primary transition-colors font-label-md text-label-md" href="#">Reports</a>
-            </nav>
-            <button className="hover:bg-surface-container-high rounded-full p-2 transition-all cursor-pointer">
-              <span className="material-symbols-outlined text-on-surface-variant">notifications</span>
-            </button>
-            <button className="hover:bg-surface-container-high rounded-full p-2 transition-all cursor-pointer">
-              <span className="material-symbols-outlined text-on-surface-variant">dark_mode</span>
-            </button>
-            
-            {/* Authenticated Admin Identity */}
-            <div className="flex items-center gap-3 pl-2 border-l border-outline-variant/50">
-              <div className="text-right hidden sm:block">
-                <div className="text-xs font-bold text-gray-900 leading-tight">{user?.name}</div>
-                <div className="text-[10px] text-gray-500">{user?.email}</div>
-              </div>
-              <button 
-                onClick={logout} 
-                className="hover:bg-red-50 text-red-600 rounded-full p-1.5 transition-all cursor-pointer"
-                title="Logout"
-              >
-                <span className="material-symbols-outlined text-xl">logout</span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* Page Canvas */}
-        <main className="p-margin-desktop max-w-container-max w-full mx-auto flex-1">
-          
-          {/* Header Section */}
-          <div className="mb-stack-lg flex justify-between items-end">
-            <div>
-              <h2 className="font-headline-lg text-headline-lg text-primary">Customer Directory</h2>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">Manage and monitor community engagement and safety.</p>
-            </div>
-            <div className="flex gap-3">
-              <button className="flex items-center gap-2 px-4 py-2 rounded-lg border border-outline text-on-surface hover:bg-surface-container-high transition-colors font-label-md text-label-md cursor-pointer">
-                <span className="material-symbols-outlined text-[20px]">filter_list</span>
-                Filters
-              </button>
-              <button 
-                onClick={() => alert('CSV Export Started...')}
-                className="flex items-center gap-2 px-4 py-2 rounded-lg bg-secondary text-on-secondary hover:opacity-90 transition-all font-label-md text-label-md cursor-pointer"
-              >
-                <span className="material-symbols-outlined text-[20px]">file_download</span>
-                Export CSV
-              </button>
-            </div>
-          </div>
+      </div>
 
           {/* Stats Overview - Bento Style */}
           <div className="grid grid-cols-1 md:grid-cols-4 gap-gutter mb-stack-lg">
@@ -564,8 +476,6 @@ export default function Customers() {
               </button>
             </div>
           </div>
-        </main>
-      </div>
 
       {/* Booking History Modal */}
       {showModal && selectedCustomer && (

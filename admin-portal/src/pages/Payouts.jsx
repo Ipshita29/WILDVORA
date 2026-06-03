@@ -261,136 +261,42 @@ export default function Payouts() {
   const paginatedLogs = combinedLogs.slice(logsStartIndex, logsStartIndex + pageSize);
 
   return (
-    <div className="bg-background text-on-surface antialiased min-h-screen flex font-sans">
+    <div className="p-margin-desktop space-y-stack-lg max-w-container-max mx-auto w-full flex-grow relative pb-20">
       
-      {/* SIDE NAV BAR */}
-      <aside className="fixed left-0 top-0 h-screen w-[280px] bg-primary dark:bg-primary-container shadow-sm flex flex-col p-6 space-y-2 z-50">
-        <div className="mb-8">
-          <h1 className="font-headline-lg text-headline-lg font-bold text-on-primary tracking-tight">WildReserve</h1>
-          <p className="font-label-md text-label-md text-on-primary/60">Admin Console</p>
+      {/* HEADER SECTION */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+          <h2 className="font-headline-lg text-headline-lg text-primary">Payouts Control</h2>
+          <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">Review and release settlements for host bookings.</p>
         </div>
-        <nav className="flex-grow space-y-1">
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors group" to="/">
-            <span className="material-symbols-outlined" data-icon="dashboard">dashboard</span>
-            <span className="font-label-md text-label-md">Overview</span>
-          </Link>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined" data-icon="fact_check">fact_check</span>
-            <span className="font-label-md text-label-md">Listings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined" data-icon="event_available">event_available</span>
-            <span className="font-label-md text-label-md">Bookings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined" data-icon="badge">badge</span>
-            <span className="font-label-md text-label-md">Hosts</span>
-          </a>
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" to="/customers">
-            <span className="material-symbols-outlined" data-icon="group">group</span>
-            <span className="font-label-md text-label-md">Customers</span>
-          </Link>
-          {/* Active State: Payouts */}
-          <Link className="flex items-center gap-3 px-4 py-3 text-on-primary-fixed bg-primary-fixed rounded-lg transition-colors shadow-md scale-95 duration-150 ease-in-out" to="/payouts">
-            <span className="material-symbols-outlined" data-icon="payments" style={{ fontVariationSettings: "'FILL' 1" }}>payments</span>
-            <span className="font-label-md text-label-md">Payouts</span>
-          </Link>
-        </nav>
-        <div className="pt-6 border-t border-on-primary/10 space-y-1">
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined" data-icon="settings">settings</span>
-            <span className="font-label-md text-label-md">Settings</span>
-          </a>
-          <a className="flex items-center gap-3 px-4 py-3 text-on-primary/70 hover:text-on-primary hover:bg-on-primary/10 rounded-lg transition-colors" href="#">
-            <span className="material-symbols-outlined" data-icon="help">help</span>
-            <span className="font-label-md text-label-md">Help Center</span>
-          </a>
-          <button className="w-full mt-4 bg-on-primary text-primary font-label-md text-label-md py-3 rounded-lg hover:bg-primary-fixed transition-all active:scale-95 cursor-pointer">
-            New Support Ticket
+        <div className="flex flex-wrap items-center gap-3">
+          {/* Relocated Search Bar */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="search">search</span>
+            <input 
+              className="pl-10 pr-4 py-2 bg-surface-container-low border border-outline-variant/30 rounded-full text-body-md focus:ring-2 focus:ring-primary/20 w-64 focus:w-80 transition-all duration-200" 
+              placeholder="Search settlements..." 
+              type="text"
+              value={filterText}
+              onChange={(e) => setFilterText(e.target.value)}
+            />
+          </div>
+          <button 
+            onClick={() => alert('Exporting payout report...')}
+            className="flex items-center gap-2 px-6 py-2.5 bg-surface-container-highest text-on-surface font-label-md text-label-md rounded-lg hover:shadow-md transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined" data-icon="download">download</span>
+            Export Report
+          </button>
+          <button 
+            onClick={() => alert('Initiating Instant Batch Settlement... (real backend settlements released today)')}
+            className="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:shadow-lg transition-all cursor-pointer"
+          >
+            <span className="material-symbols-outlined" data-icon="bolt">bolt</span>
+            Instant Settlement
           </button>
         </div>
-      </aside>
-
-      {/* MAIN CONTENT WRAPPER */}
-      <main className="ml-[280px] flex-1 min-h-screen flex flex-col">
-        
-        {/* TOP NAV BAR */}
-        <header className="sticky top-0 right-0 z-40 flex items-center justify-between h-16 px-gutter border-b border-outline-variant/30 bg-surface/80 backdrop-blur-md">
-          <div className="flex items-center gap-6">
-            <span className="font-headline-md text-headline-md font-black text-primary">WildReserve Admin</span>
-            <div className="relative">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-on-surface-variant text-[20px]" data-icon="search">search</span>
-              <input 
-                className="pl-10 pr-4 py-1.5 bg-surface-container-low border-none rounded-full text-body-md focus:ring-2 focus:ring-primary/20 w-64 focus:w-80 transition-all duration-200" 
-                placeholder="Search settlements..." 
-                type="text"
-                value={filterText}
-                onChange={(e) => setFilterText(e.target.value)}
-              />
-            </div>
-          </div>
-          <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center gap-6 mr-6">
-              <a className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Dashboard</a>
-              <a className="font-label-md text-label-md text-on-surface-variant hover:text-primary transition-colors" href="#">Logs</a>
-              <a className="font-label-md text-label-md text-primary font-bold border-b-2 border-primary pb-1" href="#">Reports</a>
-            </nav>
-            <button className="hover:bg-surface-container-high rounded-full p-2 transition-all cursor-pointer">
-              <span className="material-symbols-outlined" data-icon="notifications">notifications</span>
-            </button>
-            <button className="hover:bg-surface-container-high rounded-full p-2 transition-all cursor-pointer">
-              <span className="material-symbols-outlined" data-icon="dark_mode">dark_mode</span>
-            </button>
-            <div className="h-8 w-px bg-outline-variant/30 mx-2"></div>
-            
-            {/* Identity block & logout */}
-            <div className="flex items-center gap-3 pl-2">
-              <div className="text-right hidden sm:block">
-                <p className="font-label-md text-label-md leading-none">{user?.name || 'Financial Admin'}</p>
-                <p className="text-[10px] text-on-surface-variant uppercase tracking-wider font-bold mt-1">Financial Controller</p>
-              </div>
-              <img 
-                alt="Administrator" 
-                className="w-10 h-10 rounded-full object-cover ring-2 ring-primary-fixed" 
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuBxERVG99OmoZSlyfATXd_UcBnsfiP3choMiH7xqOqYH2iK0M8PhYg_zAXS39m8ndFrPWRmr0m2eTPEVFpfDPZLjjGAUeazEznz2NYDyasrS7MkHIENRa3yXvQjPz0PJd-F3mmJlM4OXum2vU8WZv1yfKm758-BzN6TUAgR553cf5Kl57yoEejWdoLAaSgrO6Xgt7eoS80HaMD6R53_19uBShiYTdIlmPCAsCFRaMJM8nuD7I88zNDDjI6Ue5uscoz-9yoV0FO7Qbw2"
-              />
-              <button 
-                onClick={logout} 
-                className="text-red-600 hover:bg-red-50 rounded-full p-1.5 transition-all cursor-pointer ml-1"
-                title="Logout"
-              >
-                <span className="material-symbols-outlined text-xl">logout</span>
-              </button>
-            </div>
-          </div>
-        </header>
-
-        {/* DASHBOARD CONTENT */}
-        <div className="p-margin-desktop space-y-stack-lg max-w-container-max mx-auto w-full flex-1">
-          
-          {/* HEADER SECTION */}
-          <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
-            <div>
-              <h2 className="font-headline-lg text-headline-lg text-primary">Payouts Control</h2>
-              <p className="font-body-lg text-body-lg text-on-surface-variant mt-1">Review and release settlements for host bookings.</p>
-            </div>
-            <div className="flex gap-3">
-              <button 
-                onClick={() => alert('Exporting payout report...')}
-                className="flex items-center gap-2 px-6 py-2.5 bg-surface-container-highest text-on-surface font-label-md text-label-md rounded-lg hover:shadow-md transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined" data-icon="download">download</span>
-                Export Report
-              </button>
-              <button 
-                onClick={() => alert('Initiating Instant Batch Settlement... (real backend settlements released today)')}
-                className="flex items-center gap-2 px-6 py-2.5 bg-primary text-on-primary font-label-md text-label-md rounded-lg hover:shadow-lg transition-all cursor-pointer"
-              >
-                <span className="material-symbols-outlined" data-icon="bolt">bolt</span>
-                Instant Settlement
-              </button>
-            </div>
-          </div>
+      </div>
 
           {/* STATS GRID */}
           <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-gutter">
@@ -690,13 +596,10 @@ export default function Payouts() {
               </div>
             </div>
           </section>
-        </div>
-
         {/* FOOTER INFO */}
         <footer className="mt-auto p-6 text-center border-t border-outline-variant/20 bg-surface-container-low/20">
           <p className="text-[10px] text-on-surface-variant/50 uppercase tracking-[0.2em] font-bold">WildReserve Financial Compliance • Protected by End-to-End Encryption</p>
         </footer>
-      </main>
 
       {/* FLOATING ACTION BUTTON */}
       <button 
