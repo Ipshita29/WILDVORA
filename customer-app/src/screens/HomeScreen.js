@@ -12,7 +12,7 @@ import { experienceAPI } from '../services/api';
 const { width } = Dimensions.get('window');
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   primaryContainer:    '#338263',
   onPrimaryContainer:  '#f5fff7',
   secondary:           '#0a6687',

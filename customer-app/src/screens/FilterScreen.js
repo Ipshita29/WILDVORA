@@ -36,7 +36,7 @@ const sl = StyleSheet.create({
   track: { height: 4, backgroundColor: '#bec9c1', borderRadius: 2, width: '100%', position: 'relative' },
   fill:  { height: 4, backgroundColor: '#bec9c1', borderRadius: 2, position: 'absolute', left: 0, top: 0 },
   thumb: {
-    width: 22, height: 22, borderRadius: 11, backgroundColor: '#11694b',
+    width: 22, height: 22, borderRadius: 11, backgroundColor: '#1A5F45',
     position: 'absolute', top: -9,
     ...Platform.select({
       ios:     { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.18, shadowRadius: 3 },
@@ -153,7 +153,7 @@ export default function FilterScreen({ navigation }) {
               <Text style={s.resultPriceSub}>/person</Text>
             </View>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 3 }}>
-              <Ionicons name="star" size={13} color="#11694b" />
+              <Ionicons name="star" size={13} color="#1A5F45" />
               <Text style={s.resultRating}>{item.rating || '4.9'}</Text>
             </View>
           </View>
@@ -168,7 +168,7 @@ export default function FilterScreen({ navigation }) {
       {/* ── App bar ── */}
       <View style={s.appBar}>
         <TouchableOpacity activeOpacity={0.7}>
-          <Ionicons name="menu-outline" size={24} color="#11694b" />
+          <Ionicons name="menu-outline" size={24} color="#1A5F45" />
         </TouchableOpacity>
         <Text style={s.appBarLogo}>Wildvora</Text>
         {/* Avatar — initials fallback, no external image needed */}
@@ -182,7 +182,7 @@ export default function FilterScreen({ navigation }) {
 
           {/* Search */}
           <View style={s.searchWrap}>
-            <Ionicons name="search-outline" size={20} color="#11694b" style={{ marginRight: 10 }} />
+            <Ionicons name="search-outline" size={20} color="#1A5F45" style={{ marginRight: 10 }} />
             <TextInput
               style={s.searchInput}
               placeholder="Where to next?"
@@ -194,7 +194,7 @@ export default function FilterScreen({ navigation }) {
 
           {/* ── Activity Type ── */}
           <View style={s.secRow}>
-            <MaterialCommunityIcons name="hiking" size={24} color="#11694b" />
+            <MaterialCommunityIcons name="hiking" size={24} color="#1A5F45" />
             <Text style={s.secTitle}>Activity Type</Text>
           </View>
           <View style={s.actGrid}>
@@ -216,7 +216,7 @@ export default function FilterScreen({ navigation }) {
 
           {/* ── Price Range ── */}
           <View style={[s.secRow, { marginTop: 28 }]}>
-            <MaterialIcons name="payments" size={24} color="#11694b" />
+            <MaterialIcons name="payments" size={24} color="#1A5F45" />
             <Text style={s.secTitle}>Price Range</Text>
             <View style={s.priceBadge}>
               <Text style={s.priceBadgeText}>$200 – ${price.toLocaleString()}</Text>
@@ -232,7 +232,7 @@ export default function FilterScreen({ navigation }) {
 
           {/* ── Difficulty ── */}
           <View style={s.secRow}>
-            <MaterialIcons name="signal-cellular-alt" size={24} color="#11694b" />
+            <MaterialIcons name="signal-cellular-alt" size={24} color="#1A5F45" />
             <Text style={s.secTitle}>Difficulty Level</Text>
           </View>
           <View style={s.chipsRow}>
@@ -295,7 +295,7 @@ export default function FilterScreen({ navigation }) {
         <View style={{ flex: 1, paddingHorizontal: 16 }}>
           <View style={s.resultsHdr}>
             <TouchableOpacity style={s.backCircle} onPress={() => setViewResults(false)}>
-              <Ionicons name="arrow-back" size={22} color="#11694b" />
+              <Ionicons name="arrow-back" size={22} color="#1A5F45" />
             </TouchableOpacity>
             <View>
               <Text style={s.resultsTitle}>Matching Results</Text>
@@ -304,7 +304,7 @@ export default function FilterScreen({ navigation }) {
           </View>
           {loading ? (
             <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-              <ActivityIndicator size="large" color="#11694b" />
+              <ActivityIndicator size="large" color="#1A5F45" />
             </View>
           ) : (
             <FlatList
@@ -342,9 +342,9 @@ const s = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(190,201,193,0.2)',
   },
-  appBarLogo:    { flex: 1, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#11694b' },
+  appBarLogo:    { flex: 1, textAlign: 'center', fontSize: 22, fontWeight: '700', color: '#1A5F45' },
   avatarCircle:  { width: 38, height: 38, borderRadius: 19, backgroundColor: '#ebefea', borderWidth: 2, borderColor: 'rgba(17,105,75,0.2)', justifyContent: 'center', alignItems: 'center' },
-  avatarInitial: { fontSize: 15, fontWeight: '700', color: '#11694b' },
+  avatarInitial: { fontSize: 15, fontWeight: '700', color: '#1A5F45' },
 
   scroll: { paddingHorizontal: 20, paddingTop: 20, paddingBottom: 40 },
 
@@ -379,7 +379,7 @@ const s = StyleSheet.create({
     paddingVertical: 14, paddingHorizontal: 14,
     width: '47%',
   },
-  cbChecked:   { width: 20, height: 20, borderRadius: 4, backgroundColor: '#11694b', justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  cbChecked:   { width: 20, height: 20, borderRadius: 4, backgroundColor: '#1A5F45', justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
   cbUnchecked: { width: 20, height: 20, borderRadius: 4, borderWidth: 2, borderColor: '#bec9c1', backgroundColor: '#fff', flexShrink: 0 },
   actText:     { fontSize: 13, fontWeight: '600', color: '#181d1a', flexShrink: 1 },
 
@@ -391,8 +391,8 @@ const s = StyleSheet.create({
   chipsRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 0 },
   chip:     { paddingHorizontal: 20, paddingVertical: 9, borderRadius: 50, borderWidth: 1.5, borderColor: '#bec9c1', backgroundColor: '#fff' },
   chipActive: {
-    backgroundColor: '#11694b', borderColor: '#11694b',
-    ...Platform.select({ ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 }, android: { elevation: 2 } }),
+    backgroundColor: '#1A5F45', borderColor: '#1A5F45',
+    ...Platform.select({ ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.2, shadowRadius: 4 }, android: { elevation: 2 } }),
   },
   chipText:       { fontSize: 13, fontWeight: '600', color: '#6f7a73' },
   chipTextActive: { color: '#fff', fontWeight: '700' },
@@ -406,11 +406,11 @@ const s = StyleSheet.create({
   infoCardLabel: { fontSize: 11, fontWeight: '700', color: '#6f7a73', letterSpacing: 1.2, marginBottom: 10 },
   radioRow:      { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: 9 },
   radioText:     { fontSize: 15, color: '#181d1a', fontWeight: '500' },
-  radioOn:       { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#11694b', justifyContent: 'center', alignItems: 'center' },
-  radioInner:    { width: 10, height: 10, borderRadius: 5, backgroundColor: '#11694b' },
+  radioOn:       { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#1A5F45', justifyContent: 'center', alignItems: 'center' },
+  radioInner:    { width: 10, height: 10, borderRadius: 5, backgroundColor: '#1A5F45' },
   radioOff:      { width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: '#bec9c1', backgroundColor: '#fff' },
   distHdr:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
-  distValue:     { fontSize: 13, fontWeight: '700', color: '#11694b' },
+  distValue:     { fontSize: 13, fontWeight: '700', color: '#1A5F45' },
   distSub:       { fontSize: 11, color: '#6f7a73', marginTop: 8, lineHeight: 16 },
 
   /* Action buttons */
@@ -418,9 +418,9 @@ const s = StyleSheet.create({
   resetBtn:  { borderWidth: 2, borderColor: '#8f4645', borderRadius: 50, height: 50, justifyContent: 'center', alignItems: 'center' },
   resetText: { fontSize: 15, fontWeight: '700', color: '#8f4645' },
   showBtn:   {
-    backgroundColor: '#11694b', borderRadius: 50, height: 50,
+    backgroundColor: '#1A5F45', borderRadius: 50, height: 50,
     flexDirection: 'row', justifyContent: 'center', alignItems: 'center', gap: 8,
-    ...Platform.select({ ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 }, android: { elevation: 4 } }),
+    ...Platform.select({ ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.25, shadowRadius: 8 }, android: { elevation: 4 } }),
   },
   showText: { fontSize: 15, fontWeight: '700', color: '#fff' },
 
@@ -439,11 +439,11 @@ const s = StyleSheet.create({
   resultMetaRow:{ flexDirection: 'row', alignItems: 'center', gap: 3, marginBottom: 7 },
   resultMeta:   { fontSize: 11, color: '#6f7a73' },
   resultFooter: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  resultPrice:  { fontSize: 14, fontWeight: '700', color: '#11694b' },
+  resultPrice:  { fontSize: 14, fontWeight: '700', color: '#1A5F45' },
   resultPriceSub:{ fontSize: 10, color: '#6f7a73' },
   resultRating: { fontSize: 11, fontWeight: '700', color: '#181d1a' },
 
   emptyBox:  { alignItems: 'center', paddingTop: 70 },
   emptyText: { fontSize: 14, color: '#6f7a73', marginBottom: 8, fontWeight: '600' },
-  emptyLink: { fontSize: 13, color: '#11694b', fontWeight: '700', textDecorationLine: 'underline' },
+  emptyLink: { fontSize: 13, color: '#1A5F45', fontWeight: '700', textDecorationLine: 'underline' },
 });

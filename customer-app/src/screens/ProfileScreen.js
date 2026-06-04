@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { userAPI, reviewAPI } from '../services/api';
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   primaryContainer:    '#338263',
   onPrimaryContainer:  '#f5fff7',
   secondary:           '#0a6687',

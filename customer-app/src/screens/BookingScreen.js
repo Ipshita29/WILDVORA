@@ -130,7 +130,7 @@ export default function BookingScreen({ route, navigation }) {
       <View style={styles.header}>
         <View style={styles.headerLeft}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.closeBtn}>
-            <Ionicons name="close" size={24} color="#11694b" />
+            <Ionicons name="close" size={24} color="#1A5F45" />
           </TouchableOpacity>
           <Text style={styles.logo}>Wildvora</Text>
         </View>
@@ -246,7 +246,7 @@ export default function BookingScreen({ route, navigation }) {
                     onPress={() => setAdults(Math.max(1, adults - 1))}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="remove" size={18} color="#11694b" />
+                    <Ionicons name="remove" size={18} color="#1A5F45" />
                   </TouchableOpacity>
                   <Text style={styles.stepperVal}>{adults}</Text>
                   <TouchableOpacity
@@ -254,7 +254,7 @@ export default function BookingScreen({ route, navigation }) {
                     onPress={() => setAdults(adults + 1)}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="add" size={18} color="#11694b" />
+                    <Ionicons name="add" size={18} color="#1A5F45" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -272,7 +272,7 @@ export default function BookingScreen({ route, navigation }) {
                     disabled={children === 0}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="remove" size={18} color={children === 0 ? '#bec9c1' : '#11694b'} />
+                    <Ionicons name="remove" size={18} color={children === 0 ? '#bec9c1' : '#1A5F45'} />
                   </TouchableOpacity>
                   <Text style={styles.stepperVal}>{children}</Text>
                   <TouchableOpacity
@@ -280,7 +280,7 @@ export default function BookingScreen({ route, navigation }) {
                     onPress={() => setChildren(children + 1)}
                     activeOpacity={0.7}
                   >
-                    <Ionicons name="add" size={18} color="#11694b" />
+                    <Ionicons name="add" size={18} color="#1A5F45" />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -304,7 +304,7 @@ export default function BookingScreen({ route, navigation }) {
                   <Ionicons
                     name="card-outline"
                     size={22}
-                    color={paymentMethod === 'card' ? '#11694b' : '#6f7a73'}
+                    color={paymentMethod === 'card' ? '#1A5F45' : '#6f7a73'}
                   />
                   <Text
                     style={[
@@ -316,7 +316,7 @@ export default function BookingScreen({ route, navigation }) {
                   </Text>
                 </View>
                 {paymentMethod === 'card' && (
-                  <Ionicons name="checkmark-circle" size={20} color="#11694b" />
+                  <Ionicons name="checkmark-circle" size={20} color="#1A5F45" />
                 )}
               </TouchableOpacity>
 
@@ -333,7 +333,7 @@ export default function BookingScreen({ route, navigation }) {
                   <Ionicons
                     name="logo-apple"
                     size={22}
-                    color={paymentMethod === 'apple_pay' ? '#11694b' : '#6f7a73'}
+                    color={paymentMethod === 'apple_pay' ? '#1A5F45' : '#6f7a73'}
                   />
                   <Text
                     style={[
@@ -345,7 +345,7 @@ export default function BookingScreen({ route, navigation }) {
                   </Text>
                 </View>
                 {paymentMethod === 'apple_pay' && (
-                  <Ionicons name="checkmark-circle" size={20} color="#11694b" />
+                  <Ionicons name="checkmark-circle" size={20} color="#1A5F45" />
                 )}
               </TouchableOpacity>
             </View>
@@ -482,7 +482,7 @@ export default function BookingScreen({ route, navigation }) {
         /* Done Screen matches Step 4 Success Confirmed perfectly */
         <View style={styles.doneContainer}>
           <View style={styles.doneEmojiBg}>
-            <Ionicons name="checkmark-circle" size={56} color="#11694b" />
+            <Ionicons name="checkmark-circle" size={56} color="#1A5F45" />
           </View>
           <Text style={styles.doneTitle}>Booking Confirmed!</Text>
           <Text style={styles.doneSub}>
@@ -491,15 +491,15 @@ export default function BookingScreen({ route, navigation }) {
 
           <View style={styles.doneDetailCard}>
             <View style={styles.doneDetailRow}>
-              <Ionicons name="calendar-outline" size={18} color="#11694b" />
+              <Ionicons name="calendar-outline" size={18} color="#1A5F45" />
               <Text style={styles.doneDetailText}>Oct 3 - Oct 7, 2024</Text>
             </View>
             <View style={styles.doneDetailRow}>
-              <Ionicons name="people-outline" size={18} color="#11694b" />
+              <Ionicons name="people-outline" size={18} color="#1A5F45" />
               <Text style={styles.doneDetailText}>2 Adults</Text>
             </View>
             <View style={styles.doneDetailRow}>
-              <Ionicons name="cash-outline" size={18} color="#11694b" />
+              <Ionicons name="cash-outline" size={18} color="#1A5F45" />
               <Text style={styles.doneDetailText}>Total Paid: ${grandTotal.toFixed(2)}</Text>
             </View>
           </View>
@@ -549,7 +549,7 @@ export default function BookingScreen({ route, navigation }) {
 
         {/* Trips (Active Tab) */}
         <TouchableOpacity style={styles.tabItemActive} activeOpacity={1}>
-          <MaterialCommunityIcons name="hiking" size={22} color="#11694b" />
+          <MaterialCommunityIcons name="hiking" size={22} color="#1A5F45" />
           <Text style={styles.tabTextActive}>Trips</Text>
         </TouchableOpacity>
 
@@ -599,7 +599,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 24,
     fontWeight: '700',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   avatarContainer: {
     width: 40,
@@ -635,7 +635,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
@@ -655,12 +655,12 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     backgroundColor: '#ffffff',
     borderWidth: 2,
-    borderColor: '#11694b',
+    borderColor: '#1A5F45',
     justifyContent: 'center',
     alignItems: 'center',
   },
   stepDotTextActive: {
-    color: '#11694b',
+    color: '#1A5F45',
     fontWeight: '700',
     fontSize: 14,
     fontFamily: 'Quicksand',
@@ -683,7 +683,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 12,
     fontWeight: '700',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   stepLabelInactive: {
     fontFamily: 'Quicksand',
@@ -694,7 +694,7 @@ const styles = StyleSheet.create({
   stepLineActive: {
     flex: 1,
     height: 2,
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     marginBottom: 20,
   },
   stepLineInactive: {
@@ -727,7 +727,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 15,
     fontWeight: '600',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   calendarContainer: {
     width: '100%',
@@ -759,11 +759,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3 },
+      ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3 },
       android: { elevation: 2 },
     }),
   },
@@ -771,11 +771,11 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3 },
+      ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 3 },
       android: { elevation: 2 },
     }),
   },
@@ -804,7 +804,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 14,
     fontWeight: '700',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   calendarDayTextNormal: {
     fontFamily: 'Quicksand',
@@ -879,7 +879,7 @@ const styles = StyleSheet.create({
     ...Platform.select({ web: { cursor: 'pointer' } }),
   },
   paymentRowSelected: {
-    borderColor: '#11694b',
+    borderColor: '#1A5F45',
     backgroundColor: 'rgba(17, 105, 75, 0.03)',
   },
   paymentRowLeft: {
@@ -894,7 +894,7 @@ const styles = StyleSheet.create({
     color: '#6f7a73',
   },
   paymentMethodLabelSelected: {
-    color: '#11694b',
+    color: '#1A5F45',
   },
   cardInputsContainer: {
     marginTop: 16,
@@ -1039,16 +1039,16 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 22,
     fontWeight: '700',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   payBtn: {
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     borderRadius: 24,
     height: 48,
     justifyContent: 'center',
     alignItems: 'center',
     ...Platform.select({
-      ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 6 },
+      ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.15, shadowRadius: 6 },
       android: { elevation: 3 },
       web: { cursor: 'pointer' },
     }),
@@ -1152,7 +1152,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Quicksand',
     fontSize: 12,
     fontWeight: '700',
-    color: '#11694b',
+    color: '#1A5F45',
   },
   /* Done view styles */
   doneContainer: {
@@ -1210,7 +1210,7 @@ const styles = StyleSheet.create({
   },
   viewTripsBtn: {
     width: '100%',
-    backgroundColor: '#11694b',
+    backgroundColor: '#1A5F45',
     borderRadius: 24,
     height: 48,
     justifyContent: 'center',

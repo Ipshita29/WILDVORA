@@ -27,7 +27,7 @@ import HelpCenterScreen from '../screens/Helpcenterscreen';
 const Stack = createNativeStackNavigator();
 const Tab   = createBottomTabNavigator();
 
-const PRIMARY = '#11694b';
+const PRIMARY = '#1A5F45';
 
 // Map each tab to a MaterialCommunityIcons name (active / inactive pair)
 const TAB_ICONS = {

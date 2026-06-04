@@ -105,7 +105,7 @@ export default function Payouts() {
                 <div className="text-3xl font-black text-gray-900 mt-2">${(data?.earnings?.totalEarnings || 0).toLocaleString()}</div>
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-[#105D3D]">Pending Payouts</span>
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest text-[#1A5F45]">Pending Payouts</span>
                 <div className="text-3xl font-black text-gray-900 mt-2">${(data?.earnings?.pendingPayouts || 0).toLocaleString()}</div>
               </div>
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
@@ -166,7 +166,7 @@ export default function Payouts() {
 
               {/* Payout / Bank Account Settings (Span 1) */}
               <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 space-y-4">
-                <h3 className="text-xs font-bold text-[#105D3D] uppercase tracking-wider border-b pb-2 border-gray-50">Bank Account Details</h3>
+                <h3 className="text-xs font-bold text-[#1A5F45] uppercase tracking-wider border-b pb-2 border-gray-50">Bank Account Details</h3>
                 <form onSubmit={handleBankSubmit} className="space-y-3.5">
                   <div>
                     <label className="block text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Account Holder Name</label>
@@ -177,7 +177,7 @@ export default function Payouts() {
                       value={bankAccount.holderName} 
                       onChange={handleBankChange}
                       placeholder="e.g. John Doe"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#105D3D] transition"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#1A5F45] transition"
                     />
                   </div>
                   <div>
@@ -189,7 +189,7 @@ export default function Payouts() {
                       value={bankAccount.accountNumber} 
                       onChange={handleBankChange}
                       placeholder="501002392812"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#105D3D] transition"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#1A5F45] transition"
                     />
                   </div>
                   <div>
@@ -201,7 +201,7 @@ export default function Payouts() {
                       value={bankAccount.bankName} 
                       onChange={handleBankChange}
                       placeholder="HDFC Bank"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#105D3D] transition"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#1A5F45] transition"
                     />
                   </div>
                   <div>
@@ -213,13 +213,13 @@ export default function Payouts() {
                       value={bankAccount.ifscCode} 
                       onChange={handleBankChange}
                       placeholder="HDFC0000124"
-                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#105D3D] transition"
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs bg-gray-50 outline-none focus:ring-1 focus:ring-[#1A5F45] transition"
                     />
                   </div>
                   <button 
                     type="submit" 
                     disabled={updating}
-                    className="w-full py-2.5 bg-[#105D3D] hover:bg-[#0c4e32] text-white text-xs font-bold rounded-xl shadow-sm transition mt-2"
+                    className="w-full py-2.5 bg-[#1A5F45] hover:bg-[#145038] text-white text-xs font-bold rounded-xl shadow-sm transition mt-2"
                   >
                     {updating ? 'Saving...' : 'Update Settings'}
                   </button>

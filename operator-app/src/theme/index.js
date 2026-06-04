@@ -7,9 +7,9 @@ export const theme = {
   cardShadow: 'rgba(30, 41, 59, 0.07)',
 
   // Primary green (Wildvora brand)
-  primary: '#11694B',
-  primaryDark: '#0D5039',
-  primaryContainer: '#338263',
+  primary: '#1A5F45',
+  primaryDark: '#145038',
+  primaryContainer: '#2E7D52',
   primaryFixed: '#A3F3CD',
   primaryFixedDim: '#88D6B2',
   onPrimary: '#FFFFFF',
