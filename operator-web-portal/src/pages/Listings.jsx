@@ -150,7 +150,7 @@ export default function Listings() {
                           </div>
                           <div>
                             <p className="font-semibold text-gray-900">{exp.title}</p>
-                            <p className="text-xs text-gray-400 mt-0.5">{exp.location}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{typeof exp.location === 'object' ? `${exp.location?.city || ''}${exp.location?.country ? ', ' + exp.location.country : ''}` : exp.location}</p>
                           </div>
                         </div>
                       </td>

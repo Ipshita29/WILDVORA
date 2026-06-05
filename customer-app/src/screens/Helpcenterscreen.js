@@ -11,7 +11,7 @@ if (Platform.OS === 'android' && UIManager.setLayoutAnimationEnabledExperimental
 }
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   primaryContainer:    '#338263',
   onPrimaryContainer:  '#f5fff7',
   secondary:           '#0a6687',
@@ -28,7 +28,7 @@ const C = {
 
 const CATEGORIES = [
   { icon: 'calendar-check-outline', label: 'Bookings',    color: '#0a6687' },
-  { icon: 'credit-card-outline',    label: 'Payments',    color: '#11694b' },
+  { icon: 'credit-card-outline',    label: 'Payments',    color: '#1A5F45' },
   { icon: 'account-outline',        label: 'Account',     color: '#7c5c00' },
   { icon: 'map-marker-outline',     label: 'Experiences', color: '#8f4645' },
 ];

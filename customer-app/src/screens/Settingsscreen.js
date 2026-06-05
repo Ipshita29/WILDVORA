@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   primaryContainer:    '#338263',
   onPrimaryContainer:  '#f5fff7',
   secondary:           '#0a6687',
@@ -46,7 +46,7 @@ const SECTIONS = [
     title: 'Preferences',
     items: [
       { icon: 'translate',            label: 'Language',             key: 'language',    arrow: true, value: 'English' },
-      { icon: 'currency-usd',         label: 'Currency',             key: 'currency',    arrow: true, value: 'USD' },
+      { icon: 'currency-inr',         label: 'Currency',             key: 'currency',    arrow: true, value: 'INR' },
       { icon: 'weather-night',        label: 'Dark Mode',            key: 'dark',        toggle: false },
     ],
   },

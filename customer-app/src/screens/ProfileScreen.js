@@ -9,7 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { userAPI, reviewAPI } from '../services/api';
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   primaryContainer:    '#338263',
   onPrimaryContainer:  '#f5fff7',
   secondary:           '#0a6687',
@@ -36,7 +36,7 @@ const REVIEW_IMAGES = [
 // ── Menu items — now with nav destinations ────────────────────────────────────
 const MENU_ITEMS = [
   { icon: 'heart-outline',       label: 'My Wishlist',      key: 'wishlist',  special: false, screen: 'Wishlist' },
-  { icon: 'gift-outline',        label: 'Referral Program', key: 'referral',  special: true,  screen: null,             sub: 'Earn $50 per invite' },
+  { icon: 'gift-outline',        label: 'Referral Program', key: 'referral',  special: true,  screen: null,             sub: 'Earn ₹4,000 per invite' },
   { icon: 'history',             label: 'Review History',   key: 'reviews',   special: false, screen: 'ReviewHistory' },
   { icon: 'help-circle-outline', label: 'Help Center',      key: 'help',      special: false, screen: 'HelpCenter' },
   { icon: 'cog-outline',         label: 'Settings',         key: 'settings',  special: false, screen: 'Settings' },

@@ -8,7 +8,7 @@ import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { userAPI } from '../services/api';
 
 const C = {
-  primary:             '#11694b',
+  primary:             '#1A5F45',
   background:          '#f7faf6',
   surface:             '#ffffff',
   surfaceContainerLow: '#f1f4f0',
@@ -103,7 +103,7 @@ export default function WishlistScreen({ navigation }) {
                 </View>
                 <View style={s.cardFooter}>
                   <Text style={s.cardPrice}>
-                    <Text style={s.cardPriceNum}>${item.price}</Text>
+                    <Text style={s.cardPriceNum}>₹{item.price}</Text>
                     <Text style={s.cardPriceSub}>/person</Text>
                   </Text>
                   {item.rating > 0 && (

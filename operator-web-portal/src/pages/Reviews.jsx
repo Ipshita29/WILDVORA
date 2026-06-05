@@ -118,7 +118,7 @@ export default function Reviews() {
               <div key={star} className="flex items-center text-xs text-gray-500 font-semibold">
                 <span className="w-12">{star} Star</span>
                 <div className="flex-1 bg-gray-100 h-2 rounded-full overflow-hidden mx-4">
-                  <div style={{ width: `${pct}%` }} className="bg-[#105D3D] h-full rounded-full" />
+                  <div style={{ width: `${pct}%` }} className="bg-[#1A5F45] h-full rounded-full" />
                 </div>
                 <span className="w-8 text-right">{pct}%</span>
               </div>
@@ -177,7 +177,7 @@ export default function Reviews() {
 
                   {/* Reply Block */}
                   {review.hostReply ? (
-                    <div className="bg-gray-50 border-l-[3px] border-[#105D3D] rounded-r-xl p-4">
+                    <div className="bg-gray-50 border-l-[3px] border-[#1A5F45] rounded-r-xl p-4">
                       <div className="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">Your Response &bull; Sept 11</div>
                       <p className="text-xs text-gray-700 font-semibold leading-relaxed">
                         "{review.hostReply}"
@@ -192,7 +192,7 @@ export default function Reviews() {
                           </span>
                           <button
                             onClick={() => setReplyOpen(prev => ({ ...prev, [review._id]: true }))}
-                            className="flex items-center gap-1 text-xs font-bold text-[#105D3D] hover:underline"
+                            className="flex items-center gap-1 text-xs font-bold text-[#1A5F45] hover:underline"
                           >
                             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                               <path d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"/>
@@ -208,7 +208,7 @@ export default function Reviews() {
                             rows={3}
                             value={replyText[review._id] || ''}
                             onChange={e => setReplyText(prev => ({ ...prev, [review._id]: e.target.value }))}
-                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-800 outline-none focus:ring-1 focus:ring-[#105D3D] resize-none"
+                            className="w-full bg-gray-50 border border-gray-200 rounded-xl p-3 text-xs text-gray-800 outline-none focus:ring-1 focus:ring-[#1A5F45] resize-none"
                           />
                           <div className="flex justify-end gap-2.5">
                             <button
@@ -220,7 +220,7 @@ export default function Reviews() {
                             <button
                               disabled={sending === review._id}
                               onClick={() => handleReply(review._id)}
-                              className="px-4 py-1.5 text-xs font-bold text-white bg-[#105D3D] rounded-lg hover:bg-[#0c4e32] transition"
+                              className="px-4 py-1.5 text-xs font-bold text-white bg-[#1A5F45] rounded-lg hover:bg-[#145038] transition"
                             >
                               {sending === review._id ? 'Sending...' : 'Send Response'}
                             </button>
@@ -248,7 +248,7 @@ export default function Reviews() {
                     key={idx}
                     onClick={() => setPage(idx + 1)}
                     className={`w-7 h-7 rounded-lg text-xs font-semibold flex items-center justify-center transition ${
-                      page === idx + 1 ? 'bg-[#105D3D] text-white' : 'bg-white border border-gray-200 hover:bg-gray-50'
+                      page === idx + 1 ? 'bg-[#1A5F45] text-white' : 'bg-white border border-gray-200 hover:bg-gray-50'
                     }`}
                   >
                     {idx + 1}

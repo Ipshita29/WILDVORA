@@ -8,7 +8,7 @@ const bookingRows = [
     customer: 'Elena Miller', customerType: 'Pro Member',
     host: 'Grand Canyon Glamping',
     date: 'Oct 12–15, 2023',
-    amount: '$1,450.00',
+    amount: '₹1,20,750',
     status: 'Disputed',
   },
   {
@@ -17,7 +17,7 @@ const bookingRows = [
     customer: 'James David', customerType: 'Verified',
     host: 'Olympic Forest Cabin',
     date: 'Oct 14–18, 2023',
-    amount: '$840.00',
+    amount: '₹69,900',
     status: 'Confirmed',
   },
   {
@@ -26,7 +26,7 @@ const bookingRows = [
     customer: 'Sarah L.', customerType: 'New User',
     host: 'Yosemite Valley Dome',
     date: 'Oct 15–17, 2023',
-    amount: '$1,200.00',
+    amount: '₹99,900',
     status: 'Flagged',
   },
   {
@@ -35,7 +35,7 @@ const bookingRows = [
     customer: 'Tom King', customerType: 'Guest',
     host: 'Zion Cliffhouse Suite',
     date: 'Oct 20–22, 2023',
-    amount: '$650.00',
+    amount: '₹54,100',
     status: 'Pending',
   },
 ]
@@ -80,7 +80,7 @@ function SparkBar() {
 const topStats = [
   { label: 'ACTIVE BOOKINGS',      value: '1,284', badge: '+12%',        badgeClass: 'text-emerald-600' },
   { label: 'OPEN DISPUTES',        value: '24',    tag: 'High Priority',  tagClass: 'text-red-500' },
-  { label: 'WEEKLY REVENUE',       value: '$42,500', sub: 'v. Target',   subClass: 'text-emerald-600' },
+  { label: 'WEEKLY REVENUE',       value: '₹3,54,100', sub: 'v. Target',   subClass: 'text-emerald-600' },
   { label: 'AVG. RESOLUTION TIME', value: '4.2h',  badge: '-15%',        badgeClass: 'text-red-500' },
 ]
 
@@ -190,9 +190,30 @@ export default function BookingsDisputes() {
                 <td className="px-5 py-4 text-gray-900 font-bold text-sm">{b.amount}</td>
                 <td className="px-5 py-4"><StatusBadge status={b.status} /></td>
                 <td className="px-5 py-4">
-                  <button className="text-xs text-gray-500 border border-gray-200 px-3 py-1.5 rounded-lg hover:bg-gray-100 hover:text-gray-800 font-medium transition-all">
-                    View
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button 
+                      onClick={() => alert(`Initiated communication channel between customer (${b.customer}) and host (${b.host}) for booking ${b.id}.`)}
+                      className="text-xs text-gray-600 border border-gray-300 px-2.5 py-1 rounded-md hover:bg-gray-50 font-semibold transition-all shadow-sm cursor-pointer"
+                    >
+                      Contact
+                    </button>
+                    {(b.status === 'Disputed' || b.status === 'Flagged') && (
+                      <button 
+                        onClick={() => alert(`Issued full refund for booking ${b.id} to customer ${b.customer}.`)}
+                        className="text-xs text-rose-600 border border-rose-200 px-2.5 py-1 rounded-md hover:bg-rose-50 font-semibold transition-all shadow-sm cursor-pointer"
+                      >
+                        Refund
+                      </button>
+                    )}
+                    {b.status === 'Confirmed' && (
+                      <button 
+                        onClick={() => alert(`Flagged booking ${b.id} as Disputed for administrative review.`)}
+                        className="text-xs text-amber-600 border border-amber-200 px-2.5 py-1 rounded-md hover:bg-amber-50 font-semibold transition-all shadow-sm cursor-pointer"
+                      >
+                        Flag Dispute
+                      </button>
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}

@@ -9,7 +9,7 @@ const stats = [
     up: true,
     vs: 'vs. 2,206 last week',
     icon: (
-      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#6b9e7a" strokeWidth={1.8}>
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1A5F45" strokeWidth={1.8}>
         <rect x="3" y="4" width="18" height="18" rx="2"/>
         <line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/>
         <line x1="3" y1="10" x2="21" y2="10"/>
@@ -18,12 +18,12 @@ const stats = [
   },
   {
     label: 'GMV',
-    value: '$412,900',
+    value: '₹34,12,900',
     change: '+8.2%',
     up: true,
-    vs: 'vs. $381,500 last week',
+    vs: 'vs. ₹31,81,500 last week',
     icon: (
-      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#6b9e7a" strokeWidth={1.8}>
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1A5F45" strokeWidth={1.8}>
         <rect x="2" y="7" width="20" height="14" rx="2"/>
         <path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>
         <line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/>
@@ -50,7 +50,7 @@ const stats = [
     up: false,
     vs: 'vs. 12,277 last week',
     icon: (
-      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#6b9e7a" strokeWidth={1.8}>
+      <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1A5F45" strokeWidth={1.8}>
         <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
         <circle cx="9" cy="7" r="4"/>
         <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
@@ -66,7 +66,7 @@ const recentBookings = [
     host: 'Sarah Jenkins',
     date: 'Oct 24, 2023',
     status: 'Confirmed',
-    amount: '$1,240.00',
+    amount: '₹1,03,200',
     img: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=64&h=64&fit=crop',
   },
   {
@@ -74,7 +74,7 @@ const recentBookings = [
     host: 'Marcus Thorne',
     date: 'Oct 23, 2023',
     status: 'Pending',
-    amount: '$850.00',
+    amount: '₹70,850',
     img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=64&h=64&fit=crop',
   },
   {
@@ -82,7 +82,7 @@ const recentBookings = [
     host: 'Elena Rodriguez',
     date: 'Oct 22, 2023',
     status: 'Confirmed',
-    amount: '$2,100.00',
+    amount: '₹1,74,900',
     img: 'https://images.unsplash.com/photo-1488415032361-b7e238421f1b?w=64&h=64&fit=crop',
   },
 ]
@@ -111,7 +111,7 @@ const recentActivity = [
       </svg>
     ),
     title: 'Payout Processed',
-    desc: '$4,200.00 sent to Host #8821',
+    desc: '₹3,49,800 sent to Host #8821',
     time: '1 hour ago',
   },
   {
@@ -218,7 +218,7 @@ export default function Dashboard() {
               style={{ borderColor: '#f0f2f0' }}
             >
               <h2 className="text-gray-900 font-bold text-base">Recent Bookings</h2>
-              <button className="font-semibold text-sm transition-colors" style={{ color: '#3a7d5a' }}>
+              <button className="font-semibold text-sm transition-colors" style={{ color: '#1A5F45' }}>
                 View All
               </button>
             </div>

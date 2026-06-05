@@ -145,7 +145,7 @@ export default function CreateEditListing({ editListing, setListings, setActiveT
         <View style={styles.card}>
           <Text style={styles.cardHeading}>Pricing</Text>
           <View style={styles.priceRow}>
-            <Text style={styles.priceCurrency}>$</Text>
+            <Text style={styles.priceCurrency}>₹</Text>
             <TextInput
               style={styles.priceInput}
               placeholder="0.00"
@@ -262,7 +262,7 @@ export default function CreateEditListing({ editListing, setListings, setActiveT
 
 const BEIGE   = '#F7F4EE';   // warm bg matching screenshot
 const WHITE   = '#FFFFFF';
-const PRIMARY = '#11694B';
+const PRIMARY = '#1A5F45';
 const PRIMARY_CONTAINER = '#338263';
 const ON_PC   = '#F5FFF7';
 const OUTLINE = '#BEC9C1';

@@ -18,6 +18,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
   const [loading, setLoading]       = useState(true);
   const [inWishlist, setInWishlist] = useState(false);
   const [readMore, setReadMore]     = useState(false);
+  const [selectedDate, setSelectedDate] = useState(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -53,7 +54,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#11694b" />
+        <ActivityIndicator size="large" color="#1A5F45" />
       </View>
     );
   }
@@ -68,7 +69,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
         key={i}
         name={i < Math.floor(rating) ? 'star' : 'star-outline'}
         size={14}
-        color="#11694b"
+        color="#1A5F45"
         style={{ marginRight: 2 }}
       />
     ));
@@ -111,7 +112,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
           activeOpacity={0.85}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Ionicons name="arrow-back" size={20} color="#11694b" />
+          <Ionicons name="arrow-back" size={20} color="#1A5F45" />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -123,7 +124,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
           <Ionicons
             name={inWishlist ? 'heart' : 'heart-outline'}
             size={20}
-            color={inWishlist ? '#ba1a1a' : '#11694b'}
+            color={inWishlist ? '#ba1a1a' : '#1A5F45'}
           />
         </TouchableOpacity>
       </View>
@@ -156,12 +157,12 @@ export default function ExperienceDetailScreen({ route, navigation }) {
             <Text style={styles.title}>{experience.title}</Text>
             <View style={styles.ratingLocationRow}>
               <View style={styles.ratingCol}>
-                <Ionicons name="star" size={16} color="#11694b" />
+                <Ionicons name="star" size={16} color="#1A5F45" />
                 <Text style={styles.ratingNum}>{experience.rating || '4.9'}</Text>
                 <Text style={styles.reviewCount}>({experience.reviewCount || '124'} reviews)</Text>
               </View>
               <View style={styles.locationCol}>
-                <Ionicons name="location" size={16} color="#11694b" />
+                <Ionicons name="location" size={16} color="#1A5F45" />
                 <Text style={styles.locationText}>
                   {experience.location?.city}, {experience.location?.country}
                 </Text>
@@ -176,8 +177,8 @@ export default function ExperienceDetailScreen({ route, navigation }) {
               <View style={styles.hostMeta}>
                 <Text style={styles.hostName}>{experience.hostName || 'Alex Explorer'}</Text>
                 <View style={styles.verifiedRow}>
-                  <MaterialIcons name="verified" size={14} color="#11694b" />
-                  <Text style={styles.verifiedText}>Verified Host</Text>
+                  <MaterialIcons name="verified" size={14} color="#1A5F45" />
+                  <Text style={styles.verifiedText}>Verified Host • 98% response</Text>
                 </View>
               </View>
             </View>
@@ -197,7 +198,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
               <Ionicons
                 name={readMore ? 'chevron-up' : 'chevron-down'}
                 size={14}
-                color="#11694b"
+                color="#1A5F45"
                 style={{ marginLeft: 2 }}
               />
             </TouchableOpacity>
@@ -206,10 +207,10 @@ export default function ExperienceDetailScreen({ route, navigation }) {
           {/* Bento highlights */}
           <View style={styles.bentoGrid}>
             {[
-              { icon: <MaterialCommunityIcons name="flag-outline" size={24} color="#11694b" />, label: '12km Hike' },
-              { icon: <MaterialCommunityIcons name="elevation-rise" size={24} color="#11694b" />, label: '2,400m Peak' },
-              { icon: <Ionicons name="restaurant-outline" size={24} color="#11694b" />, label: 'All Meals' },
-              { icon: <MaterialCommunityIcons name="tent" size={24} color="#11694b" />, label: 'Gear Included' },
+              { icon: <MaterialCommunityIcons name="flag-outline" size={24} color="#1A5F45" />, label: '12km Hike' },
+              { icon: <MaterialCommunityIcons name="elevation-rise" size={24} color="#1A5F45" />, label: '2,400m Peak' },
+              { icon: <Ionicons name="restaurant-outline" size={24} color="#1A5F45" />, label: 'All Meals' },
+              { icon: <MaterialCommunityIcons name="tent" size={24} color="#1A5F45" />, label: 'Gear Included' },
             ].map(({ icon, label }) => (
               <View key={label} style={styles.bentoItem}>
                 <View style={styles.bentoIcon}>{icon}</View>
@@ -268,7 +269,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
           <TouchableOpacity onPress={() => navigation.navigate('Booking', { experience })} activeOpacity={0.8}>
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
               <Text style={styles.viewDatesText}>View dates</Text>
-              <Ionicons name="calendar-outline" size={13} color="#11694b" />
+              <Ionicons name="calendar-outline" size={13} color="#1A5F45" />
             </View>
           </TouchableOpacity>
         </View>
@@ -339,16 +340,16 @@ const styles = StyleSheet.create({
   hostMeta:        { gap: 2 },
   hostName:        { fontSize: 16, fontWeight: '700', color: '#181d1a' },
   verifiedRow:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  verifiedText:    { fontSize: 12, color: '#11694b', fontWeight: '600' },
-  contactBtn:      { borderWidth: 1, borderColor: '#11694b', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 },
-  contactBtnText:  { fontSize: 13, color: '#11694b', fontWeight: '600' },
+  verifiedText:    { fontSize: 12, color: '#1A5F45', fontWeight: '600' },
+  contactBtn:      { borderWidth: 1, borderColor: '#1A5F45', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 },
+  contactBtnText:  { fontSize: 13, color: '#1A5F45', fontWeight: '600' },
 
   /* Description */
   section:         { marginBottom: 24 },
   sectionTitle:    { fontSize: 18, fontWeight: '700', color: '#181d1a', marginBottom: 10 },
   description:     { fontSize: 14, color: '#3f4943', lineHeight: 22 },
   readMoreBtn:     { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  readMoreText:    { fontSize: 13, color: '#11694b', fontWeight: '700', textDecorationLine: 'underline' },
+  readMoreText:    { fontSize: 13, color: '#1A5F45', fontWeight: '700', textDecorationLine: 'underline' },
 
   /* Available dates */
   dateChip:      { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(17,105,75,0.08)', borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8, borderWidth: 1, borderColor: 'rgba(17,105,75,0.2)' },
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   /* Reviews */
   borderTop:       { borderTopWidth: 1, borderTopColor: 'rgba(190,201,193,0.3)', paddingTop: 20 },
   sectionHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  viewAllText:     { fontSize: 14, color: '#11694b', fontWeight: '700' },
+  viewAllText:     { fontSize: 14, color: '#1A5F45', fontWeight: '700' },
   reviewGrid:      { gap: 12 },
   reviewCard:      { backgroundColor: '#ffffff', borderRadius: 12, padding: 16, borderWidth: 1, borderColor: 'rgba(190,201,193,0.2)', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 3 }, android: { elevation: 1 } }) },
   reviewHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
@@ -377,7 +378,21 @@ const styles = StyleSheet.create({
   priceRow:        { flexDirection: 'row', alignItems: 'baseline' },
   footerPrice:     { fontSize: 22, fontWeight: '700', color: '#181d1a' },
   footerPriceSub:  { fontSize: 12, color: '#3f4943' },
-  viewDatesText:   { fontSize: 12, color: '#11694b', fontWeight: '700' },
-  bookBtn:         { backgroundColor: '#11694b', borderRadius: 24, paddingVertical: 14, paddingHorizontal: 36, ...Platform.select({ ios: { shadowColor: '#11694b', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }, android: { elevation: 4 } }) },
+  viewDatesText:   { fontSize: 12, color: '#1A5F45', fontWeight: '700' },
+  bookBtn:         { backgroundColor: '#1A5F45', borderRadius: 24, paddingVertical: 14, paddingHorizontal: 36, ...Platform.select({ ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }, android: { elevation: 4 } }) },
   bookBtnText:     { color: '#ffffff', fontWeight: '700', fontSize: 15 },
+
+  /* Available Dates */
+  datesContainer:  { gap: 10, paddingVertical: 4 },
+  dateCard:        { width: 64, height: 72, borderRadius: 12, borderWidth: 1, borderColor: '#bec9c1', justifyContent: 'center', alignItems: 'center', backgroundColor: '#ffffff' },
+  dateCardActive:  { backgroundColor: '#1A5F45', borderColor: '#1A5F45' },
+  dateMonth:       { fontSize: 11, fontWeight: '700', color: '#6f7a73', textTransform: 'uppercase' },
+  dateDay:         { fontSize: 18, fontWeight: '800', color: '#181d1a', marginTop: 2 },
+  dateTextActive:  { color: '#ffffff' },
+
+  /* Cancellation Card */
+  cancellationCard:{ backgroundColor: 'rgba(26,95,69,0.04)', borderRadius: 12, borderLeftWidth: 3, borderLeftColor: '#1A5F45', padding: 14 },
+  cancellationHeader:{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
+  cancellationTitle:{ fontSize: 13, fontWeight: '700', color: '#1A5F45' },
+  cancellationText:{ fontSize: 12, color: '#3f4943', lineHeight: 18 },
 });

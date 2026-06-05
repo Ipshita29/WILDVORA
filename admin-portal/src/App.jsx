@@ -11,6 +11,9 @@ import Dashboard from './pages/Dashboard';
 import ListingsApprovalQueue from './pages/ListingsApprovalQueue';
 import BookingsDisputes from './pages/BookingsDisputes';
 import Notifications from './pages/Notifications';
+import Profile from './pages/Profile';
+import Help from './pages/Help';
+import Settings from './pages/Settings';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
@@ -49,16 +52,19 @@ function AppRoutes() {
       <Route path="/forgot-password" element={<ForgotPassword />} />
 
       {/* Protected routes wrapped in AdminLayout */}
-      <Route path="/"                element={<ProtectedLayout><Navigate to="/hosts" replace /></ProtectedLayout>} />
+      <Route path="/"                element={<ProtectedLayout><Navigate to="/overview" replace /></ProtectedLayout>} />
       <Route path="/hosts"           element={<ProtectedLayout><Hosts /></ProtectedLayout>} />
       <Route path="/notifications"   element={<ProtectedLayout><Notifications /></ProtectedLayout>} />
+      <Route path="/profile"         element={<ProtectedLayout><Profile /></ProtectedLayout>} />
       <Route path="/overview"        element={<ProtectedLayout><Dashboard /></ProtectedLayout>} />
       <Route path="/listings"        element={<ProtectedLayout><ListingsApprovalQueue /></ProtectedLayout>} />
       <Route path="/bookings"        element={<ProtectedLayout><BookingsDisputes /></ProtectedLayout>} />
       
       {/* Interactive placeholder pages for other sidebar links */}
-      <Route path="/settings"        element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Settings</h1><p className="text-gray-500 mt-2">Global system configuration and API credentials.</p></div></ProtectedLayout>} />
-      <Route path="/help"            element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Help Center</h1><p className="text-gray-500 mt-2">Internal documentation and support ticket console.</p></div></ProtectedLayout>} />
+      <Route path="/settings"        element={<ProtectedLayout><Settings /></ProtectedLayout>} />
+      <Route path="/help"            element={<ProtectedLayout><Help /></ProtectedLayout>} />
+      <Route path="/logs"            element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Logs</h1><p className="text-gray-500 mt-2">System audit logs.</p></div></ProtectedLayout>} />
+      <Route path="/reports"         element={<ProtectedLayout><div className="p-8"><h1 className="text-3xl font-extrabold text-gray-900">Reports</h1><p className="text-gray-500 mt-2">Platform reports.</p></div></ProtectedLayout>} />
 
       {/* Self-contained layout routes aligned to common layout */}
       <Route path="/customers"       element={<ProtectedLayout><Customers /></ProtectedLayout>} />

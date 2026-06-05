@@ -29,7 +29,7 @@ const NOTIFICATIONS = [
   {
     id: 2,
     category: 'payment',
-    title: 'Payout sent – $1,280.00',
+    title: 'Payout sent – ₹1,06,600',
     time: '4h ago',
     desc: 'Your earnings for the "Midnight Kayak Tour" series have been processed and sent to your bank account.',
     badges: [{ text: 'Payment', color: 'bg-blue-50 text-blue-600 border border-blue-100' }],
@@ -48,7 +48,7 @@ const NOTIFICATIONS = [
     title: 'Your listing is live!',
     time: '6h ago',
     desc: '"Cascadia Forest Survival Class" has been approved and is now visible to adventurers in the Pacific Northwest.',
-    badges: [{ text: 'Listing', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100' }, { text: 'View Listing', color: 'text-[#105D3D] font-bold cursor-pointer hover:underline' }],
+    badges: [{ text: 'Listing', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100' }, { text: 'View Listing', color: 'text-[#1A5F45] font-bold cursor-pointer hover:underline' }],
     icon: (
       <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
         <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -127,20 +127,20 @@ export default function Notifications() {
           {/* Left Column Categories */}
           <div className="space-y-4">
             <div className="bg-white border border-gray-100 shadow-sm rounded-2xl p-4 space-y-1">
-              <span className="block text-[10px] font-bold text-[#105D3D] uppercase tracking-wider px-3 mb-2">Categories</span>
+              <span className="block text-[10px] font-bold text-[#1A5F45] uppercase tracking-wider px-3 mb-2">Categories</span>
               {CATEGORIES.map(cat => (
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={`w-full flex justify-between items-center px-3 py-2 rounded-xl text-xs font-semibold transition ${
                     activeCategory === cat.id
-                      ? 'bg-emerald-50 text-[#105D3D]'
+                      ? 'bg-emerald-50 text-[#1A5F45]'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
                   }`}
                 >
                   <span>{cat.label}</span>
                   <span className={`px-2 py-0.5 rounded-full text-[10px] ${
-                    activeCategory === cat.id ? 'bg-[#105D3D] text-white' : 'bg-gray-100 text-gray-500'
+                    activeCategory === cat.id ? 'bg-[#1A5F45] text-white' : 'bg-gray-100 text-gray-500'
                   }`}>
                     {cat.count}
                   </span>
@@ -157,7 +157,7 @@ export default function Notifications() {
                 </svg>
                 <span>Next Payout</span>
               </div>
-              <div className="text-2xl font-black text-gray-900 mt-2.5">$2,450.00</div>
+              <div className="text-2xl font-black text-gray-900 mt-2.5">₹2,04,000</div>
               <p className="text-[10px] text-gray-400 font-bold mt-1">Expected: Oct 24, 2023</p>
             </div>
           </div>
