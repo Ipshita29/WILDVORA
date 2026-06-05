@@ -197,7 +197,7 @@ export default function Dashboard() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-gray-800 truncate">{exp.title}</p>
-                  <p className="text-xs text-gray-400 truncate">{exp.location}</p>
+                  <p className="text-xs text-gray-400 truncate">{typeof exp.location === 'object' ? `${exp.location?.city || ''}${exp.location?.country ? ', ' + exp.location.country : ''}` : exp.location}</p>
                 </div>
                 <div className="text-xs text-gray-400 text-center w-20">— · —</div>
                 <div className="text-right w-28 flex-shrink-0">
