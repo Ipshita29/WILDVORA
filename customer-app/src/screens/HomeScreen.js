@@ -133,26 +133,71 @@ export default function HomeScreen({ navigation }) {
   const [loading, setLoading]       = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // AI Trip Recommendation States
-  const [aiCategory, setAiCategory] = useState('Trekking');
-  const [aiDuration, setAiDuration] = useState('3 days');
+  // AI Chatbot States
+  const [messages, setMessages] = useState([
+    {
+      id: '1',
+      role: 'assistant',
+      text: 'Hi! I am your Wildvora AI assistant. Tell me about your dream adventure and I will recommend the perfect itinerary!',
+      experiences: []
+    }
+  ]);
+  const [aiInput, setAiInput]       = useState('');
   const [aiLoading, setAiLoading]   = useState(false);
-  const [aiPlan, setAiPlan]         = useState(null);
   const [aiExpanded, setAiExpanded] = useState(true);
   const [aiError, setAiError]       = useState('');
 
-  const handleGenerateAIPlan = async () => {
+  const handleSendAIMessage = async () => {
+    if (!aiInput.trim()) return;
+
+    const userMsg = {
+      id: Date.now().toString(),
+      role: 'user',
+      text: aiInput,
+    };
+
+    // Optimistically add the user's message
+    setMessages((prev) => [...prev, userMsg]);
+    const inputToSend = aiInput;
+    setAiInput('');
     setAiLoading(true);
     setAiError('');
+
+    const conversationHistory = [...messages, userMsg].map((m) => ({
+      role: m.role,
+      content: m.text,
+    }));
+
     try {
-      const res = await aiAPI.getTripPlan({
-        category: aiCategory,
-        duration: aiDuration,
-      });
+      const res = await aiAPI.getTripPlan({ messages: conversationHistory });
       if (res.data && res.data.success) {
-        setAiPlan(res.data.tripPlan);
+        const { text, recommendedExperienceIds } = res.data.tripPlan;
+
+        // Resolve details for recommended experiences
+        let resolvedExperiences = [];
+        if (Array.isArray(recommendedExperienceIds) && recommendedExperienceIds.length > 0) {
+          const promises = recommendedExperienceIds.map(async (id) => {
+            try {
+              const expRes = await experienceAPI.getOne(id);
+              return expRes.data.experience;
+            } catch {
+              return null;
+            }
+          });
+          const results = await Promise.all(promises);
+          resolvedExperiences = results.filter(Boolean);
+        }
+
+        const assistantMsg = {
+          id: (Date.now() + 1).toString(),
+          role: 'assistant',
+          text,
+          experiences: resolvedExperiences,
+        };
+
+        setMessages((prev) => [...prev, assistantMsg]);
       } else {
-        setAiError('Failed to generate trip plan');
+        setAiError('Failed to get a response from AI');
       }
     } catch (err) {
       setAiError(err.response?.data?.message || err.message || 'Failed to connect to AI server');
@@ -232,7 +277,7 @@ export default function HomeScreen({ navigation }) {
           </View>
         </View>
 
-        {/* AI Trip Recommendation */}
+        {/* AI Trip Recommendation Chatbot */}
         <View style={s.aiSection}>
           <TouchableOpacity 
             style={s.aiHeaderRow} 
@@ -240,7 +285,7 @@ export default function HomeScreen({ navigation }) {
             activeOpacity={0.8}
           >
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
-              <MaterialCommunityIcons name="auto-fix" size={20} color={C.primary} />
+              <MaterialCommunityIcons name="robot" size={20} color={C.primary} />
               <Text style={s.aiSectionTitle}>AI Trip Recommendation</Text>
             </View>
             <MaterialCommunityIcons 
@@ -252,104 +297,107 @@ export default function HomeScreen({ navigation }) {
 
           {aiExpanded && (
             <View style={s.aiContent}>
-              <Text style={s.aiSub}>Choose your preferences and get an instant custom itinerary</Text>
-              
-              {/* Category selector */}
-              <Text style={s.aiFieldLabel}>Adventure Category</Text>
-              <View style={s.aiSelectorRow}>
-                {['Camping', 'Trekking', 'Water Sports', 'Jungle'].map((cat) => {
-                  const active = aiCategory === cat;
-                  return (
-                    <TouchableOpacity
-                      key={cat}
-                      style={[s.aiChip, active ? s.aiChipActive : s.aiChipInactive]}
-                      onPress={() => setAiCategory(cat)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[s.aiChipText, active ? s.aiChipTextActive : s.aiChipTextInactive]}>{cat}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Duration selector */}
-              <Text style={s.aiFieldLabel}>Trip Duration</Text>
-              <View style={s.aiSelectorRow}>
-                {['1 day', '3 days', '7 days'].map((dur) => {
-                  const active = aiDuration === dur;
-                  return (
-                    <TouchableOpacity
-                      key={dur}
-                      style={[s.aiChip, active ? s.aiChipActive : s.aiChipInactive]}
-                      onPress={() => setAiDuration(dur)}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={[s.aiChipText, active ? s.aiChipTextActive : s.aiChipTextInactive]}>{dur}</Text>
-                    </TouchableOpacity>
-                  );
-                })}
-              </View>
-
-              {/* Generate button */}
-              <TouchableOpacity 
-                style={s.aiBtn} 
-                onPress={handleGenerateAIPlan}
-                disabled={aiLoading}
-                activeOpacity={0.85}
+              {/* Messages History */}
+              <ScrollView 
+                style={s.chatScroll}
+                contentContainerStyle={s.chatContent}
+                nestedScrollEnabled={true}
               >
-                {aiLoading ? (
-                  <ActivityIndicator size="small" color={C.white} />
-                ) : (
-                  <>
-                    <MaterialCommunityIcons name="sparkles" size={16} color={C.white} style={{ marginRight: 6 }} />
-                    <Text style={s.aiBtnText}>Generate Custom Itinerary</Text>
-                  </>
-                )}
-              </TouchableOpacity>
-
-              {aiError ? (
-                <Text style={s.aiErrorText}>{aiError}</Text>
-              ) : null}
-
-              {/* Result Area */}
-              {aiPlan && (
-                <View style={s.aiResultContainer}>
-                  <View style={s.aiDivider} />
-                  <Text style={s.aiPlanTitle}>{aiPlan.title}</Text>
-                  <Text style={s.aiPlanDesc}>{aiPlan.description}</Text>
-                  
-                  {aiPlan.days?.map((day, idx) => (
-                    <View key={idx} style={s.aiDayCard}>
-                      <View style={s.aiDayHeader}>
-                        <Text style={s.aiDayNum}>Day {day.dayNumber}</Text>
-                        <Text style={s.aiDayTitle} numberOfLines={1}>{day.title || day.description}</Text>
-                      </View>
-                      
-                      <View style={s.aiDayBody}>
-                        {day.activities?.map((act, actIdx) => (
-                          <View key={actIdx} style={s.aiActivityRow}>
-                            <View style={s.aiActivityTimeBadge}>
-                              <Text style={s.aiActivityTimeText}>{act.time}</Text>
-                            </View>
-                            <Text style={s.aiActivityText}>{act.text}</Text>
-                          </View>
-                        ))}
-
-                        {day.recommendedExperienceId ? (
-                          <TouchableOpacity 
-                            style={s.aiBookBtn}
-                            onPress={() => navigation.navigate('ExperienceDetail', { experienceId: day.recommendedExperienceId })}
-                            activeOpacity={0.8}
+                {messages.map((msg) => {
+                  const isUser = msg.role === 'user';
+                  return (
+                    <View key={msg.id} style={[s.msgWrapper, isUser ? s.msgUserWrapper : s.msgAssistantWrapper]}>
+                      {!isUser && (
+                        <View style={s.chatAvatar}>
+                          <MaterialCommunityIcons name="robot-outline" size={16} color={C.primary} />
+                        </View>
+                      )}
+                      <View style={{ flex: 1 }}>
+                        <View style={[s.msgBubble, isUser ? s.msgBubbleUser : s.msgBubbleAssistant]}>
+                          <Text style={[s.msgText, isUser ? s.msgTextUser : s.msgTextAssistant]}>
+                            {msg.text}
+                          </Text>
+                        </View>
+                        
+                        {/* Recommended Experience Cards */}
+                        {msg.experiences && msg.experiences.length > 0 && (
+                          <ScrollView 
+                            horizontal 
+                            showsHorizontalScrollIndicator={false}
+                            style={s.chatExpScroll}
+                            contentContainerStyle={s.chatExpContainer}
+                            nestedScrollEnabled={true}
                           >
-                            <MaterialCommunityIcons name="ticket-confirmation-outline" size={16} color={C.primary} style={{ marginRight: 6 }} />
-                            <Text style={s.aiBookBtnText}>Book This Activity on Wildvora</Text>
-                          </TouchableOpacity>
-                        ) : null}
+                            {msg.experiences.map((exp, idx) => (
+                              <TouchableOpacity 
+                                key={exp._id || idx} 
+                                style={s.chatExpCard}
+                                onPress={() => navigation.navigate('ExperienceDetail', { experienceId: exp._id })}
+                                activeOpacity={0.9}
+                              >
+                                <Image 
+                                  source={{ uri: exp.images?.[0] || CARD_IMAGES[idx % CARD_IMAGES.length] }} 
+                                  style={s.chatExpImg} 
+                                />
+                                <View style={s.chatExpBody}>
+                                  <Text style={s.chatExpTitle} numberOfLines={1}>{exp.title}</Text>
+                                  <Text style={s.chatExpLoc} numberOfLines={1}>{exp.location?.city}, {exp.location?.country}</Text>
+                                  <View style={s.chatExpFooter}>
+                                    <Text style={s.chatExpPrice}>₹{exp.price}</Text>
+                                    <Text style={s.chatExpBook}>BOOK NOW</Text>
+                                  </View>
+                                </View>
+                              </TouchableOpacity>
+                            ))}
+                          </ScrollView>
+                        )}
                       </View>
                     </View>
-                  ))}
-                </View>
-              )}
+                  );
+                })}
+
+                {aiLoading && (
+                  <View style={[s.msgWrapper, s.msgAssistantWrapper]}>
+                    <View style={s.chatAvatar}>
+                      <MaterialCommunityIcons name="robot-outline" size={16} color={C.primary} />
+                    </View>
+                    <View style={[s.msgBubble, s.msgBubbleAssistant, { flexDirection: 'row', alignItems: 'center', gap: 6 }]}>
+                      <ActivityIndicator size="small" color={C.primary} />
+                      <Text style={[s.msgText, s.msgTextAssistant, { fontStyle: 'italic' }]}>
+                        AI is planning...
+                      </Text>
+                    </View>
+                  </View>
+                )}
+
+                {aiError ? (
+                  <View style={s.chatErrorWrap}>
+                    <Text style={s.aiErrorText}>{aiError}</Text>
+                  </View>
+                ) : null}
+              </ScrollView>
+
+              {/* Input Box */}
+              <View style={s.chatInputRow}>
+                <TextInput
+                  style={s.chatInput}
+                  placeholder="Ask about trekking, camping, budgets..."
+                  placeholderTextColor={C.onSurfaceVariant + '80'}
+                  value={aiInput}
+                  onChangeText={setAiInput}
+                  onSubmitEditing={handleSendAIMessage}
+                  returnKeyType="send"
+                  editable={!aiLoading}
+                />
+                <TouchableOpacity 
+                  style={[s.chatSendBtn, !aiInput.trim() || aiLoading ? s.chatSendBtnDisabled : null]} 
+                  onPress={handleSendAIMessage}
+                  disabled={!aiInput.trim() || aiLoading}
+                  activeOpacity={0.8}
+                >
+                  <MaterialCommunityIcons name="send" size={18} color={C.white} />
+                </TouchableOpacity>
+              </View>
             </View>
           )}
         </View>
@@ -601,7 +649,7 @@ const s = StyleSheet.create({
   safetyTitle:  { fontSize: 12, fontWeight: '700', color: C.onSurface, lineHeight: 16 },
   safetyDesc:   { fontSize: 10, color: C.onSurfaceVariant, marginTop: 2 },
 
-  /* AI Trip Recommendation Styles */
+  /* AI Trip Recommendation Chatbot Styles */
   aiSection: {
     margin: 20,
     marginBottom: 8,
@@ -629,164 +677,160 @@ const s = StyleSheet.create({
   aiContent: {
     marginTop: 12,
   },
-  aiSub: {
-    fontSize: 12,
-    color: C.onSurfaceVariant,
-    marginBottom: 12,
-  },
-  aiFieldLabel: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: C.onSurfaceVariant,
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-    marginTop: 6,
-  },
-  aiSelectorRow: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginBottom: 10,
-  },
-  aiChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 20,
-    borderWidth: 1,
-  },
-  aiChipActive: {
-    backgroundColor: C.primary + '15',
-    borderColor: C.primary,
-  },
-  aiChipInactive: {
-    backgroundColor: C.background,
-    borderColor: C.outlineVariant + '80',
-  },
-  aiChipText: {
-    fontSize: 12,
-    fontWeight: '600',
-  },
-  aiChipTextActive: {
-    color: C.primary,
-  },
-  aiChipTextInactive: {
-    color: C.onSurfaceVariant,
-  },
-  aiBtn: {
-    backgroundColor: C.primary,
-    borderRadius: 8,
-    paddingVertical: 12,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    marginTop: 8,
-  },
-  aiBtnText: {
-    color: C.white,
-    fontWeight: '700',
-    fontSize: 14,
-  },
-  aiErrorText: {
-    color: C.tertiary,
-    fontSize: 12,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-  aiResultContainer: {
-    marginTop: 12,
-  },
-  aiDivider: {
-    height: 1,
-    backgroundColor: C.outlineVariant + '40',
-    marginVertical: 14,
-  },
-  aiPlanTitle: {
-    fontSize: 17,
-    fontWeight: '800',
-    color: C.onSurface,
-    marginBottom: 4,
-  },
-  aiPlanDesc: {
-    fontSize: 13,
-    color: C.onSurfaceVariant,
-    lineHeight: 18,
-    marginBottom: 14,
-  },
-  aiDayCard: {
+  chatScroll: {
+    maxHeight: 320,
+    minHeight: 180,
     backgroundColor: C.background,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: C.outlineVariant + '30',
+    padding: 10,
     marginBottom: 10,
-    overflow: 'hidden',
   },
-  aiDayHeader: {
-    backgroundColor: C.primary + '08',
-    paddingHorizontal: 12,
-    paddingVertical: 8,
+  chatContent: {
+    paddingBottom: 10,
+    gap: 12,
+  },
+  msgWrapper: {
     flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
-    borderBottomWidth: 1,
-    borderBottomColor: C.outlineVariant + '20',
+    alignItems: 'flex-start',
+    maxWidth: '85%',
+    marginBottom: 6,
   },
-  aiDayNum: {
+  msgUserWrapper: {
+    alignSelf: 'flex-end',
+    justifyContent: 'flex-end',
+  },
+  msgAssistantWrapper: {
+    alignSelf: 'flex-start',
+    justifyContent: 'flex-start',
+  },
+  chatAvatar: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    backgroundColor: C.primary + '12',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: 2,
+  },
+  msgBubble: {
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+    borderRadius: 16,
+  },
+  msgBubbleUser: {
+    backgroundColor: C.primary,
+    borderTopRightRadius: 2,
+  },
+  msgBubbleAssistant: {
+    backgroundColor: C.surfaceContainer,
+    borderTopLeftRadius: 2,
+  },
+  msgText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  msgTextUser: {
+    color: C.white,
+  },
+  msgTextAssistant: {
+    color: C.onSurface,
+  },
+  chatErrorWrap: {
+    padding: 8,
+    backgroundColor: '#feebee',
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  aiErrorText: {
+    color: C.tertiary,
+    fontSize: 12,
+    textAlign: 'center',
+  },
+  chatInputRow: {
+    flexDirection: 'row',
+    gap: 8,
+    alignItems: 'center',
+  },
+  chatInput: {
+    flex: 1,
+    height: 40,
+    backgroundColor: C.background,
+    borderWidth: 1,
+    borderColor: C.outlineVariant + '80',
+    borderRadius: 20,
+    paddingHorizontal: 16,
+    fontSize: 13,
+    color: C.onSurface,
+  },
+  chatSendBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: C.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  chatSendBtnDisabled: {
+    backgroundColor: C.outlineVariant,
+  },
+  chatExpScroll: {
+    marginTop: 10,
+    width: '100%',
+  },
+  chatExpContainer: {
+    gap: 10,
+    paddingRight: 10,
+  },
+  chatExpCard: {
+    width: 180,
+    backgroundColor: C.white,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: C.outlineVariant + '45',
+    overflow: 'hidden',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  chatExpImg: {
+    width: '100%',
+    height: 85,
+  },
+  chatExpBody: {
+    padding: 8,
+  },
+  chatExpTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: C.onSurface,
+  },
+  chatExpLoc: {
+    fontSize: 10,
+    color: C.onSurfaceVariant,
+    marginTop: 2,
+  },
+  chatExpFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+    borderTopWidth: 1,
+    borderTopColor: C.outlineVariant + '20',
+    paddingTop: 6,
+  },
+  chatExpPrice: {
     fontSize: 11,
     fontWeight: '800',
     color: C.primary,
-    backgroundColor: C.primary + '15',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: 4,
   },
-  aiDayTitle: {
-    fontSize: 13,
-    fontWeight: '700',
-    color: C.onSurface,
-    flex: 1,
-  },
-  aiDayBody: {
-    padding: 12,
-    gap: 10,
-  },
-  aiActivityRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 10,
-  },
-  aiActivityTimeBadge: {
-    width: 65,
-    backgroundColor: C.surfaceContainer,
-    borderRadius: 4,
-    paddingVertical: 2,
-    alignItems: 'center',
-  },
-  aiActivityTimeText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: C.onSurfaceVariant,
-  },
-  aiActivityText: {
-    fontSize: 12,
-    color: C.onSurface,
-    flex: 1,
-    lineHeight: 16,
-  },
-  aiBookBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: C.primary,
-    borderRadius: 6,
-    paddingVertical: 8,
-    marginTop: 6,
-    backgroundColor: C.white,
-  },
-  aiBookBtnText: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: C.primary,
+  chatExpBook: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: C.secondary,
   },
 });
