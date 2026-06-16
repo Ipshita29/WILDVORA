@@ -1,101 +1,120 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Layout from '../components/Layout';
+import api from '../api/axios';
 
 const CATEGORIES = [
-  { label: 'All Activity', count: 12, id: 'all' },
-  { label: 'Booking Alerts', count: 4, id: 'booking' },
-  { label: 'Payment Status', count: 2, id: 'payment' },
-  { label: 'Listing Updates', count: 5, id: 'listing' },
-  { label: 'System Alerts', count: 1, id: 'system' }
+  { label: 'All Activity', id: 'all' },
+  { label: 'Booking Alerts', id: 'booking' },
+  { label: 'Payment Status', id: 'payout' },
+  { label: 'Listing Updates', id: 'listing' },
+  { label: 'System Alerts', id: 'system' }
 ];
 
-const NOTIFICATIONS = [
-  {
-    id: 1,
-    category: 'booking',
-    title: 'New booking! – "Alpine Ridge Trek"',
-    time: '2m ago',
-    desc: 'Sarah Jenkins booked 3 spots for the upcoming weekend expedition. Please review the guest requirements.',
-    badges: [{ text: 'Booking', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100' }, { text: '#4491-ZV', color: 'text-gray-500 border border-gray-200' }],
-    icon: (
-      <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <rect x="3" y="4" width="18" height="18" rx="2" />
-          <path d="M16 2v4M8 2v4M3 10h18" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    id: 2,
-    category: 'payment',
-    title: 'Payout sent – ₹1,06,600',
-    time: '4h ago',
-    desc: 'Your earnings for the "Midnight Kayak Tour" series have been processed and sent to your bank account.',
-    badges: [{ text: 'Payment', color: 'bg-blue-50 text-blue-600 border border-blue-100' }],
-    icon: (
-      <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <rect x="2" y="6" width="20" height="14" rx="2" />
-          <path d="M2 10h20M12 14v-4" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    id: 3,
-    category: 'listing',
-    title: 'Your listing is live!',
-    time: '6h ago',
-    desc: '"Cascadia Forest Survival Class" has been approved and is now visible to adventurers in the Pacific Northwest.',
-    badges: [{ text: 'Listing', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100' }, { text: 'View Listing', color: 'text-[#1A5F45] font-bold cursor-pointer hover:underline' }],
-    icon: (
-      <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M5 10l7-7m0 0l7 7m-7-7v18" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    id: 4,
-    category: 'system',
-    title: 'Security Alert: New Login',
-    time: '12h ago',
-    desc: "A new login was detected from a Chrome browser on MacOS (Portland, OR). If this wasn't you, reset your password.",
-    badges: [{ text: 'Security', color: 'bg-amber-50 text-amber-700 border border-amber-100' }],
-    icon: (
-      <div className="w-10 h-10 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-        </svg>
-      </div>
-    )
-  },
-  {
-    id: 5,
-    category: 'system',
-    title: 'Platform Update: New Analytics',
-    time: '1d ago',
-    desc: "We've added deeper insights into your seasonal booking trends. Check your updated Dashboard.",
-    badges: [],
-    icon: (
-      <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-          <circle cx="12" cy="12" r="10" />
-          <path d="M12 16v-4M12 8h.01" />
-        </svg>
-      </div>
-    )
+const getIcon = (type) => {
+  switch (type) {
+    case 'booking':
+      return (
+        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <rect x="3" y="4" width="18" height="18" rx="2" />
+            <path d="M16 2v4M8 2v4M3 10h18" />
+          </svg>
+        </div>
+      );
+    case 'payout':
+    case 'payment':
+      return (
+        <div className="w-10 h-10 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <rect x="2" y="6" width="20" height="14" rx="2" />
+            <path d="M2 10h20M12 14v-4" />
+          </svg>
+        </div>
+      );
+    case 'listing':
+      return (
+        <div className="w-10 h-10 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <path d="M5 10l7-7m0 0l7 7m-7-7v18" />
+          </svg>
+        </div>
+      );
+    default:
+      return (
+        <div className="w-10 h-10 rounded-full bg-sky-50 text-sky-600 flex items-center justify-center flex-shrink-0">
+          <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="10" />
+            <path d="M12 16v-4M12 8h.01" />
+          </svg>
+        </div>
+      );
   }
-];
+};
+
+const formatTime = (dateStr) => {
+  const date = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now - date;
+  const diffMins = Math.floor(diffMs / 60000);
+  if (diffMins < 1) return 'Just now';
+  if (diffMins < 60) return `${diffMins}m ago`;
+  const diffHrs = Math.floor(diffMins / 60);
+  if (diffHrs < 24) return `${diffHrs}h ago`;
+  const diffDays = Math.floor(diffHrs / 24);
+  return `${diffDays}d ago`;
+};
 
 export default function Notifications() {
   const [activeCategory, setActiveCategory] = useState('all');
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  const fetchNotifications = async () => {
+    try {
+      const response = await api.get('/notifications');
+      if (response.data && response.data.success) {
+        setNotifications(response.data.notifications);
+      }
+    } catch (error) {
+      console.error('Failed to fetch notifications:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+    const interval = setInterval(fetchNotifications, 10000); // poll every 10s
+    return () => clearInterval(interval);
+  }, []);
+
+  const markAllAsRead = async () => {
+    try {
+      await api.patch('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (error) {
+      console.error('Failed to mark all as read:', error);
+    }
+  };
+
+  const markSingleAsRead = async (id) => {
+    try {
+      await api.patch(`/notifications/${id}/read`);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+    } catch (error) {
+      console.error('Failed to mark notification as read:', error);
+    }
+  };
 
   const filteredNotifications = activeCategory === 'all'
-    ? NOTIFICATIONS
-    : NOTIFICATIONS.filter(n => n.category === activeCategory);
+    ? notifications
+    : notifications.filter(n => n.type === activeCategory || (activeCategory === 'payout' && n.type === 'payment'));
+
+  // Count helper
+  const getCount = (catId) => {
+    if (catId === 'all') return notifications.length;
+    return notifications.filter(n => n.type === catId || (catId === 'payout' && n.type === 'payment')).length;
+  };
 
   return (
     <Layout>
@@ -107,13 +126,10 @@ export default function Notifications() {
             <p className="text-sm text-gray-500 mt-1">Stay updated on your wilderness bookings and payout milestones.</p>
           </div>
           <div className="flex items-center gap-3">
-            <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl px-4 py-2.5 text-sm shadow-sm hover:bg-gray-50 transition">
-              <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M4 6h16M4 12h16M4 18h16" />
-              </svg>
-              <span>Filter</span>
-            </button>
-            <button className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl px-4 py-2.5 text-sm shadow-sm hover:bg-gray-50 transition">
+            <button
+              onClick={markAllAsRead}
+              className="flex items-center gap-2 bg-white border border-gray-200 text-gray-700 font-semibold rounded-xl px-4 py-2.5 text-sm shadow-sm hover:bg-gray-50 transition cursor-pointer"
+            >
               <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path d="M5 13l4 4L19 7" />
               </svg>
@@ -132,7 +148,7 @@ export default function Notifications() {
                 <button
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
-                  className={`w-full flex justify-between items-center px-3 py-2 rounded-xl text-xs font-semibold transition ${
+                  className={`w-full flex justify-between items-center px-3 py-2 rounded-xl text-xs font-semibold transition cursor-pointer ${
                     activeCategory === cat.id
                       ? 'bg-emerald-50 text-[#1A5F45]'
                       : 'text-gray-500 hover:bg-gray-50 hover:text-gray-800'
@@ -142,7 +158,7 @@ export default function Notifications() {
                   <span className={`px-2 py-0.5 rounded-full text-[10px] ${
                     activeCategory === cat.id ? 'bg-[#1A5F45] text-white' : 'bg-gray-100 text-gray-500'
                   }`}>
-                    {cat.count}
+                    {getCount(cat.id)}
                   </span>
                 </button>
               ))}
@@ -169,36 +185,39 @@ export default function Notifications() {
               <span className="text-[10px] text-gray-400 font-semibold">Showing last 24 hours</span>
             </div>
 
-            <div className="space-y-6 flex-1">
-              {filteredNotifications.map(n => (
-                <div key={n.id} className="flex gap-4 items-start">
-                  {n.icon}
-                  <div className="flex-1 space-y-1">
-                    <div className="flex justify-between items-start">
-                      <h4 className="text-xs font-extrabold text-gray-900">{n.title}</h4>
-                      <span className="text-[10px] text-gray-400 font-medium">{n.time}</span>
-                    </div>
-                    <p className="text-xs text-gray-500 leading-relaxed font-medium">{n.desc}</p>
-                    {n.badges.length > 0 && (
-                      <div className="flex gap-2 pt-1">
-                        {n.badges.map((b, idx) => (
-                          <span key={idx} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.color}`}>
-                            {b.text}
-                          </span>
-                        ))}
+            {loading ? (
+              <div className="text-center py-12 text-sm text-gray-500">Loading notifications...</div>
+            ) : filteredNotifications.length === 0 ? (
+              <div className="text-center py-12 text-sm text-gray-500">No notifications found.</div>
+            ) : (
+              <div className="space-y-6 flex-1">
+                {filteredNotifications.map(n => (
+                  <div
+                    key={n._id}
+                    onClick={() => !n.read && markSingleAsRead(n._id)}
+                    className={`flex gap-4 items-start p-2 rounded-xl transition cursor-pointer ${!n.read ? 'bg-emerald-50/30' : ''}`}
+                  >
+                    {getIcon(n.type)}
+                    <div className="flex-1 space-y-1">
+                      <div className="flex justify-between items-start">
+                        <h4 className={`text-xs font-extrabold ${!n.read ? 'text-gray-900 font-black' : 'text-gray-600'}`}>{n.title}</h4>
+                        <span className="text-[10px] text-gray-400 font-medium">{formatTime(n.createdAt)}</span>
                       </div>
-                    )}
+                      <p className="text-xs text-gray-500 leading-relaxed font-medium">{n.desc}</p>
+                      {n.badges && n.badges.length > 0 && (
+                        <div className="flex gap-2 pt-1">
+                          {n.badges.map((b, idx) => (
+                            <span key={idx} className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${b.color}`}>
+                              {b.text}
+                            </span>
+                          ))}
+                        </div>
+                      )}
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
-
-            <button className="flex items-center justify-center gap-1.5 text-xs font-bold text-gray-400 hover:text-gray-600 transition mt-6 pt-4 border-t border-gray-50 w-full">
-              <span>View Older Activity</span>
-              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                <path d="M19 9l-7 7-7-7" />
-              </svg>
-            </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
 

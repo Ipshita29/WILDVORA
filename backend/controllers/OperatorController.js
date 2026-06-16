@@ -3,6 +3,7 @@ const Booking = require('../models/Booking');
 const Review = require('../models/Review');
 const User = require('../models/User');
 const Payout = require('../models/Payout');
+const Notification = require('../models/Notification');
 
 // Helper to get operator experience IDs
 const getOperatorExperienceIds = async (operatorId) => {
@@ -129,6 +130,22 @@ const createListing = async (req, res) => {
       status: 'pending' // pending admin approval
     });
 
+    // Notify all admin users
+    const admins = await User.find({ role: 'admin' });
+    for (const admin of admins) {
+      await Notification.create({
+        recipient: admin._id,
+        type: 'listing',
+        title: `Listing Approval Required – "${experience.title}"`,
+        desc: `${req.user.name || 'An operator'} submitted a new listing for review. Please check the compliance requirements.`,
+        referenceId: experience._id,
+        badges: [
+          { text: 'Review', color: 'bg-amber-50 text-amber-600 border border-amber-100' },
+          { text: `#${experience._id.toString().slice(-6).toUpperCase()}`, color: 'text-gray-500 border border-gray-200' }
+        ]
+      });
+    }
+
     res.status(201).json({ success: true, experience });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
@@ -144,8 +161,10 @@ const editListing = async (req, res) => {
 
     // Allow status transitions to paused/draft or reset live back to pending upon major changes
     const updates = req.body;
+    let becamePending = false;
     if (exp.status === 'live' && (updates.title || updates.price || updates.description)) {
       updates.status = 'pending'; // re-verification required for critical updates
+      becamePending = true;
     }
 
     const experience = await Experience.findByIdAndUpdate(
@@ -153,6 +172,24 @@ const editListing = async (req, res) => {
       updates,
       { new: true, runValidators: true }
     );
+
+    if (becamePending || experience.status === 'pending') {
+      // Notify all admin users
+      const admins = await User.find({ role: 'admin' });
+      for (const admin of admins) {
+        await Notification.create({
+          recipient: admin._id,
+          type: 'listing',
+          title: `Listing Review Required – "${experience.title}"`,
+          desc: `${req.user.name || 'An operator'} updated their listing. Re-verification is required.`,
+          referenceId: experience._id,
+          badges: [
+            { text: 'Review', color: 'bg-amber-50 text-amber-600 border border-amber-100' },
+            { text: `#${experience._id.toString().slice(-6).toUpperCase()}`, color: 'text-gray-500 border border-gray-200' }
+          ]
+        });
+      }
+    }
 
     res.json({ success: true, experience });
   } catch (err) {

@@ -1,5 +1,6 @@
 const Booking = require('../models/Booking');
 const Experience = require('../models/Experience');
+const Notification = require('../models/Notification');
 
 // @route POST /api/bookings
 const createBooking = async (req, res) => {
@@ -29,7 +30,22 @@ const createBooking = async (req, res) => {
       specialRequests: specialRequests || '',
     });
 
-    await booking.populate('experience', 'title images location price duration');
+    await booking.populate('experience', 'title images location price duration host');
+
+    // Create a notification for the operator (host)
+    if (booking.experience && booking.experience.host) {
+      await Notification.create({
+        recipient: booking.experience.host,
+        type: 'booking',
+        title: `New booking! – "${booking.experience.title}"`,
+        desc: `${req.user.name || 'A customer'} booked ${booking.adults} spot(s) for ${booking.startDate}.`,
+        referenceId: booking._id,
+        badges: [
+          { text: 'Booking', color: 'bg-emerald-50 text-emerald-600 border border-emerald-100' },
+          { text: `#${booking._id.toString().slice(-6).toUpperCase()}`, color: 'text-gray-500 border border-gray-200' }
+        ]
+      });
+    }
 
     res.status(201).json({ success: true, booking });
   } catch (err) {
