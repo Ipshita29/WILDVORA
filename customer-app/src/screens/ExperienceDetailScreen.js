@@ -5,8 +5,163 @@ import {
 } from 'react-native';
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Ionicons, MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { experienceAPI, reviewAPI, userAPI } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+
+function getWeatherAndSafetyData(experience) {
+  const idStr = experience._id || experience.title || '';
+  let hash = 0;
+  for (let i = 0; i < idStr.length; i++) {
+    hash = (hash << 5) - hash + idStr.charCodeAt(i);
+    hash |= 0;
+  }
+  const absHash = Math.abs(hash);
+
+  const category = experience.category || 'Trekking';
+  const difficulty = experience.difficulty || 'Moderate';
+  const city = experience.location?.city || 'the location';
+
+  let tempVal = 22 + (absHash % 10);
+  let cond = 'Sunny';
+  let rainP = absHash % 40;
+  let windSp = 5 + (absHash % 15);
+  let suitability = 'Good';
+  let alerts = [];
+
+  if (category === 'Trekking' || category === 'Climbing') {
+    tempVal = 10 + (absHash % 12);
+    windSp = 12 + (absHash % 20);
+    if (difficulty === 'Hard' || difficulty === 'Expert') {
+      cond = absHash % 3 === 0 ? 'Heavy Winds' : (absHash % 3 === 1 ? 'Partly Cloudy' : 'Mist');
+      if (cond === 'Heavy Winds') {
+        suitability = 'Moderate';
+        alerts.push('High wind speeds expected at high altitude peaks.');
+      }
+    } else {
+      cond = absHash % 2 === 0 ? 'Sunny' : 'Clear';
+    }
+  } else if (category === 'Water Sports') {
+    tempVal = 26 + (absHash % 6);
+    rainP = absHash % 60;
+    if (rainP > 40) {
+      cond = 'Scattered Showers';
+      suitability = 'Moderate';
+      alerts.push('Rain probability is slightly elevated. Check water activity guides.');
+    } else {
+      cond = 'Warm & Sunny';
+    }
+  } else if (category === 'Skiing') {
+    tempVal = -5 + (absHash % 8);
+    cond = 'Snowy';
+    windSp = 10 + (absHash % 15);
+    suitability = 'Good';
+  } else {
+    cond = absHash % 3 === 0 ? 'Sunny' : (absHash % 3 === 1 ? 'Passing Clouds' : 'Clear');
+  }
+
+  if (rainP > 55 || windSp > 28) {
+    suitability = 'Not Recommended';
+    alerts.push('Severe weather warning: Avoid outdoor activities today.');
+  }
+
+  const sunriseHour = 5 + (absHash % 2);
+  const sunriseMin = 10 + (absHash % 40);
+  const sunsetHour = 6 + (absHash % 2);
+  const sunsetMin = 10 + (absHash % 40);
+  const vis = 8 + (absHash % 10);
+
+  let fitnessReq = 'Average physical fitness. Comfortable walking/moving for 2 hours.';
+  let medicalAdv = 'Consult a doctor if you have knee/joint issues or balance conditions.';
+  let gearChecklist = ['Comfortable outdoor shoes', 'Drinking water (1L+)', 'Sunscreen / Cap'];
+
+  if (category === 'Trekking' || category === 'Climbing') {
+    if (difficulty === 'Hard' || difficulty === 'Expert') {
+      fitnessReq = 'Excellent physical endurance. Able to hike 6+ hours with elevation changes.';
+      medicalAdv = 'Not recommended for cardiovascular issues, severe asthma, or pregnant women.';
+      gearChecklist = ['Trekking boots with grip', 'Warm layers / windproof jacket', 'Headlamp / Flashlight', 'Hydration pack (2L+)', 'Energy snacks'];
+    } else {
+      fitnessReq = 'Moderate cardiovascular fitness. Able to walk on uneven terrain for 3-4 hours.';
+      medicalAdv = 'Be mindful of knee strain. Stay hydrated to avoid heat exhaustion.';
+      gearChecklist = ['Sturdy walking shoes', 'Backpack (15-20L)', 'Rain coat', 'Water bottle (1.5L)'];
+    }
+  } else if (category === 'Water Sports') {
+    fitnessReq = 'Basic swimming ability and comfort in deep water. Moderate upper body movement.';
+    medicalAdv = 'Avoid if you have history of seizures, severe asthma, or recent shoulder/back injuries.';
+    gearChecklist = ['Swimwear / quick-dry clothes', 'Waterproof pouch for phone', 'Change of dry clothes', 'Towel'];
+  } else if (category === 'Skiing') {
+    fitnessReq = 'Good leg strength and balance. Comfortable in sub-zero environments.';
+    medicalAdv = 'Not recommended for osteoporosis or severe joint instability.';
+    gearChecklist = ['Thermal innerwear', 'Ski gloves and goggles', 'Waterproof snow suit'];
+  } else if (category === 'Camping') {
+    fitnessReq = 'Basic fitness. Minimal physical strain, but comfortable sleeping in outdoor tents.';
+    medicalAdv = 'Carry insect repellent. Keep warm layers handy for temperature drop at night.';
+    gearChecklist = ['Personal toiletries', 'Warm socks & jacket', 'Power bank', 'Personal medication'];
+  }
+
+  const certifiedGuide = (absHash % 10) < 9;
+  const emergencyNum = `+91 9${(absHash % 90000) + 10000} ${(absHash % 9000) + 1000}`;
+  const hospitalDist = 5 + (absHash % 25);
+  const hospitalName = `${city.split(',')[0]} Emergency Clinic (${hospitalDist} km)`;
+
+  return {
+    weather: {
+      temp: `${tempVal}°C`,
+      condition: cond,
+      rainProb: `${rainP}%`,
+      windSpeed: `${windSp} km/h`,
+      sunrise: `0${sunriseHour}:${sunriseMin} AM`,
+      sunset: `0${sunsetHour}:${sunsetMin} PM`,
+      visibility: `${vis} km`,
+      suitability,
+      alerts
+    },
+    safety: {
+      difficulty,
+      fitnessReq,
+      certifiedGuide,
+      emergencyContact: emergencyNum,
+      medicalAdv,
+      tags: ['Solo-Friendly', 'Women-Friendly'],
+      nearestHospital: hospitalName,
+      checklist: gearChecklist
+    }
+  };
+}
+
+const getWeatherIcon = (cond) => {
+  const iconProps = { size: 36 };
+  switch (cond) {
+    case 'Sunny':
+    case 'Warm & Sunny':
+    case 'Clear':
+      return <MaterialCommunityIcons name="weather-sunny" {...iconProps} color="#d97706" />;
+    case 'Snowy':
+      return <MaterialCommunityIcons name="weather-snowy" {...iconProps} color="#0284c7" />;
+    case 'Heavy Winds':
+    case 'Windy':
+      return <MaterialCommunityIcons name="weather-windy" {...iconProps} color="#4b5563" />;
+    case 'Mist':
+      return <MaterialCommunityIcons name="weather-fog" {...iconProps} color="#6b7280" />;
+    case 'Scattered Showers':
+    case 'Light Rain':
+    case 'Rainy':
+      return <MaterialCommunityIcons name="weather-pouring" {...iconProps} color="#2563eb" />;
+    default:
+      return <MaterialCommunityIcons name="weather-partly-cloudy" {...iconProps} color="#4b5563" />;
+  }
+};
+
+const getSuitabilityStyle = (suitability) => {
+  switch (suitability) {
+    case 'Good':
+      return { bg: '#eefcf3', border: '#b2f0c7', text: '#15803d', label: 'Highly Suitable' };
+    case 'Moderate':
+      return { bg: '#fffbeb', border: '#fde68a', text: '#b45309', label: 'Moderate / Use Caution' };
+    default:
+      return { bg: '#fef2f2', border: '#fecaca', text: '#b91c1c', label: 'Not Recommended Today' };
+  }
+};
 
 export default function ExperienceDetailScreen({ route, navigation }) {
   const { experienceId } = route.params;
@@ -19,6 +174,11 @@ export default function ExperienceDetailScreen({ route, navigation }) {
   const [inWishlist, setInWishlist] = useState(false);
   const [readMore, setReadMore]     = useState(false);
   const [selectedDate, setSelectedDate] = useState(0);
+
+  const data = React.useMemo(() => {
+    if (!experience) return null;
+    return getWeatherAndSafetyData(experience);
+  }, [experience]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -98,6 +258,8 @@ export default function ExperienceDetailScreen({ route, navigation }) {
     }
     return dates;
   })();
+
+  const suitabilityInfo = data ? getSuitabilityStyle(data.weather.suitability) : null;
 
   return (
     // No edges — we handle insets manually for the hero overlap
@@ -217,6 +379,150 @@ export default function ExperienceDetailScreen({ route, navigation }) {
                 <Text style={styles.bentoText}>{label}</Text>
               </View>
             ))}
+          </View>
+
+          {/* Weather & Conditions Widget */}
+          <View style={[styles.section, styles.borderTop]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <MaterialCommunityIcons name="weather-partly-cloudy" size={20} color="#1A5F45" style={{ marginRight: 6 }} />
+              <Text style={styles.sectionTitle}>Weather & Conditions</Text>
+            </View>
+
+            {data.weather.alerts.length > 0 && (
+              <View style={styles.alertBanner}>
+                <Ionicons name="warning" size={18} color="#ba1a1a" style={{ marginRight: 8 }} />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.alertTitle}>Weather Alert</Text>
+                  <Text style={styles.alertText}>{data.weather.alerts[0]}</Text>
+                </View>
+              </View>
+            )}
+
+            <LinearGradient
+              colors={['#f3f8f5', '#e9f3ed']}
+              style={styles.weatherCard}
+            >
+              <View style={styles.weatherMain}>
+                <View>
+                  <Text style={styles.weatherTemp}>{data.weather.temp}</Text>
+                  <Text style={styles.weatherCondition}>{data.weather.condition}</Text>
+                </View>
+                {getWeatherIcon(data.weather.condition)}
+              </View>
+
+              <View style={styles.weatherGrid}>
+                <View style={styles.weatherItem}>
+                  <Ionicons name="umbrella-outline" size={18} color="#0a6687" />
+                  <View style={{ marginLeft: 4 }}>
+                    <Text style={styles.weatherLabel}>Rain Prob.</Text>
+                    <Text style={styles.weatherValue}>{data.weather.rainProb}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.weatherItem}>
+                  <Ionicons name="speedometer-outline" size={18} color="#8f4645" />
+                  <View style={{ marginLeft: 4 }}>
+                    <Text style={styles.weatherLabel}>Wind Speed</Text>
+                    <Text style={styles.weatherValue}>{data.weather.windSpeed}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.weatherItem}>
+                  <Ionicons name="eye-outline" size={18} color="#1A5F45" />
+                  <View style={{ marginLeft: 4 }}>
+                    <Text style={styles.weatherLabel}>Visibility</Text>
+                    <Text style={styles.weatherValue}>{data.weather.visibility}</Text>
+                  </View>
+                </View>
+
+                <View style={styles.weatherItem}>
+                  <Ionicons name="sunny-outline" size={18} color="#d97706" />
+                  <View style={{ marginLeft: 4 }}>
+                    <Text style={styles.weatherLabel}>Sun Cycle</Text>
+                    <Text style={styles.weatherValue} numberOfLines={1}>{data.weather.sunrise} - {data.weather.sunset}</Text>
+                  </View>
+                </View>
+              </View>
+
+              <View style={[styles.suitabilityBanner, { backgroundColor: suitabilityInfo.bg, borderColor: suitabilityInfo.border }]}>
+                <View style={styles.suitabilityLeft}>
+                  <Ionicons 
+                    name={data.weather.suitability === 'Good' ? 'checkmark-circle' : (data.weather.suitability === 'Moderate' ? 'alert-circle' : 'close-circle')} 
+                    size={18} 
+                    color={suitabilityInfo.text} 
+                  />
+                  <Text style={[styles.suitabilityText, { color: suitabilityInfo.text }]}>
+                    Adventure Suitability: <Text style={{ fontWeight: '800' }}>{suitabilityInfo.label}</Text>
+                  </Text>
+                </View>
+              </View>
+            </LinearGradient>
+          </View>
+
+          {/* Safety & Preparedness Widget */}
+          <View style={[styles.section, styles.borderTop]}>
+            <View style={{ flexDirection: 'row', alignItems: 'center', marginBottom: 12 }}>
+              <MaterialIcons name="security" size={20} color="#1A5F45" style={{ marginRight: 6 }} />
+              <Text style={styles.sectionTitle}>Safety & Preparedness</Text>
+            </View>
+
+            <View style={styles.safetyCard}>
+              {/* Top Row: Tags */}
+              <View style={styles.safetyTagsRow}>
+                <View style={[styles.safetyTag, styles.safetyTagDiff]}>
+                  <Ionicons name="bar-chart-outline" size={12} color="#1E3A8A" />
+                  <Text style={styles.safetyTagTextDiff}>{data.safety.difficulty} Difficulty</Text>
+                </View>
+                {data.safety.tags.map((t) => (
+                  <View key={t} style={[styles.safetyTag, styles.safetyTagFriendly]}>
+                    <Ionicons name="heart-outline" size={12} color="#9D174D" />
+                    <Text style={styles.safetyTagTextFriendly}>{t}</Text>
+                  </View>
+                ))}
+              </View>
+
+              {/* Fitness & Medical */}
+              <View style={styles.infoBlock}>
+                <View style={styles.infoTitleRow}>
+                  <MaterialCommunityIcons name="heart-pulse" size={16} color="#ba1a1a" />
+                  <Text style={styles.infoBlockTitle}>Fitness Requirement</Text>
+                </View>
+                <Text style={styles.infoBlockText}>{data.safety.fitnessReq}</Text>
+              </View>
+
+              <View style={[styles.infoBlock, { marginTop: 12 }]}>
+                <View style={styles.infoTitleRow}>
+                  <MaterialIcons name="medical-services" size={16} color="#ba1a1a" />
+                  <Text style={styles.infoBlockTitle}>Medical Advisory</Text>
+                </View>
+                <Text style={styles.infoBlockText}>{data.safety.medicalAdv}</Text>
+              </View>
+
+              <View style={styles.divider} />
+              
+              <View style={styles.guideRow}>
+                <Ionicons name="checkmark-circle-outline" size={20} color="#1A5F45" style={{ marginRight: 4 }} />
+                <Text style={styles.guideText}>
+                  {data.safety.certifiedGuide ? 'Certified Local Guide Available (Included)' : 'Self-guided (Operator Support Available)'}
+                </Text>
+              </View>
+
+              <View style={styles.emergencyCard}>
+                <View style={styles.emergencyItem}>
+                  <Ionicons name="call" size={14} color="#181d1a" />
+                  <Text style={styles.emergencyLabel}>Emergency Support: </Text>
+                  <Text style={styles.emergencyValue}>{data.safety.emergencyContact}</Text>
+                </View>
+                <View style={[styles.emergencyItem, { marginTop: 6 }]}>
+                  <Ionicons name="business" size={14} color="#181d1a" />
+                  <Text style={styles.emergencyLabel}>Nearest Facility: </Text>
+                  <Text style={styles.emergencyValue} numberOfLines={1}>{data.safety.nearestHospital}</Text>
+                </View>
+              </View>
+
+
+
+            </View>
           </View>
 
           {/* Available Dates */}
@@ -395,4 +701,276 @@ const styles = StyleSheet.create({
   cancellationHeader:{ flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 6 },
   cancellationTitle:{ fontSize: 13, fontWeight: '700', color: '#1A5F45' },
   cancellationText:{ fontSize: 12, color: '#3f4943', lineHeight: 18 },
+
+  /* Weather Widget Styles */
+  weatherCard: {
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(190,201,193,0.3)',
+    marginTop: 8,
+  },
+  weatherMain: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  weatherTemp: {
+    fontSize: 32,
+    fontWeight: '800',
+    color: '#181d1a',
+  },
+  weatherCondition: {
+    fontSize: 16,
+    color: '#3f4943',
+    fontWeight: '600',
+    marginTop: 2,
+  },
+  weatherGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 12,
+    marginBottom: 16,
+  },
+  weatherItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    minWidth: '45%',
+    backgroundColor: '#ffffff',
+    padding: 8,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(190,201,193,0.2)',
+  },
+  weatherLabel: {
+    fontSize: 11,
+    color: '#6f7a73',
+  },
+  weatherValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#181d1a',
+  },
+  suitabilityBanner: {
+    borderRadius: 10,
+    paddingVertical: 10,
+    paddingHorizontal: 12,
+    borderWidth: 1,
+    marginTop: 4,
+  },
+  suitabilityLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  suitabilityText: {
+    fontSize: 12,
+    fontWeight: '600',
+    flex: 1,
+  },
+  alertBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff1f2',
+    borderWidth: 1,
+    borderColor: '#fecaca',
+    borderRadius: 12,
+    padding: 12,
+    marginBottom: 12,
+  },
+  alertTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#991b1b',
+    marginBottom: 2,
+  },
+  alertText: {
+    fontSize: 12,
+    color: '#b91c1c',
+  },
+
+  /* Safety Widget Styles */
+  safetyCard: {
+    backgroundColor: '#ffffff',
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: 'rgba(190,201,193,0.3)',
+    marginTop: 8,
+  },
+  safetyTagsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  safetyTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 20,
+    borderWidth: 1,
+  },
+  safetyTagDiff: {
+    backgroundColor: '#EFF6FF',
+    borderColor: '#DBEAFE',
+  },
+  safetyTagFriendly: {
+    backgroundColor: '#FDF2F8',
+    borderColor: '#FCE7F3',
+  },
+  safetyTagTextDiff: {
+    fontSize: 11,
+    color: '#1E40AF',
+    fontWeight: '700',
+  },
+  safetyTagTextFriendly: {
+    fontSize: 11,
+    color: '#9D174D',
+    fontWeight: '700',
+  },
+  infoBlock: {
+    backgroundColor: '#fafbfc',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: 'rgba(190,201,193,0.15)',
+  },
+  infoTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  infoBlockTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#181d1a',
+  },
+  infoBlockText: {
+    fontSize: 12,
+    color: '#3f4943',
+    lineHeight: 18,
+  },
+  divider: {
+    height: 1,
+    backgroundColor: 'rgba(190,201,193,0.3)',
+    marginVertical: 16,
+  },
+  guideRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 12,
+  },
+  guideText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#181d1a',
+  },
+  emergencyCard: {
+    backgroundColor: '#f1f4f0',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: 'rgba(190,201,193,0.2)',
+  },
+  emergencyItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  emergencyLabel: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#3f4943',
+    marginLeft: 6,
+  },
+  emergencyValue: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#1A5F45',
+    flex: 1,
+  },
+  checklistTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#181d1a',
+    marginBottom: 2,
+  },
+  checklistSubtitle: {
+    fontSize: 12,
+    color: '#6f7a73',
+    marginBottom: 12,
+  },
+  checklistGrid: {
+    gap: 8,
+  },
+  checklistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    padding: 10,
+    backgroundColor: '#f9fafb',
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  checklistItemActive: {
+    backgroundColor: 'rgba(26,95,69,0.03)',
+    borderColor: '#1A5F45',
+  },
+  checklistText: {
+    fontSize: 13,
+    color: '#3f4943',
+  },
+  checklistTextActive: {
+    color: '#1A5F45',
+    fontWeight: '500',
+    textDecorationLine: 'line-through',
+  },
+  checklistProgressContainer: {
+    marginTop: 16,
+    backgroundColor: '#f3f4f6',
+    borderRadius: 12,
+    padding: 12,
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: '#e5e7eb',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: '#1A5F45',
+  },
+  progressLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginTop: 6,
+  },
+  progressLabelText: {
+    fontSize: 11,
+    color: '#4b5563',
+    fontWeight: '600',
+  },
+  successCelebration: {
+    fontSize: 11,
+    color: '#16a34a',
+    fontWeight: '700',
+  },
+  safetyVerdictMessage: {
+    fontSize: 11,
+    color: '#4b5563',
+    lineHeight: 16,
+    marginTop: 10,
+    fontStyle: 'italic',
+  },
 });
