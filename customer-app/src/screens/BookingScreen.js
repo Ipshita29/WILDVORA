@@ -82,16 +82,11 @@ export default function BookingScreen({ route, navigation }) {
 
   const nights = getNightsCount() || 4;
 
-  // Dynamic calculations based on selection
-  const basePrice = (experience.price || 310) * nights;
-  const totalGuests = adults + children;
-  const equipmentRental = totalGuests * 90.00;
-  const serviceFee = 45.00;
-  const subtotal = basePrice + equipmentRental + serviceFee;
-  const taxes = Math.round(subtotal * 0.022184 * 100) / 100;
-  const grandTotal = basePrice + equipmentRental + serviceFee + taxes;
-
-
+  // Dynamic calculations based on selection (matching backend rules)
+  const basePrice = (experience.price || 0) * adults + (experience.price || 0) * 0.5 * children;
+  const serviceFee = Math.round(basePrice * 0.05);
+  const taxes = Math.round(basePrice * 0.03);
+  const grandTotal = basePrice + serviceFee + taxes;
 
   const handleConfirm = async () => {
     setLoading(true);
@@ -107,8 +102,8 @@ export default function BookingScreen({ route, navigation }) {
       // Hit real API backend if valid ID
       await bookingAPI.create({
         experienceId: experience._id,
-        startDate: `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, '0')}-${String(checkInDay).padStart(2, '0')}`,
-        endDate: `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, '0')}-${String(checkOutDay).padStart(2, '0')}`,
+        startDate: formatDateISO(checkInDate),
+        endDate: formatDateISO(checkOutDate),
         adults,
         children,
         paymentMethod,
@@ -489,15 +484,17 @@ export default function BookingScreen({ route, navigation }) {
             <View style={styles.heroImageContainer}>
               <Image
                 source={{
-                  uri: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAV_xkdn4s6l3_zO7n67c2arjobqCE3w4SemT8y6Rzkr5MLamhUsugWnQzI5pIxqQhKHFwc1fKbcFjOq0W3A4KlknUl6AX4uzAqhytBObipQp0OOTpn6ll6fMeyh4BCnFV-fitJAhFSikjTIROwcrWhL1rB13g3-J_GNSIefkXFImCxZg8ugsD52O0JRI4NpIbSsU-13BTLw4J3Mns7n9pDcsd9MWHYlQOCNplJoGDC1g-VoRnSKxrPtnOQNy2jJ136zzKfMN2Kzjg',
+                  uri: experience.coverImage || experience.images?.[0] || 'https://lh3.googleusercontent.com/aida-public/AB6AXuAV_xkdn4s6l3_zO7n67c2arjobqCE3w4SemT8y6Rzkr5MLamhUsugWnQzI5pIxqQhKHFwc1fKbcFjOq0W3A4KlknUl6AX4uzAqhytBObipQp0OOTpn6ll6fMeyh4BCnFV-fitJAhFSikjTIROwcrWhL1rB13g3-J_GNSIefkXFImCxZg8ugsD52O0JRI4NpIbSsU-13BTLw4J3Mns7n9pDcsd9MWHYlQOCNplJoGDC1g-VoRnSKxrPtnOQNy2jJ136zzKfMN2Kzjg',
                 }}
                 style={styles.heroImage}
               />
               <View style={styles.heroOverlay}>
-                <Text style={styles.heroTitle}>High-Alpine Glacial Trek</Text>
+                <Text style={styles.heroTitle}>{experience.title}</Text>
                 <View style={styles.heroLocationRow}>
                   <Ionicons name="location" size={14} color="#ffffff" />
-                  <Text style={styles.heroLocation}>Zermatt, Switzerland</Text>
+                  <Text style={styles.heroLocation}>
+                    {experience.location?.city ? `${experience.location.city}, ${experience.location.country}` : 'Zermatt, Switzerland'}
+                  </Text>
                 </View>
               </View>
             </View>
@@ -521,19 +518,15 @@ export default function BookingScreen({ route, navigation }) {
               {/* Price Breakdown */}
               <View style={styles.breakdownRows}>
                 <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>Base Experience (4 nights)</Text>
+                  <Text style={styles.breakdownLabel}>Base Experience ({experience.duration || `${nights} nights`})</Text>
                   <Text style={styles.breakdownVal}>₹{basePrice.toFixed(2)}</Text>
                 </View>
                 <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>Equipment Rental (2x)</Text>
-                  <Text style={styles.breakdownVal}>₹{equipmentRental.toFixed(2)}</Text>
-                </View>
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>Service Fee</Text>
+                  <Text style={styles.breakdownLabel}>Service Fee (5%)</Text>
                   <Text style={styles.breakdownVal}>₹{serviceFee.toFixed(2)}</Text>
                 </View>
                 <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>Taxes</Text>
+                  <Text style={styles.breakdownLabel}>Taxes (3%)</Text>
                   <Text style={styles.breakdownVal}>₹{taxes.toFixed(2)}</Text>
                 </View>
               </View>
@@ -583,14 +576,14 @@ export default function BookingScreen({ route, navigation }) {
           </View>
         </ScrollView>
       ) : (
-        /* Done Screen matches Step 4 Success Confirmed perfectly */
+          /* Done Screen matches Step 4 Success Confirmed perfectly */
         <View style={styles.doneContainer}>
           <View style={styles.doneEmojiBg}>
             <Ionicons name="checkmark-circle" size={56} color="#1A5F45" />
           </View>
           <Text style={styles.doneTitle}>Booking Confirmed!</Text>
           <Text style={styles.doneSub}>
-            Your adventure is booked. Get ready for High-Alpine Glacial Trek!
+            Your adventure is booked. Get ready for {experience.title}!
           </Text>
 
           <View style={styles.doneDetailCard}>
