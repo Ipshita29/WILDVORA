@@ -1,136 +1,154 @@
-import { useState } from 'react'
-import { FilterIcon, DownloadIcon, TrendUp, TrendDown } from '../components/shared.jsx'
+import { useState, useEffect } from 'react';
+import { FilterIcon, DownloadIcon } from '../components/shared.jsx';
+import api from '../api/axios';
 
-const bookingRows = [
-  {
-    id: '#WR-82910',
-    initials: 'EM', color: 'bg-pink-400',
-    customer: 'Elena Miller', customerType: 'Pro Member',
-    host: 'Grand Canyon Glamping',
-    date: 'Oct 12–15, 2023',
-    amount: '₹1,20,750',
-    status: 'Disputed',
-  },
-  {
-    id: '#WR-82911',
-    initials: 'JD', color: 'bg-blue-400',
-    customer: 'James David', customerType: 'Verified',
-    host: 'Olympic Forest Cabin',
-    date: 'Oct 14–18, 2023',
-    amount: '₹69,900',
-    status: 'Confirmed',
-  },
-  {
-    id: '#WR-82912',
-    initials: 'SL', color: 'bg-gray-400',
-    customer: 'Sarah L.', customerType: 'New User',
-    host: 'Yosemite Valley Dome',
-    date: 'Oct 15–17, 2023',
-    amount: '₹99,900',
-    status: 'Flagged',
-  },
-  {
-    id: '#WR-82913',
-    initials: 'TK', color: 'bg-teal-400',
-    customer: 'Tom King', customerType: 'Guest',
-    host: 'Zion Cliffhouse Suite',
-    date: 'Oct 20–22, 2023',
-    amount: '₹54,100',
-    status: 'Pending',
-  },
-]
-
-function StatusBadge({ status }) {
-  const cfg = {
-    Disputed:  { cls: 'bg-red-50 text-red-500 border-red-200',      icon: '⚠' },
-    Confirmed: { cls: 'bg-blue-50 text-blue-600 border-blue-200',    icon: '✓' },
-    Flagged:   { cls: 'bg-orange-50 text-orange-500 border-orange-200', icon: '!' },
-    Pending:   { cls: 'bg-gray-100 text-gray-500 border-gray-200',   icon: '○' },
+function StatusBadge({ status, disputed }) {
+  if (disputed) {
+    return (
+      <span className="inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border bg-red-50 text-red-500 border-red-200">
+        <span>⚠</span> Disputed
+      </span>
+    );
   }
-  const { cls, icon } = cfg[status] || { cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: '•' }
+  
+  const cfg = {
+    completed: { cls: 'bg-emerald-50 text-emerald-600 border-emerald-200', icon: '✓' },
+    confirmed: { cls: 'bg-blue-50 text-blue-600 border-blue-200', icon: '✓' },
+    cancelled: { cls: 'bg-red-50 text-red-600 border-red-200', icon: '✕' },
+    pending:   { cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: '○' },
+  };
+  const statusLower = status?.toLowerCase() || 'pending';
+  const { cls, icon } = cfg[statusLower] || { cls: 'bg-gray-100 text-gray-500 border-gray-200', icon: '•' };
+  
   return (
     <span className={`inline-flex items-center gap-1 text-xs font-semibold px-2.5 py-1 rounded-full border ${cls}`}>
-      <span>{icon}</span> {status}
+      <span>{icon}</span> {statusLower.charAt(0).toUpperCase() + statusLower.slice(1)}
     </span>
-  )
+  );
 }
-
-const recentAlerts = [
-  { dot: 'bg-red-500',    text: 'New dispute on #WR-82910',       time: '2 mins ago' },
-  { dot: 'bg-gray-400',   text: 'Payment flagged for audit',       time: '15 mins ago' },
-  { dot: 'bg-blue-500',   text: 'Refund processed for #WR-81222', time: '1 hour ago' },
-]
-
-const sparkHeights = [20, 40, 30, 60, 45, 70, 55, 85, 65, 75, 50, 90, 60, 72]
-
-function SparkBar() {
-  return (
-    <div className="flex items-end gap-1 h-16 mt-2">
-      {sparkHeights.map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 rounded-sm transition-all hover:opacity-80"
-          style={{ height: `${h}%`, backgroundColor: '#2d6a4f', opacity: 0.7 }}
-        />
-      ))}
-    </div>
-  )
-}
-
-const topStats = [
-  { label: 'ACTIVE BOOKINGS',      value: '1,284', badge: '+12%',        badgeClass: 'text-emerald-600' },
-  { label: 'OPEN DISPUTES',        value: '24',    tag: 'High Priority',  tagClass: 'text-red-500' },
-  { label: 'WEEKLY REVENUE',       value: '₹3,54,100', sub: 'v. Target',   subClass: 'text-emerald-600' },
-  { label: 'AVG. RESOLUTION TIME', value: '4.2h',  badge: '-15%',        badgeClass: 'text-red-500' },
-]
 
 export default function BookingsDisputes() {
-  const [activeTab, setActiveTab] = useState('All Bookings')
-  const tabs = ['All Bookings', 'Disputed', 'Flagged']
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('All Bookings');
+  const [searchQuery, setSearchQuery] = useState('');
 
-  const tabStatusMap = { Disputed: 'Disputed', Flagged: 'Flagged' }
-  const filteredRows =
-    activeTab === 'All Bookings'
-      ? bookingRows
-      : bookingRows.filter(b => b.status === tabStatusMap[activeTab])
+  const fetchBookings = async () => {
+    try {
+      setLoading(true);
+      const res = await api.get('/admin/bookings');
+      if (res.data?.success) {
+        setBookings(res.data.bookings || []);
+      }
+    } catch (err) {
+      console.error('Failed to fetch bookings:', err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchBookings();
+  }, []);
+
+  const handleToggleDispute = async (bookingId, currentDisputed) => {
+    try {
+      const reason = !currentDisputed ? prompt('Enter reason for dispute:') : '';
+      if (!currentDisputed && reason === null) return; // Cancelled prompt
+      
+      const res = await api.patch(`/admin/bookings/${bookingId}/dispute`, {
+        disputed: !currentDisputed,
+        disputeReason: reason || ''
+      });
+      if (res.data?.success) {
+        fetchBookings();
+        alert(`Dispute status updated.`);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update dispute status.');
+    }
+  };
+
+  const handleRefund = async (bookingId) => {
+    if (!window.confirm('Are you sure you want to issue a full refund and cancel this booking?')) return;
+    try {
+      const res = await api.post(`/bookings/${bookingId}/refund`);
+      if (res.data?.success) {
+        fetchBookings();
+        alert('Refund issued successfully.');
+      }
+    } catch (err) {
+      // try admin fallback endpoint if regular doesn't match
+      try {
+        const adminRes = await api.post(`/admin/bookings/${bookingId}/refund`);
+        if (adminRes.data?.success) {
+          fetchBookings();
+          alert('Refund issued successfully.');
+        }
+      } catch (adminErr) {
+        alert(adminErr.response?.data?.message || 'Failed to issue refund.');
+      }
+    }
+  };
+
+  const filteredBookings = bookings.filter(b => {
+    const matchesSearch = 
+      (b.experience?.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b.user?.name || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (b._id || '').toLowerCase().includes(searchQuery.toLowerCase());
+      
+    if (!matchesSearch) return false;
+    
+    if (activeTab === 'Disputed') return b.disputed === true;
+    if (activeTab === 'Cancelled') return b.status === 'cancelled';
+    return true;
+  });
+
+  const totalDisputes = bookings.filter(b => b.disputed).length;
+  const totalCompleted = bookings.filter(b => b.status === 'completed').length;
+  const totalRevenue = bookings
+    .filter(b => b.paymentStatus === 'paid')
+    .reduce((sum, b) => sum + b.totalPrice, 0);
 
   return (
-    // Light cream content
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ backgroundColor: '#f5f1ea' }}>
-
       {/* Header */}
       <div className="flex items-start justify-between mb-7">
         <div>
           <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Bookings & Disputes</h1>
           <p className="text-gray-500 text-sm mt-1">Oversee global transactions and resolve platform conflicts.</p>
         </div>
-        <div className="flex items-center gap-2">
-          <button className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all shadow-sm">
-            <DownloadIcon /> Export CSV
-          </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold text-white transition-all shadow"
-            style={{ backgroundColor: '#1a3a26' }}
-            onMouseOver={e => e.currentTarget.style.backgroundColor = '#14301f'}
-            onMouseOut={e => e.currentTarget.style.backgroundColor = '#1a3a26'}
+        <div className="flex items-center gap-3">
+          <input
+            type="text"
+            placeholder="Search booking ID, customer or listing..."
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-64"
+          />
+          <button 
+            onClick={fetchBookings}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"
           >
-            <FilterIcon /> Advanced Filters
+            ↻ Refresh
           </button>
         </div>
       </div>
 
       {/* Top Stats */}
-      <div className="grid grid-cols-4 gap-4 mb-6">
-        {topStats.map((s, i) => (
-          <div key={i} className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
-            <div className="text-gray-400 text-xs font-semibold tracking-widest mb-2">{s.label}</div>
-            <div className="flex items-end gap-2 flex-wrap">
-              <span className="text-2xl font-bold text-gray-900">{s.value}</span>
-              {s.badge && <span className={`text-xs font-bold mb-0.5 ${s.badgeClass}`}>{s.badge}</span>}
-              {s.tag   && <span className={`text-xs font-bold mb-0.5 ${s.tagClass}`}>{s.tag}</span>}
-              {s.sub   && <span className={`text-xs font-semibold mb-0.5 ${s.subClass}`}>{s.sub}</span>}
-            </div>
-          </div>
-        ))}
+      <div className="grid grid-cols-3 gap-4 mb-6">
+        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+          <div className="text-gray-400 text-xs font-semibold tracking-widest mb-2 uppercase">Total Bookings</div>
+          <div className="text-2xl font-bold text-gray-900">{bookings.length}</div>
+        </div>
+        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+          <div className="text-gray-400 text-xs font-semibold tracking-widest mb-2 uppercase">Active Disputes</div>
+          <div className={`text-2xl font-bold ${totalDisputes > 0 ? 'text-red-600' : 'text-gray-900'}`}>{totalDisputes}</div>
+        </div>
+        <div className="bg-white rounded-xl p-5 border border-gray-200 shadow-sm">
+          <div className="text-gray-400 text-xs font-semibold tracking-widest mb-2 uppercase">Paid Marketplace Revenue</div>
+          <div className="text-2xl font-bold text-emerald-700">₹{totalRevenue.toLocaleString()}</div>
+        </div>
       </div>
 
       {/* Table Card */}
@@ -138,7 +156,7 @@ export default function BookingsDisputes() {
         {/* Tabs row */}
         <div className="flex items-center gap-2 px-5 py-3.5 border-b border-gray-100">
           <div className="flex items-center bg-gray-100 rounded-lg p-1 gap-1">
-            {tabs.map(t => (
+            {['All Bookings', 'Disputed', 'Cancelled'].map(t => (
               <button
                 key={t}
                 onClick={() => setActiveTab(t)}
@@ -148,133 +166,86 @@ export default function BookingsDisputes() {
                     : 'text-gray-500 hover:text-gray-700'
                 }`}
               >
-                {t === 'Disputed' && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
-                {t === 'Flagged'  && <span className="w-1.5 h-1.5 bg-gray-500 rounded-full" />}
+                {t === 'Disputed' && totalDisputes > 0 && <span className="w-1.5 h-1.5 bg-red-500 rounded-full" />}
                 {t}
               </button>
             ))}
           </div>
-          <div className="ml-auto flex items-center gap-1">
-            <button className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">‹</button>
-            <button className="w-7 h-7 rounded-md border border-gray-200 flex items-center justify-center text-gray-400 hover:bg-gray-50">›</button>
-            <span className="text-gray-400 text-xs ml-2">Showing 1–10 of 1,284</span>
+          <div className="ml-auto text-gray-400 text-xs">
+            Showing {filteredBookings.length} booking(s)
           </div>
         </div>
 
-        {/* Table */}
-        <table className="w-full">
-          <thead>
-            <tr className="border-b border-gray-100 bg-gray-50/50">
-              {['Booking ID', 'Customer', 'Host', 'Date', 'Amount', 'Status', 'Actions'].map(h => (
-                <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-gray-400 tracking-wide">{h}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-100">
-            {filteredRows.map((b, i) => (
-              <tr key={i} className="hover:bg-gray-50/60 transition-all">
-                <td className="px-5 py-4 text-gray-700 text-sm font-mono font-semibold">{b.id}</td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold shrink-0 ${b.color}`}>
-                      {b.initials}
-                    </div>
-                    <div>
-                      <div className="text-gray-800 text-sm font-semibold leading-tight">{b.customer}</div>
-                      <div className="text-gray-400 text-xs">{b.customerType}</div>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-5 py-4 text-gray-600 text-sm">{b.host}</td>
-                <td className="px-5 py-4 text-gray-500 text-xs leading-relaxed">{b.date}</td>
-                <td className="px-5 py-4 text-gray-900 font-bold text-sm">{b.amount}</td>
-                <td className="px-5 py-4"><StatusBadge status={b.status} /></td>
-                <td className="px-5 py-4">
-                  <div className="flex items-center gap-1.5">
-                    <button 
-                      onClick={() => alert(`Initiated communication channel between customer (${b.customer}) and host (${b.host}) for booking ${b.id}.`)}
-                      className="text-xs text-gray-600 border border-gray-300 px-2.5 py-1 rounded-md hover:bg-gray-50 font-semibold transition-all shadow-sm cursor-pointer"
-                    >
-                      Contact
-                    </button>
-                    {(b.status === 'Disputed' || b.status === 'Flagged') && (
-                      <button 
-                        onClick={() => alert(`Issued full refund for booking ${b.id} to customer ${b.customer}.`)}
-                        className="text-xs text-rose-600 border border-rose-200 px-2.5 py-1 rounded-md hover:bg-rose-50 font-semibold transition-all shadow-sm cursor-pointer"
-                      >
-                        Refund
-                      </button>
-                    )}
-                    {b.status === 'Confirmed' && (
-                      <button 
-                        onClick={() => alert(`Flagged booking ${b.id} as Disputed for administrative review.`)}
-                        className="text-xs text-amber-600 border border-amber-200 px-2.5 py-1 rounded-md hover:bg-amber-50 font-semibold transition-all shadow-sm cursor-pointer"
-                      >
-                        Flag Dispute
-                      </button>
-                    )}
-                  </div>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Pagination */}
-        <div className="px-5 py-3.5 flex items-center justify-between border-t border-gray-100">
-          <span className="text-gray-400 text-xs">Page 1 of 128</span>
-          <div className="flex items-center gap-1.5">
-            <button className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 font-medium">Previous</button>
-            {[1, 2, 3, '…', 128].map((p, i) => (
-              <button
-                key={i}
-                className={`w-7 h-7 rounded-md text-xs font-semibold transition-all ${
-                  p === 1
-                    ? 'text-white shadow'
-                    : 'text-gray-500 hover:bg-gray-100 hover:text-gray-800'
-                }`}
-                style={p === 1 ? { backgroundColor: '#1a3a26' } : {}}
-              >
-                {p}
-              </button>
-            ))}
-            <button className="px-3 py-1.5 text-xs text-gray-500 hover:text-gray-800 font-medium">Next</button>
+        {loading ? (
+          <div className="text-center py-16 text-gray-400">Loading bookings from system...</div>
+        ) : filteredBookings.length === 0 ? (
+          <div className="p-16 text-center text-gray-400">
+            <div className="text-4xl mb-2">📄</div>
+            <p className="font-bold text-gray-600 text-lg">No Bookings Found</p>
+            <p className="text-gray-400 text-sm mt-1">No database records match the selected view.</p>
           </div>
-        </div>
-      </div>
-
-      {/* Bottom Row */}
-      <div className="grid grid-cols-2 gap-5">
-        {/* Dispute Trends */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <div className="flex items-center justify-between mb-1">
-            <h3 className="text-gray-900 font-bold text-sm">Dispute Trends</h3>
-            <span className="text-gray-400 text-xs">Last 30 Days</span>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b border-gray-100 bg-gray-50/50">
+                  {['Booking ID', 'Customer', 'Listing', 'Date', 'Amount', 'Status', 'Actions'].map(h => (
+                    <th key={h} className="text-left px-5 py-3 text-xs font-semibold text-gray-400 tracking-wide">{h}</th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-gray-100">
+                {filteredBookings.map((b) => (
+                  <tr key={b._id} className="hover:bg-gray-50/60 transition-all">
+                    <td className="px-5 py-4 text-gray-700 text-xs font-mono font-semibold">
+                      #{b._id.slice(-8).toUpperCase()}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center text-xs font-bold shrink-0">
+                          {b.user?.name ? b.user.name.charAt(0).toUpperCase() : 'C'}
+                        </div>
+                        <div>
+                          <div className="text-gray-800 text-sm font-semibold leading-tight">{b.user?.name || 'Customer'}</div>
+                          <div className="text-gray-400 text-xs">{b.user?.email || '—'}</div>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-gray-600 text-sm max-w-xs truncate">{b.experience?.title || 'Wild Adventure'}</td>
+                    <td className="px-5 py-4 text-gray-500 text-xs leading-relaxed">
+                      {new Date(b.startDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                    </td>
+                    <td className="px-5 py-4 text-gray-900 font-bold text-sm">₹{b.totalPrice.toLocaleString()}</td>
+                    <td className="px-5 py-4"><StatusBadge status={b.status} disputed={b.disputed} /></td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <button 
+                          onClick={() => handleToggleDispute(b._id, b.disputed)}
+                          className={`text-xs px-2.5 py-1 rounded-md font-semibold transition-all border cursor-pointer ${
+                            b.disputed 
+                              ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100'
+                              : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50'
+                          }`}
+                        >
+                          {b.disputed ? 'Resolve Dispute' : 'Flag Dispute'}
+                        </button>
+                        {b.paymentStatus === 'paid' && b.status !== 'cancelled' && (
+                          <button 
+                            onClick={() => handleRefund(b._id)}
+                            className="text-xs text-rose-600 border border-rose-200 px-2.5 py-1 rounded-md hover:bg-rose-50 font-semibold transition-all cursor-pointer"
+                          >
+                            Refund
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
-          <SparkBar />
-          <div className="flex justify-between text-gray-300 text-xs mt-3">
-            {['MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT', 'SUN'].map(d => (
-              <span key={d}>{d}</span>
-            ))}
-          </div>
-        </div>
-
-        {/* Recent Alerts */}
-        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-5">
-          <h3 className="text-gray-900 font-bold text-sm mb-4">Recent Alerts</h3>
-          <div className="space-y-4">
-            {recentAlerts.map((a, i) => (
-              <div key={i} className="flex items-start gap-2.5">
-                <span className={`w-2 h-2 rounded-full mt-1.5 shrink-0 ${a.dot}`} />
-                <div>
-                  <div className="text-gray-700 text-sm font-medium">{a.text}</div>
-                  <div className="text-gray-400 text-xs mt-0.5">{a.time}</div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        )}
       </div>
     </div>
-  )
+  );
 }

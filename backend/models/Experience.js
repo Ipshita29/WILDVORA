@@ -75,6 +75,12 @@ const experienceSchema = new mongoose.Schema(
       type: String,
       default: 'Flexible: Cancel up to 24 hours in advance for a full refund.',
     },
+    safetyChecklist: [{ type: String }],
+    medicalAdvisories: [{ type: String }],
+    emergencyInfo: {
+      contact: { type: String, default: '' },
+      nearestFacility: { type: String, default: '' }
+    },
     status: {
       type: String,
       enum: ['draft', 'pending', 'live', 'paused', 'rejected', 'changes_requested'],

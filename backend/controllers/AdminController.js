@@ -16,6 +16,17 @@ const getPlatformOverview = async (req, res) => {
     const activeHosts = await User.countDocuments({ role: 'operator', isActive: true });
     const activeCustomers = await User.countDocuments({ role: 'customer', isActive: true });
 
+    // Additional Platform Stats
+    const totalOperators = await User.countDocuments({ role: 'operator' });
+    const verifiedOperators = await User.countDocuments({ role: 'operator', kyc: 'approved' });
+    const pendingListings = await Experience.countDocuments({ status: 'pending' });
+    const liveListings = await Experience.countDocuments({ status: 'live' });
+    const totalReports = await Booking.countDocuments({ disputed: true });
+    
+    const processedPayoutsList = await Payout.find({ status: 'processed' });
+    const totalPayoutsAmount = processedPayoutsList.reduce((sum, p) => sum + p.amount, 0);
+    const totalPayoutsCount = processedPayoutsList.length;
+
     // Weekly comparisons (last 7 days vs 7-14 days ago)
     const now = new Date();
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
@@ -46,6 +57,13 @@ const getPlatformOverview = async (req, res) => {
         gmv,
         activeHosts,
         activeCustomers,
+        totalOperators,
+        verifiedOperators,
+        pendingListings,
+        liveListings,
+        totalReports,
+        totalPayoutsAmount,
+        totalPayoutsCount,
         bookingsThisWeek,
         bookingsLastWeek,
         bookingGrowth: Math.round(bookingGrowth * 10) / 10,
@@ -268,10 +286,11 @@ const toggleUserStatus = async (req, res) => {
 // Payouts Control: Pending settlements
 const getPendingSettlements = async (req, res) => {
   try {
-    // Bookings that are paid, completed or confirmed, and not yet settled
+    // Bookings that are paid, completed, and not disputed, and not yet settled
     const pendingBookings = await Booking.find({
       paymentStatus: 'paid',
-      status: { $in: ['confirmed', 'completed'] },
+      status: 'completed',
+      disputed: { $ne: true },
       settled: false
     })
       .populate({
@@ -304,6 +323,12 @@ const releasePayout = async (req, res) => {
     });
 
     if (!booking) return res.status(404).json({ success: false, message: 'Booking not found' });
+    if (booking.status !== 'completed') {
+      return res.status(400).json({ success: false, message: 'Cannot release payout: Booking must be completed.' });
+    }
+    if (booking.disputed) {
+      return res.status(400).json({ success: false, message: 'Cannot release payout: Booking has an active dispute.' });
+    }
     if (booking.settled) return res.status(400).json({ success: false, message: 'Payout already settled' });
     if (booking.paymentStatus !== 'paid') {
       return res.status(400).json({ success: false, message: 'Booking is not paid' });

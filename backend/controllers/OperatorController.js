@@ -107,7 +107,10 @@ const createListing = async (req, res) => {
       includes,
       exclusions,
       cancellationPolicy,
-      availableDates
+      availableDates,
+      safetyChecklist,
+      medicalAdvisories,
+      emergencyInfo
     } = req.body;
 
     const experience = await Experience.create({
@@ -124,6 +127,9 @@ const createListing = async (req, res) => {
       exclusions: exclusions || [],
       cancellationPolicy,
       availableDates: availableDates || [],
+      safetyChecklist: safetyChecklist || [],
+      medicalAdvisories: medicalAdvisories || [],
+      emergencyInfo: emergencyInfo || { contact: '', nearestFacility: '' },
       host: req.user._id,
       hostName: req.user.name,
       hostVerified: req.user.kyc === 'approved',

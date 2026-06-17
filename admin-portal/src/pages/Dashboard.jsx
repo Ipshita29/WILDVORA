@@ -2,11 +2,10 @@ import { useState, useEffect } from 'react';
 import { TrendUp, TrendDown } from '../components/shared.jsx';
 import api from '../api/axios';
 
-// ─── Inline status badge (pill style matching screenshot) ─────────────────────
 function BookingBadge({ status }) {
   if (status?.toLowerCase() === 'confirmed' || status === 'Confirmed') {
     return (
-      <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full animate-pulse-subtle" style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}>
+      <span className="inline-block text-xs font-semibold px-3 py-1 rounded-full" style={{ backgroundColor: '#dbeafe', color: '#2563eb' }}>
         Confirmed
       </span>
     );
@@ -35,83 +34,22 @@ function BookingBadge({ status }) {
 export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState({
-    totalBookings: 2482,
-    gmv: 3412900,
-    activeHosts: 854,
-    activeCustomers: 12105,
-    bookingGrowth: 12.5,
-    gmvGrowth: 8.2,
-    activeHostsGrowth: 3.1,
-    activeCustomersGrowth: -1.4,
+    totalBookings: 0,
+    gmv: 0,
+    activeHosts: 0,
+    activeCustomers: 0,
+    totalOperators: 0,
+    verifiedOperators: 0,
+    pendingListings: 0,
+    liveListings: 0,
+    totalReports: 0,
+    totalPayoutsAmount: 0,
+    bookingGrowth: 0,
+    gmvGrowth: 0,
   });
 
-  const [recentBookings, setRecentBookings] = useState([
-    {
-      listing: 'Aspen Peak Cabin',
-      host: 'Sarah Jenkins',
-      date: 'Oct 24, 2023',
-      status: 'Confirmed',
-      amount: '₹1,03,200',
-      img: 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=64&h=64&fit=crop',
-    },
-    {
-      listing: 'Stillwater Basin',
-      host: 'Marcus Thorne',
-      date: 'Oct 23, 2023',
-      status: 'Pending',
-      amount: '₹70,850',
-      img: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?w=64&h=64&fit=crop',
-    },
-    {
-      listing: 'Canyon Vista Loft',
-      host: 'Elena Rodriguez',
-      date: 'Oct 22, 2023',
-      status: 'Confirmed',
-      amount: '₹1,74,900',
-      img: 'https://images.unsplash.com/photo-1488415032361-b7e238421f1b?w=64&h=64&fit=crop',
-    },
-  ]);
-
-  const [recentActivity, setRecentActivity] = useState([
-    {
-      bg: 'bg-emerald-100',
-      dot: 'bg-emerald-500',
-      icon: (
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth={2}>
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-          <circle cx="12" cy="7" r="4"/>
-        </svg>
-      ),
-      title: 'New Host Application',
-      desc: "Dave Miller applied for 'Pine Valley Estate'",
-      time: '2 mins ago',
-    },
-    {
-      bg: 'bg-blue-100',
-      dot: 'bg-blue-400',
-      icon: (
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#3b82f6" strokeWidth={2}>
-          <line x1="12" y1="1" x2="12" y2="23"/>
-          <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
-        </svg>
-      ),
-      title: 'Payout Processed',
-      desc: '₹3,49,800 sent to Host #8821',
-      time: '1 hour ago',
-    },
-    {
-      bg: 'bg-rose-100',
-      dot: 'bg-rose-400',
-      icon: (
-        <svg width={14} height={14} viewBox="0 0 24 24" fill="none" stroke="#f43f5e" strokeWidth={2}>
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-        </svg>
-      ),
-      title: 'Support Ticket',
-      desc: "Guest reported heating issue at 'Frost Cabin'",
-      time: '3 hours ago',
-    },
-  ]);
+  const [recentBookings, setRecentBookings] = useState([]);
+  const [recentActivity, setRecentActivity] = useState([]);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -125,14 +63,18 @@ export default function Dashboard() {
         if (overviewRes.data && overviewRes.data.success) {
           const stats = overviewRes.data.analytics;
           setStatsData({
-            totalBookings: stats.totalBookings,
-            gmv: stats.gmv,
-            activeHosts: stats.activeHosts,
-            activeCustomers: stats.activeCustomers,
-            bookingGrowth: stats.bookingGrowth,
-            gmvGrowth: stats.gmvGrowth,
-            activeHostsGrowth: 3.1, // Fallback growth stats
-            activeCustomersGrowth: -1.4,
+            totalBookings: stats.totalBookings || 0,
+            gmv: stats.gmv || 0,
+            activeHosts: stats.activeHosts || 0,
+            activeCustomers: stats.activeCustomers || 0,
+            totalOperators: stats.totalOperators || 0,
+            verifiedOperators: stats.verifiedOperators || 0,
+            pendingListings: stats.pendingListings || 0,
+            liveListings: stats.liveListings || 0,
+            totalReports: stats.totalReports || 0,
+            totalPayoutsAmount: stats.totalPayoutsAmount || 0,
+            bookingGrowth: stats.bookingGrowth || 0,
+            gmvGrowth: stats.gmvGrowth || 0,
           });
         }
 
@@ -145,9 +87,7 @@ export default function Dashboard() {
             amount: `₹${b.totalPrice.toLocaleString()}`,
             img: b.experience?.images?.[0] || 'https://images.unsplash.com/photo-1449158743715-0a90ebb6d2d8?w=64&h=64&fit=crop',
           }));
-          if (bList.length > 0) {
-            setRecentBookings(bList);
-          }
+          setRecentBookings(bList);
         }
 
         if (notifRes.data && notifRes.data.success) {
@@ -177,9 +117,7 @@ export default function Dashboard() {
               time: 'Just now',
             };
           });
-          if (nList.length > 0) {
-            setRecentActivity(nList);
-          }
+          setRecentActivity(nList);
         }
       } catch (err) {
         console.error('Error fetching dashboard statistics:', err);
@@ -221,11 +159,11 @@ export default function Dashboard() {
       ),
     },
     {
-      label: 'Active Hosts',
-      value: statsData.activeHosts.toLocaleString(),
-      change: `${statsData.activeHostsGrowth >= 0 ? '+' : ''}${statsData.activeHostsGrowth}%`,
-      up: statsData.activeHostsGrowth >= 0,
-      vs: 'vs. last week',
+      label: 'Operators',
+      value: `${statsData.totalOperators} / ${statsData.verifiedOperators} Verif.`,
+      change: 'Active',
+      up: true,
+      vs: 'Total registered & verified',
       icon: (
         <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#c0874a" strokeWidth={1.8}>
           <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
@@ -234,17 +172,45 @@ export default function Dashboard() {
       ),
     },
     {
-      label: 'Active Customers',
-      value: statsData.activeCustomers.toLocaleString(),
-      change: `${statsData.activeCustomersGrowth >= 0 ? '+' : ''}${statsData.activeCustomersGrowth}%`,
-      up: statsData.activeCustomersGrowth >= 0,
-      vs: 'vs. last week',
+      label: 'Listings Status',
+      value: `${statsData.liveListings} Live / ${statsData.pendingListings} Pend.`,
+      change: 'Active',
+      up: true,
+      vs: 'Marketplace experiences',
       icon: (
         <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#1A5F45" strokeWidth={1.8}>
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
           <circle cx="9" cy="7" r="4"/>
           <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
           <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Active Disputes / Reports',
+      value: statsData.totalReports.toString(),
+      change: 'Priority',
+      up: false,
+      vs: 'Awaiting resolution',
+      icon: (
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth={1.8}>
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/>
+          <line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      ),
+    },
+    {
+      label: 'Total Payouts Released',
+      value: `₹${statsData.totalPayoutsAmount.toLocaleString()}`,
+      change: 'Success',
+      up: true,
+      vs: 'Settled funds',
+      icon: (
+        <svg width={18} height={18} viewBox="0 0 24 24" fill="none" stroke="#15803d" strokeWidth={1.8}>
+          <rect x="2" y="5" width="20" height="14" rx="2"/>
+          <line x1="12" y1="17" x2="12" y2="17"/>
+          <path d="M12 9v5"/>
         </svg>
       ),
     },
@@ -276,7 +242,7 @@ export default function Dashboard() {
 
       {/* ── Stat Cards (overlap hero) ── */}
       <div className="px-8 pt-6 pb-8">
-        <div className="grid grid-cols-4 gap-4 mb-8">
+        <div className="grid grid-cols-3 gap-4 mb-8">
           {statsList.map((s, i) => (
             <div
               key={i}
@@ -293,14 +259,16 @@ export default function Dashboard() {
                 >
                   {s.icon}
                 </div>
-                <span
-                  className={`flex items-center gap-0.5 text-xs font-bold ${s.up ? 'text-emerald-600' : 'text-rose-500'}`}
-                >
-                  {s.up ? <TrendUp /> : <TrendDown />} {s.change}
-                </span>
+                {s.change && (
+                  <span
+                    className={`flex items-center gap-0.5 text-xs font-bold ${s.up ? 'text-emerald-600' : 'text-rose-500'}`}
+                  >
+                    {s.up ? <TrendUp /> : <TrendDown />} {s.change}
+                  </span>
+                )}
               </div>
               <div className="text-gray-500 text-xs font-medium mb-1">{s.label}</div>
-              <div className="text-gray-900 text-2xl font-extrabold tracking-tight">{s.value}</div>
+              <div className="text-gray-900 text-xl font-extrabold tracking-tight truncate">{s.value}</div>
               <div className="text-gray-400 text-xs mt-1">{s.vs}</div>
             </div>
           ))}
@@ -320,49 +288,57 @@ export default function Dashboard() {
               <h2 className="text-gray-900 font-bold text-base">Recent Bookings</h2>
             </div>
 
-            {/* Column headers */}
-            <div
-              className="grid px-6 py-3 text-xs font-semibold border-b"
-              style={{
-                gridTemplateColumns: '2fr 1.2fr 1fr 1fr 1.1fr',
-                color: '#9ca3af',
-                borderColor: '#f0f2f0',
-              }}
-            >
-              <span>Listing</span>
-              <span>Host</span>
-              <span>Date</span>
-              <span>Status</span>
-              <span>Amount</span>
-            </div>
-
-            {/* Rows */}
-            <div className="divide-y" style={{ borderColor: '#f0f2f0' }}>
-              {recentBookings.map((b, i) => (
+            {recentBookings.length === 0 ? (
+              <div className="p-16 text-center text-gray-400 text-sm">
+                No recent bookings recorded.
+              </div>
+            ) : (
+              <>
+                {/* Column headers */}
                 <div
-                  key={i}
-                  className="grid items-center px-6 py-4 hover:bg-gray-50/70 transition-all cursor-pointer"
+                  className="grid px-6 py-3 text-xs font-semibold border-b"
                   style={{
                     gridTemplateColumns: '2fr 1.2fr 1fr 1fr 1.1fr',
+                    color: '#9ca3af',
                     borderColor: '#f0f2f0',
                   }}
                 >
-                  <div className="flex items-center gap-3">
-                    <img
-                      src={b.img}
-                      alt=""
-                      className="w-11 h-11 rounded-xl object-cover flex-shrink-0"
-                      style={{ border: '1px solid #e4e8e4' }}
-                    />
-                    <span className="text-gray-800 text-sm font-semibold leading-snug truncate">{b.listing}</span>
-                  </div>
-                  <span className="text-gray-600 text-sm truncate">{b.host}</span>
-                  <span className="text-gray-400 text-xs">{b.date}</span>
-                  <span><BookingBadge status={b.status} /></span>
-                  <span className="text-gray-900 font-bold text-sm">{b.amount}</span>
+                  <span>Listing</span>
+                  <span>Host</span>
+                  <span>Date</span>
+                  <span>Status</span>
+                  <span>Amount</span>
                 </div>
-              ))}
-            </div>
+
+                {/* Rows */}
+                <div className="divide-y" style={{ borderColor: '#f0f2f0' }}>
+                  {recentBookings.map((b, i) => (
+                    <div
+                      key={i}
+                      className="grid items-center px-6 py-4 hover:bg-gray-50/70 transition-all cursor-pointer"
+                      style={{
+                        gridTemplateColumns: '2fr 1.2fr 1fr 1fr 1.1fr',
+                        borderColor: '#f0f2f0',
+                      }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <img
+                          src={b.img}
+                          alt=""
+                          className="w-11 h-11 rounded-xl object-cover flex-shrink-0"
+                          style={{ border: '1px solid #e4e8e4' }}
+                        />
+                        <span className="text-gray-800 text-sm font-semibold leading-snug truncate">{b.listing}</span>
+                      </div>
+                      <span className="text-gray-600 text-sm truncate">{b.host}</span>
+                      <span className="text-gray-400 text-xs">{b.date}</span>
+                      <span><BookingBadge status={b.status} /></span>
+                      <span className="text-gray-900 font-bold text-sm">{b.amount}</span>
+                    </div>
+                  ))}
+                </div>
+              </>
+            )}
           </div>
 
           {/* Recent Activity */}
@@ -377,22 +353,28 @@ export default function Dashboard() {
               <h2 className="text-gray-900 font-bold text-base">Recent Activity</h2>
             </div>
 
-            <div className="flex-1 divide-y px-6" style={{ borderColor: '#f0f2f0' }}>
-              {recentActivity.map((a, i) => (
-                <div key={i} className="flex gap-4 py-5">
-                  <div
-                    className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${a.bg}`}
-                  >
-                    {a.icon}
+            {recentActivity.length === 0 ? (
+              <div className="p-16 text-center text-gray-400 text-sm flex-1 flex items-center justify-center">
+                No recent activity reports.
+              </div>
+            ) : (
+              <div className="flex-1 divide-y px-6" style={{ borderColor: '#f0f2f0' }}>
+                {recentActivity.map((a, i) => (
+                  <div key={i} className="flex gap-4 py-5">
+                    <div
+                      className={`w-10 h-10 rounded-full flex items-center justify-center shrink-0 ${a.bg}`}
+                    >
+                      {a.icon}
+                    </div>
+                    <div>
+                      <div className="text-gray-900 text-sm font-semibold leading-snug">{a.title}</div>
+                      <div className="text-gray-500 text-xs mt-0.5 leading-relaxed">{a.desc}</div>
+                      <div className="text-gray-400 text-xs mt-1">{a.time}</div>
+                    </div>
                   </div>
-                  <div>
-                    <div className="text-gray-900 text-sm font-semibold leading-snug">{a.title}</div>
-                    <div className="text-gray-500 text-xs mt-0.5 leading-relaxed">{a.desc}</div>
-                    <div className="text-gray-400 text-xs mt-1">{a.time}</div>
-                  </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>
