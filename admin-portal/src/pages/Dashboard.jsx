@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendUp, TrendDown } from '../components/shared.jsx';
 import api from '../api/axios';
+import { useAuth } from '../context/AuthContext';
 
 function BookingBadge({ status }) {
   if (status?.toLowerCase() === 'confirmed' || status === 'Confirmed') {
@@ -32,6 +33,7 @@ function BookingBadge({ status }) {
 }
 
 export default function Dashboard() {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [statsData, setStatsData] = useState({
     totalBookings: 0,
@@ -222,7 +224,7 @@ export default function Dashboard() {
       <div className="relative" style={{ height: '240px', background: 'linear-gradient(135deg, #052618 0%, #0a4028 50%, #0f5c38 100%)' }}>
         <div className="relative px-8 pt-14">
           <h1 className="text-4xl font-extrabold text-white tracking-tight leading-tight">
-            Welcome Back, Alex.
+            Welcome Back, {user?.name ? user.name.split(' ')[0] : 'Admin'}.
           </h1>
           <p className="text-white/65 text-sm mt-2.5 leading-relaxed max-w-sm">
             The reserves are seeing high activity this morning. Monitor registrations, check listing approval requests and manage payouts.
