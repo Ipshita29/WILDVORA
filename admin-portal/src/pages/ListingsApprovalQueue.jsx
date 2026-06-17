@@ -174,7 +174,7 @@ function mapListing(l) {
     kycStatus:      l.host?.kyc || '',
     date:           new Date(l.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
     location:       l.location ? `${l.location.city || ''}, ${l.location.country || ''}` : '—',
-    img:            l.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&h=260&fit=crop',
+    img:            l.coverImage || l.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&h=260&fit=crop',
     price:          l.price,
     duration:       l.duration,
     difficulty:     l.difficulty,

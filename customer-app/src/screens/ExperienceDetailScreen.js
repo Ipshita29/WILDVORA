@@ -220,7 +220,7 @@ export default function ExperienceDetailScreen({ route, navigation }) {
   }
   if (!experience) return null;
 
-  const heroImage = 'https://lh3.googleusercontent.com/aida-public/AB6AXuDWD971kShMZZtm1tqLB1M4tT3C06H-IIw4sAIM6q8Is0Z9f0vV3ghGpyKWw2nsI4RtbB5uFyLJ5KVbQBPqQZ6gfNwyC1lom8RMKstswmSXAi0R33J96h_T0nlJ7drHXfktm54c2af9pWrWq-mvNbCkov7u8y65OtgNfN26r9q0XApuM_gY2XgxZLsXXkdn9w-FJhi7TZIApYrX9KkoguY-CxCc-IZM5n1re5sZpl6C3J0RkedcQGyLBdqfw99XC6CuwtXrTw8BrHI';
+  const heroImage = experience.coverImage || experience.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=800&h=600&fit=crop';
   const hostAvatar = 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxvAqhiKslj3TU3hkTN0aTpyErN45FaI1bC5dTIh145GMLa5MKJKC-y_PZLsWw2boHuKnNn852nWapfByDXJIYTSyYA4OzkCrrq4T-VIDhRdkQMMOYzQgl1iE_FybIikOHI2SgX6h0Xs0NqxpfGGwKfS1jLl-sAWDpfnTdsWhsljtlNN1CjlKjGbpVNIJUOl0UB3dZxDiXjE4hKH6Qp18eU17iLI5YCVvtp11ej88ZBVBYmVoRXHQwkvdSJV2HoH5FvbNleuMCDFg';
 
   const renderStars = (rating) =>
@@ -348,6 +348,23 @@ export default function ExperienceDetailScreen({ route, navigation }) {
               <Text style={styles.contactBtnText}>Contact</Text>
             </TouchableOpacity>
           </View>
+
+          {/* Adventure Images Gallery */}
+          {(experience.adventureImages?.length > 0 || experience.images?.length > 1) && (
+            <View style={[styles.section, { marginBottom: 20 }]}>
+              <Text style={styles.sectionTitle}>Gallery</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 10 }}>
+                {(experience.adventureImages?.length > 0 ? experience.adventureImages : experience.images.slice(1)).map((uri, idx) => (
+                  <Image
+                    key={idx}
+                    source={{ uri }}
+                    style={{ width: 200, height: 130, borderRadius: 12 }}
+                    resizeMode="cover"
+                  />
+                ))}
+              </ScrollView>
+            </View>
+          )}
 
           {/* Description */}
           <View style={styles.section}>
@@ -524,6 +541,21 @@ export default function ExperienceDetailScreen({ route, navigation }) {
 
             </View>
           </View>
+
+          {/* What to Bring Checklist */}
+          {experience.requirements?.length > 0 && (
+            <View style={[styles.section, styles.borderTop]}>
+              <Text style={styles.sectionTitle}>What to Bring</Text>
+              <View style={styles.checklistGrid}>
+                {experience.requirements.map((item, idx) => (
+                  <View key={idx} style={styles.checklistItem}>
+                    <Ionicons name="checkmark-circle-outline" size={16} color="#1A5F45" />
+                    <Text style={[styles.checklistText, { marginLeft: 8 }]}>{item}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          )}
 
           {/* Available Dates */}
           <View style={[styles.section, styles.borderTop]}>
