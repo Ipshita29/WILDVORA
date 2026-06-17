@@ -34,13 +34,50 @@ const TRIP_IMAGES = [
 ];
 
 function CountdownBanner({ booking }) {
+  const [timeLeft, setTimeLeft] = useState({ days: '00', hours: '00', minutes: '00' });
+
+  useEffect(() => {
+    if (!booking || !booking.startDate) return;
+
+    const calculateTimeLeft = () => {
+      const parts = booking.startDate.split('-');
+      if (parts.length !== 3) return { days: '00', hours: '00', minutes: '00' };
+      // Set target to the midnight of the day following the start date
+      const targetDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]) + 1);
+      const now = new Date();
+      const difference = targetDate.getTime() - now.getTime();
+
+      if (difference <= 0) {
+        return { days: '00', hours: '00', minutes: '00' };
+      }
+
+      const days = Math.floor(difference / (1000 * 60 * 60 * 24));
+      const hours = Math.floor((difference / (1000 * 60 * 60)) % 24);
+      const minutes = Math.floor((difference / 1000 / 60) % 60);
+
+      return {
+        days: String(days).padStart(2, '0'),
+        hours: String(hours).padStart(2, '0'),
+        minutes: String(minutes).padStart(2, '0'),
+      };
+    };
+
+    setTimeLeft(calculateTimeLeft());
+
+    const timer = setInterval(() => {
+      setTimeLeft(calculateTimeLeft());
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [booking]);
+
   if (!booking) return null;
   return (
     <View style={s.countdownBanner}>
       <View>
         <Text style={s.countdownLabel}>NEXT ADVENTURE IN</Text>
         <View style={s.countdownRow}>
-          {[['04','DAYS'],['12','HRS'],['45','MIN']].map(([num, lbl], i) => (
+          {[[timeLeft.days, 'DAYS'], [timeLeft.hours, 'HRS'], [timeLeft.minutes, 'MIN']].map(([num, lbl], i) => (
             <React.Fragment key={lbl}>
               <View style={s.countUnit}>
                 <Text style={s.countNum}>{num}</Text>
