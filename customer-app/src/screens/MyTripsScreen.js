@@ -129,7 +129,8 @@ function UpcomingCard({ booking, index, onCancel, onPress }) {
           </TouchableOpacity>
         </View>
         {(booking.status === 'confirmed' || booking.status === 'pending') && (
-          <TouchableOpacity style={s.cancelLink} onPress={() => onCancel(booking._id)}>
+          <TouchableOpacity style={s.cancelLink} onPress={() => onCancel(booking._id)} activeOpacity={0.75}>
+            <MaterialCommunityIcons name="calendar-remove-outline" size={14} color={C.error} />
             <Text style={s.cancelLinkText}>Cancel booking</Text>
           </TouchableOpacity>
         )}
@@ -338,8 +339,16 @@ const s = StyleSheet.create({
   dirBtnText:   { color: C.white, fontWeight: '700', fontSize: 13 },
   hostBtn:      { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: C.outline, borderRadius: 50, paddingVertical: 11 },
   hostBtnText:  { color: C.primary, fontWeight: '700', fontSize: 13 },
-  cancelLink:   { alignItems: 'center', paddingTop: 4 },
-  cancelLinkText: { fontSize: 12, color: C.error, textDecorationLine: 'underline' },
+  cancelLink:   {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    gap: 5, marginTop: 10,
+    paddingVertical: 8, paddingHorizontal: 14,
+    borderWidth: 1, borderColor: C.error + '35',
+    borderRadius: 50,
+    backgroundColor: 'rgba(186,26,26,0.04)',
+    alignSelf: 'center',
+  },
+  cancelLinkText: { fontSize: 12, fontWeight: '600', color: C.error },
 
   pastCard:     { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '40', overflow: 'hidden', marginBottom: 14 },
   pastCardImg:  { width: '100%', height: 160, opacity: 0.75 },

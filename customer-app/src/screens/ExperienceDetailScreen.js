@@ -296,7 +296,10 @@ export default function ExperienceDetailScreen({ route, navigation }) {
         {/* Hero */}
         <View style={styles.heroContainer}>
           <Image source={{ uri: heroImage }} style={styles.heroImage} resizeMode="cover" />
-          <View style={styles.heroFade} />
+          <LinearGradient
+            colors={['transparent', 'rgba(247,250,246,0.55)', '#f7faf6']}
+            style={styles.heroFade}
+          />
         </View>
 
         <View style={styles.body}>
@@ -304,8 +307,16 @@ export default function ExperienceDetailScreen({ route, navigation }) {
           {/* Tags + title */}
           <View style={styles.metaSection}>
             <View style={styles.tagsRow}>
-              <View style={[styles.tag, styles.tagBlue]}><Text style={styles.tagBlueText}>High Altitude</Text></View>
-              <View style={[styles.tag, styles.tagTerracotta]}><Text style={styles.tagTerracottaText}>{experience.duration || '2-Day Trek'}</Text></View>
+              {experience.category && (
+                <View style={[styles.tag, styles.tagBlue]}>
+                  <Text style={styles.tagBlueText}>{experience.category}</Text>
+                </View>
+              )}
+              {experience.duration && (
+                <View style={[styles.tag, styles.tagTerracotta]}>
+                  <Text style={styles.tagTerracottaText}>{experience.duration}</Text>
+                </View>
+              )}
             </View>
             <Text style={styles.title}>{experience.title}</Text>
             <View style={styles.ratingRow}>
@@ -705,54 +716,59 @@ const styles = StyleSheet.create({
   circleBtn:       { width: 42, height: 42, borderRadius: 21, backgroundColor: 'rgba(255,255,255,0.90)', justifyContent: 'center', alignItems: 'center', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 4 }, android: { elevation: 4 } }) },
 
   /* Hero */
-  heroContainer:   { height: 380, width: '100%' },
+  heroContainer:   { height: 340, width: '100%' },
   heroImage:       { width: '100%', height: '100%' },
-  heroFade:        { position: 'absolute', left: 0, right: 0, bottom: 0, height: 100, backgroundColor: '#f7faf6', opacity: 0.82 },
+  heroFade:        { position: 'absolute', left: 0, right: 0, bottom: 0, height: 160 },
 
   /* Body */
-  body:            { paddingHorizontal: 16, marginTop: -24 },
+  body:            {
+    paddingHorizontal: 16, marginTop: -44,
+    backgroundColor: '#f7faf6',
+    borderTopLeftRadius: 26, borderTopRightRadius: 26,
+    paddingTop: 22,
+  },
   section:         { marginBottom: 24 },
   borderTop:       { borderTopWidth: 1, borderTopColor: 'rgba(190,201,193,0.3)', paddingTop: 20 },
 
   /* Meta */
   metaSection:     { marginBottom: 20 },
-  tagsRow:         { flexDirection: 'row', gap: 8, marginBottom: 12 },
-  tag:             { paddingHorizontal: 12, paddingVertical: 4, borderRadius: 20 },
-  tagBlue:         { backgroundColor: 'rgba(146,216,254,0.2)' },
-  tagBlueText:     { color: '#005f7f', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  tagTerracotta:   { backgroundColor: 'rgba(255,218,216,0.25)' },
-  tagTerracottaText:{ color: '#753231', fontSize: 11, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
-  title:           { fontSize: 24, fontWeight: '700', color: '#181d1a', lineHeight: 32, marginBottom: 8 },
-  ratingRow:       { flexDirection: 'row', gap: 20, alignItems: 'center', flexWrap: 'wrap' },
-  ratingCol:       { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  ratingNum:       { fontSize: 14, fontWeight: '700', color: '#181d1a' },
+  tagsRow:         { flexDirection: 'row', gap: 8, marginBottom: 14, flexWrap: 'wrap' },
+  tag:             { paddingHorizontal: 12, paddingVertical: 5, borderRadius: 8 },
+  tagBlue:         { backgroundColor: 'rgba(10,102,135,0.09)', borderWidth: 1, borderColor: 'rgba(10,102,135,0.18)' },
+  tagBlueText:     { color: '#005f7f', fontSize: 12, fontWeight: '700' },
+  tagTerracotta:   { backgroundColor: 'rgba(143,70,69,0.07)', borderWidth: 1, borderColor: 'rgba(143,70,69,0.18)' },
+  tagTerracottaText:{ color: '#753231', fontSize: 12, fontWeight: '700' },
+  title:           { fontSize: 25, fontWeight: '800', color: '#181d1a', lineHeight: 33, marginBottom: 10, letterSpacing: -0.3 },
+  ratingRow:       { flexDirection: 'row', gap: 16, alignItems: 'center', flexWrap: 'wrap' },
+  ratingCol:       { flexDirection: 'row', alignItems: 'center', gap: 5, backgroundColor: '#f1f4f0', paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
+  ratingNum:       { fontSize: 13, fontWeight: '700', color: '#181d1a' },
   reviewCount:     { fontSize: 12, color: '#6f7a73' },
   locationCol:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  locationText:    { fontSize: 14, color: '#3f4943', fontWeight: '500' },
+  locationText:    { fontSize: 13, color: '#3f4943', fontWeight: '500' },
 
   /* Host */
-  hostCard:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#f1f4f0', padding: 16, borderRadius: 12, borderWidth: 1, borderColor: 'rgba(190,201,193,0.3)', marginBottom: 24 },
+  hostCard:        { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', backgroundColor: '#fff', padding: 16, borderRadius: 16, borderWidth: 1, borderColor: 'rgba(190,201,193,0.35)', marginBottom: 24, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4 }, android: { elevation: 1 } }) },
   hostInfo:        { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  avatar:          { width: 56, height: 56, borderRadius: 28, borderWidth: 2, borderColor: 'rgba(17,105,75,0.2)' },
+  avatar:          { width: 48, height: 48, borderRadius: 24, borderWidth: 2, borderColor: 'rgba(17,105,75,0.15)' },
   avatarFallback:  { backgroundColor: '#1A5F45', justifyContent: 'center', alignItems: 'center' },
-  avatarInitials:  { color: '#fff', fontSize: 18, fontWeight: '700' },
-  hostMeta:        { gap: 2 },
-  hostName:        { fontSize: 16, fontWeight: '700', color: '#181d1a' },
+  avatarInitials:  { color: '#fff', fontSize: 16, fontWeight: '700' },
+  hostMeta:        { gap: 3 },
+  hostName:        { fontSize: 15, fontWeight: '700', color: '#181d1a' },
   verifiedRow:     { flexDirection: 'row', alignItems: 'center', gap: 4 },
   verifiedText:    { fontSize: 12, color: '#1A5F45', fontWeight: '600' },
-  contactBtn:      { borderWidth: 1, borderColor: '#1A5F45', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 6 },
-  contactBtnText:  { fontSize: 13, color: '#1A5F45', fontWeight: '600' },
+  contactBtn:      { backgroundColor: 'rgba(26,95,69,0.08)', borderWidth: 1, borderColor: 'rgba(26,95,69,0.2)', borderRadius: 20, paddingHorizontal: 16, paddingVertical: 8 },
+  contactBtnText:  { fontSize: 13, color: '#1A5F45', fontWeight: '700' },
 
   /* Description */
-  sectionTitle:    { fontSize: 18, fontWeight: '700', color: '#181d1a', marginBottom: 10 },
+  sectionTitle:    { fontSize: 17, fontWeight: '700', color: '#181d1a', marginBottom: 10, letterSpacing: -0.2 },
   description:     { fontSize: 14, color: '#3f4943', lineHeight: 22 },
-  readMoreBtn:     { flexDirection: 'row', alignItems: 'center', marginTop: 6 },
-  readMoreText:    { fontSize: 13, color: '#1A5F45', fontWeight: '700', textDecorationLine: 'underline' },
+  readMoreBtn:     { flexDirection: 'row', alignItems: 'center', marginTop: 8, gap: 2 },
+  readMoreText:    { fontSize: 13, color: '#1A5F45', fontWeight: '700' },
 
   /* Bento */
-  bentoGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 12, marginBottom: 28 },
-  bentoItem:       { flex: 1, minWidth: '45%', backgroundColor: 'rgba(224,227,223,0.3)', borderRadius: 12, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(190,201,193,0.2)' },
-  bentoText:       { fontSize: 13, fontWeight: '600', color: '#181d1a' },
+  bentoGrid:       { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 28 },
+  bentoItem:       { flex: 1, minWidth: '45%', backgroundColor: '#fff', borderRadius: 14, padding: 16, alignItems: 'center', borderWidth: 1, borderColor: 'rgba(190,201,193,0.3)', ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4 }, android: { elevation: 1 } }) },
+  bentoText:       { fontSize: 12, fontWeight: '700', color: '#181d1a', marginTop: 2 },
 
   /* Widget header */
   widgetHeader:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
@@ -859,12 +875,12 @@ const styles = StyleSheet.create({
   reviewAuthor:    { fontSize: 12, fontWeight: '600', color: '#181d1a' },
 
   /* Footer */
-  footer:          { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: 'rgba(247,250,246,0.97)', borderTopWidth: 1, borderTopColor: 'rgba(190,201,193,0.3)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, zIndex: 100 },
-  footerLeft:      { gap: 3 },
-  priceRow:        { flexDirection: 'row', alignItems: 'baseline' },
-  footerPrice:     { fontSize: 22, fontWeight: '700', color: '#181d1a' },
-  footerPriceSub:  { fontSize: 12, color: '#3f4943' },
-  viewDatesText:   { fontSize: 12, color: '#1A5F45', fontWeight: '700' },
-  bookBtn:         { backgroundColor: '#1A5F45', borderRadius: 24, paddingVertical: 14, paddingHorizontal: 36, ...Platform.select({ ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.2, shadowRadius: 8 }, android: { elevation: 4 } }) },
-  bookBtnText:     { color: '#fff', fontWeight: '700', fontSize: 15 },
+  footer:          { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: '#fff', borderTopWidth: 1, borderTopColor: 'rgba(190,201,193,0.35)', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingTop: 14, zIndex: 100, ...Platform.select({ ios: { shadowColor: '#000', shadowOffset: { width: 0, height: -2 }, shadowOpacity: 0.06, shadowRadius: 8 }, android: { elevation: 6 } }) },
+  footerLeft:      { gap: 2 },
+  priceRow:        { flexDirection: 'row', alignItems: 'baseline', gap: 2 },
+  footerPrice:     { fontSize: 22, fontWeight: '800', color: '#181d1a', letterSpacing: -0.5 },
+  footerPriceSub:  { fontSize: 12, color: '#6f7a73' },
+  viewDatesText:   { fontSize: 12, color: '#1A5F45', fontWeight: '600' },
+  bookBtn:         { backgroundColor: '#1A5F45', borderRadius: 50, paddingVertical: 14, paddingHorizontal: 32, ...Platform.select({ ios: { shadowColor: '#1A5F45', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8 }, android: { elevation: 4 } }) },
+  bookBtnText:     { color: '#fff', fontWeight: '700', fontSize: 15, letterSpacing: 0.2 },
 });
