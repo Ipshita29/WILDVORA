@@ -81,12 +81,11 @@ const experienceSchema = new mongoose.Schema(
       type: String,
       default: 'Flexible: Cancel up to 24 hours in advance for a full refund.',
     },
-    operatorInfo: {
-      businessRegistrationNumber: { type: String },
-      gstNumber:                  { type: String },
-      tourismRegistration:        { type: String },
-      yearsOfOperation:           { type: Number },
-      guideCertifications:        { type: String },
+    safetyChecklist: [{ type: String }],
+    medicalAdvisories: [{ type: String }],
+    emergencyInfo: {
+      contact: { type: String, default: '' },
+      nearestFacility: { type: String, default: '' }
     },
     status: {
       type: String,

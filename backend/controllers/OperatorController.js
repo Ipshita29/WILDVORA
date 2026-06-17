@@ -95,12 +95,22 @@ const getListings = async (req, res) => {
 const createListing = async (req, res) => {
   try {
     const {
-      title, description, category, location, socialLinks,
-      coverImage, adventureImages, video, images,
-      price, duration, difficulty, minGroupSize, maxGroupSize, bookingDeadline,
-      ageRestriction, medicalRestrictions, safetyInfo,
-      requirements, includes, exclusions, cancellationPolicy, availableDates,
-      operatorInfo,
+      title,
+      description,
+      category,
+      location,
+      images,
+      price,
+      duration,
+      difficulty,
+      maxGroupSize,
+      includes,
+      exclusions,
+      cancellationPolicy,
+      availableDates,
+      safetyChecklist,
+      medicalAdvisories,
+      emergencyInfo
     } = req.body;
 
     const experience = await Experience.create({
@@ -126,13 +136,15 @@ const createListing = async (req, res) => {
       includes:          includes || [],
       exclusions:        exclusions || [],
       cancellationPolicy,
-      availableDates:    availableDates || [],
-      operatorInfo:      operatorInfo || {},
-      host:              req.user._id,
-      hostName:          req.user.name,
-      hostVerified:      req.user.kyc === 'approved',
-      status:            'pending',
-      submittedAt:       new Date(),
+      availableDates: availableDates || [],
+      safetyChecklist: safetyChecklist || [],
+      medicalAdvisories: medicalAdvisories || [],
+      emergencyInfo: emergencyInfo || { contact: '', nearestFacility: '' },
+      host: req.user._id,
+      hostName: req.user.name,
+      hostVerified: req.user.kyc === 'approved',
+      status: 'pending',
+      submittedAt: new Date(),
     });
 
     // Notify all admin users

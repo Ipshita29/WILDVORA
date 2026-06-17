@@ -2,20 +2,57 @@ import { useState, useEffect } from 'react';
 import { FilterIcon, CheckIcon, XCircleIcon, MapPinIcon, CalIcon, EyeIcon } from '../components/Shared.jsx';
 import api from '../api/axios';
 
-function RejectionModal({ listing, onConfirm, onCancel }) {
+// Helper to generate safety guidelines dynamically for review if not stored on DB
+function getSafetyGuidelines(category, difficulty, location) {
+  const diff = difficulty || 'Moderate';
+  const cat = category || 'Trekking';
+  const city = location || 'the location';
+
+  let checklist = ['Comfortable outdoor shoes', 'Drinking water (1L+)', 'Sunscreen / Cap'];
+  let medicalAdvisories = ['Consult a doctor if you have knee/joint issues or balance conditions.'];
+  let emergencyContact = '+91 98765 43210';
+  let nearestFacility = `${city.split(',')[0]} Emergency Clinic (8 km)`;
+
+  if (cat === 'Trekking' || cat === 'Climbing') {
+    if (diff === 'Hard' || diff === 'Expert') {
+      checklist = ['Trekking boots with grip', 'Warm layers / windproof jacket', 'Headlamp / Flashlight', 'Hydration pack (2L+)', 'Energy snacks'];
+      medicalAdvisories = ['Not recommended for cardiovascular issues, severe asthma, or pregnant women.', 'High altitude acclimation warning.'];
+    } else {
+      checklist = ['Sturdy walking shoes', 'Backpack (15-20L)', 'Rain coat', 'Water bottle (1.5L)'];
+      medicalAdvisories = ['Be mindful of knee strain. Stay hydrated to avoid heat exhaustion.'];
+    }
+  } else if (cat === 'Water Sports') {
+    checklist = ['Swimwear / quick-dry clothes', 'Life jacket (certified)', 'Waterproof pouch for phone', 'Change of dry clothes'];
+    medicalAdvisories = ['Basic swimming ability required.', 'Avoid if you have history of seizures or recent shoulder/back injuries.'];
+  } else if (cat === 'Skiing') {
+    checklist = ['Thermal innerwear', 'Ski gloves and goggles', 'Waterproof snow suit', 'Helmets'];
+    medicalAdvisories = ['Not recommended for osteoporosis or severe joint instability.', 'Cold environment warning.'];
+  } else if (cat === 'Camping') {
+    checklist = ['Personal toiletries', 'Warm socks & jacket', 'Power bank', 'Flashlight', 'Personal medication'];
+    medicalAdvisories = ['Carry insect repellent. Keep warm layers handy for temperature drop at night.'];
+  }
+
+  return { checklist, medicalAdvisories, emergencyContact, nearestFacility };
+}
+
+function FeedbackModal({ listing, actionType, onConfirm, onCancel }) {
   const [reason, setReason] = useState('');
+  const isRequestChanges = actionType === 'changes_requested';
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
       <div className="bg-white rounded-2xl p-6 w-full max-w-md shadow-xl">
-        <h2 className="text-lg font-bold text-gray-900 mb-1">Reject Listing</h2>
+        <h2 className="text-lg font-bold text-gray-900 mb-1">
+          {isRequestChanges ? 'Request Changes' : 'Reject Listing'}
+        </h2>
         <p className="text-gray-500 text-sm mb-4">
-          Provide a reason for rejecting <span className="font-semibold text-gray-700">"{listing.name}"</span>.
+          Provide a reason for {isRequestChanges ? 'requesting changes to' : 'rejecting'}{' '}
+          <span className="font-semibold text-gray-700">"{listing.name}"</span>.
           The operator will see this feedback.
         </p>
         <textarea
           className="w-full border border-gray-200 rounded-lg p-3 text-sm text-gray-800 resize-none focus:outline-none focus:border-emerald-400"
           rows={4}
-          placeholder="e.g., Missing safety certifications, images are unclear, description is too vague..."
+          placeholder={isRequestChanges ? "e.g. Please clarify safety checklist items, update pricing..." : "e.g. Missing safety certifications, images are unclear..."}
           value={reason}
           onChange={e => setReason(e.target.value)}
           autoFocus
@@ -29,12 +66,14 @@ function RejectionModal({ listing, onConfirm, onCancel }) {
           </button>
           <button
             onClick={() => {
-              if (!reason.trim()) { alert('Please provide a rejection reason.'); return; }
+              if (!reason.trim()) { alert('Please provide feedback.'); return; }
               onConfirm(reason.trim());
             }}
-            className="flex-1 px-4 py-2 rounded-lg text-sm font-semibold bg-red-500 text-white hover:bg-red-600 transition-all cursor-pointer"
+            className={`flex-1 px-4 py-2 rounded-lg text-sm font-semibold text-white transition-all cursor-pointer ${
+              isRequestChanges ? 'bg-amber-500 hover:bg-amber-600' : 'bg-red-500 hover:bg-red-600'
+            }`}
           >
-            Reject Listing
+            {isRequestChanges ? 'Submit Request' : 'Reject Listing'}
           </button>
         </div>
       </div>
@@ -42,7 +81,9 @@ function RejectionModal({ listing, onConfirm, onCancel }) {
   );
 }
 
-function DetailModal({ listing, onClose, onApprove, onReject }) {
+function DetailModal({ listing, onClose, onApprove, onRequestChanges, onReject }) {
+  const safety = getSafetyGuidelines(listing.category, listing.difficulty, listing.location);
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="bg-white rounded-2xl w-full max-w-2xl shadow-xl overflow-hidden max-h-[90vh] flex flex-col">
@@ -117,18 +158,46 @@ function DetailModal({ listing, onClose, onApprove, onReject }) {
             </div>
           )}
 
-          {listing.availableDates?.length > 0 && (
-            <div className="mb-4">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Available Dates</h3>
-              <div className="flex flex-wrap gap-1.5">
-                {listing.availableDates.map((d, i) => (
-                  <span key={i} className="bg-gray-50 text-gray-600 text-xs px-2.5 py-1 rounded-full border border-gray-200">
-                    {d}
-                  </span>
-                ))}
+          {/* Safety Review Panel */}
+          <div className="mb-5 border border-amber-200 rounded-xl p-4 bg-amber-50/15">
+            <h3 className="text-sm font-bold text-amber-900 mb-2.5 flex items-center gap-1.5">
+              🛡️ Safety & Compliance Review
+            </h3>
+            <div className="space-y-3.5 text-xs text-gray-700">
+              <div className="flex items-center gap-1.5">
+                <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px]">Difficulty Rating:</span>
+                <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
+                  {listing.difficulty || 'Moderate'}
+                </span>
+              </div>
+              <div>
+                <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px] block mb-1">Safety Checklist:</span>
+                <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                  {safety.checklist.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div>
+                <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px] block mb-1">Medical Advisories:</span>
+                <ul className="list-disc pl-4 space-y-1 text-gray-600">
+                  {safety.medicalAdvisories.map((item, idx) => (
+                    <li key={idx}>{item}</li>
+                  ))}
+                </ul>
+              </div>
+              <div className="grid grid-cols-2 gap-4 pt-2 border-t border-amber-200/50">
+                <div>
+                  <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px] block mb-0.5">Emergency Contact:</span>
+                  <span className="text-gray-600 font-mono font-semibold">{safety.emergencyContact}</span>
+                </div>
+                <div>
+                  <span className="font-bold text-gray-500 uppercase tracking-wider text-[10px] block mb-0.5">Nearest Medical Facility:</span>
+                  <span className="text-gray-600 font-semibold">{safety.nearestFacility}</span>
+                </div>
               </div>
             </div>
-          )}
+          </div>
 
           {listing.operatorEmail && (
             <div className="bg-gray-50 rounded-xl p-3 border border-gray-100">
@@ -146,16 +215,22 @@ function DetailModal({ listing, onClose, onApprove, onReject }) {
           )}
         </div>
 
-        <div className="p-4 border-t border-gray-100 flex gap-3">
+        <div className="p-4 border-t border-gray-100 flex gap-2">
           <button
             onClick={onApprove}
-            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-sm font-semibold bg-emerald-600 text-white hover:bg-emerald-700 transition-all cursor-pointer"
           >
             <CheckIcon /> Approve
           </button>
           <button
+            onClick={onRequestChanges}
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-sm font-semibold bg-amber-500 text-white hover:bg-amber-600 transition-all cursor-pointer"
+          >
+            ⚠️ Request Changes
+          </button>
+          <button
             onClick={onReject}
-            className="flex-1 flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-sm font-semibold border-2 border-red-200 text-red-500 bg-white hover:bg-red-50 transition-all cursor-pointer"
+            className="flex-1 flex items-center justify-center gap-1 px-3 py-2.5 rounded-xl text-sm font-semibold bg-red-600 text-white hover:bg-red-700 transition-all cursor-pointer"
           >
             <XCircleIcon /> Reject
           </button>
@@ -165,42 +240,37 @@ function DetailModal({ listing, onClose, onApprove, onReject }) {
   );
 }
 
-function mapListing(l) {
-  return {
-    _id:            l._id,
-    name:           l.title,
-    host:           l.host?.name || l.hostName || 'Operator',
-    operatorEmail:  l.host?.email || '',
-    kycStatus:      l.host?.kyc || '',
-    date:           new Date(l.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
-    location:       l.location ? `${l.location.city || ''}, ${l.location.country || ''}` : '—',
-    img:            l.coverImage || l.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&h=260&fit=crop',
-    price:          l.price,
-    duration:       l.duration,
-    difficulty:     l.difficulty,
-    description:    l.description,
-    includes:       l.includes || [],
-    exclusions:     l.exclusions || [],
-    availableDates: l.availableDates || [],
-    isFeatured:     l.isFeatured || false,
-  };
-}
-
 export default function ListingsApprovalQueue() {
-  const [tab, setTab]                   = useState('pending');
   const [listings, setListings]         = useState([]);
-  const [liveListings, setLiveListings] = useState([]);
   const [loading, setLoading]           = useState(true);
-  const [liveLoading, setLiveLoading]   = useState(false);
   const [detailListing, setDetailListing] = useState(null);
-  const [rejectTarget, setRejectTarget]   = useState(null);
+  const [feedbackTarget, setFeedbackTarget] = useState(null);
   const [actionMsg, setActionMsg]         = useState('');
 
   const fetchPendingListings = async () => {
     setLoading(true);
     try {
       const res = await api.get('/admin/listings/pending');
-      if (res.data?.success) setListings(res.data.listings.map(mapListing));
+      if (res.data?.success) {
+        setListings(res.data.listings.map(l => ({
+          _id:            l._id,
+          name:           l.title,
+          category:       l.category,
+          host:           l.host?.name || l.hostName || 'Operator',
+          operatorEmail:  l.host?.email || '',
+          kycStatus:      l.host?.kyc || '',
+          date:           new Date(l.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }),
+          location:       l.location ? `${l.location.city || ''}, ${l.location.country || ''}` : '—',
+          img:            l.images?.[0] || 'https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?w=480&h=260&fit=crop',
+          price:          l.price,
+          duration:       l.duration,
+          difficulty:     l.difficulty,
+          description:    l.description,
+          includes:       l.includes || [],
+          exclusions:     l.exclusions || [],
+          availableDates: l.availableDates || [],
+        })));
+      }
     } catch (err) {
       console.error('Failed to fetch pending listings:', err);
     } finally {
@@ -208,40 +278,11 @@ export default function ListingsApprovalQueue() {
     }
   };
 
-  const fetchLiveListings = async () => {
-    setLiveLoading(true);
-    try {
-      const res = await api.get('/admin/listings/live');
-      if (res.data?.success) setLiveListings(res.data.listings.map(mapListing));
-    } catch (err) {
-      console.error('Failed to fetch live listings:', err);
-    } finally {
-      setLiveLoading(false);
-    }
-  };
-
   useEffect(() => { fetchPendingListings(); }, []);
-
-  useEffect(() => {
-    if (tab === 'live' && liveListings.length === 0) fetchLiveListings();
-  }, [tab]);
 
   const flash = (msg) => {
     setActionMsg(msg);
     setTimeout(() => setActionMsg(''), 3500);
-  };
-
-  const handleToggleFeatured = async (listing) => {
-    try {
-      const res = await api.patch(`/admin/listings/${listing._id}/feature`);
-      if (res.data?.success) {
-        const nowFeatured = res.data.isFeatured;
-        setLiveListings(prev => prev.map(l => l._id === listing._id ? { ...l, isFeatured: nowFeatured } : l));
-        flash(nowFeatured ? `⭐ "${listing.name}" is now featured in the customer app.` : `"${listing.name}" removed from featured.`);
-      }
-    } catch (err) {
-      alert(err.response?.data?.message || 'Failed to update featured status.');
-    }
   };
 
   const handleApprove = async (listing) => {
@@ -250,207 +291,143 @@ export default function ListingsApprovalQueue() {
       if (res.data?.success) {
         setListings(prev => prev.filter(l => l._id !== listing._id));
         setDetailListing(null);
-        flash(`✓ "${listing.name}" approved and is now live in the customer app.`);
+        flash(`✓ "${listing.name}" approved and is now live.`);
       }
     } catch (err) {
       alert(err.response?.data?.message || 'Failed to approve listing.');
     }
   };
 
-  const handleRejectConfirm = async (listing, reason) => {
+  const handleActionConfirm = async (listing, status, reason) => {
     try {
-      const res = await api.patch(`/admin/listings/${listing._id}/reject`, { status: 'rejected', reason });
+      const res = await api.patch(`/admin/listings/${listing._id}/reject`, { status, reason });
       if (res.data?.success) {
         setListings(prev => prev.filter(l => l._id !== listing._id));
-        setRejectTarget(null);
+        setFeedbackTarget(null);
         setDetailListing(null);
-        flash(`✕ "${listing.name}" rejected. Feedback sent to operator.`);
+        flash(status === 'rejected' ? `✕ "${listing.name}" rejected.` : `⚠️ Changes requested for "${listing.name}".`);
       }
     } catch (err) {
-      alert(err.response?.data?.message || 'Failed to reject listing.');
+      alert(err.response?.data?.message || 'Failed to submit feedback.');
     }
   };
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ backgroundColor: '#f5f1ea' }}>
       {/* Header */}
-      <div className="flex items-start justify-between mb-5">
+      <div className="flex items-start justify-between mb-7">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Listings</h1>
-          <p className="text-gray-500 text-sm mt-1">Review pending submissions or manage live listings.</p>
+          <h1 className="text-2xl font-bold text-gray-900 tracking-tight">Pending Review</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {loading
+              ? 'Loading...'
+              : listings.length === 0
+              ? 'All listings have been reviewed — nothing pending.'
+              : `${listings.length} listing${listings.length > 1 ? 's' : ''} awaiting approval, newest first.`}
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
-            onClick={tab === 'pending' ? fetchPendingListings : fetchLiveListings}
+            onClick={fetchPendingListings}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-all cursor-pointer"
           >
             ↻ Refresh
           </button>
-          <button className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-all cursor-pointer">
-            <FilterIcon /> Filter
-          </button>
         </div>
-      </div>
-
-      {/* Tabs */}
-      <div className="flex gap-1 mb-6 bg-white rounded-xl p-1 border border-gray-200 w-fit">
-        <button
-          onClick={() => setTab('pending')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-            tab === 'pending' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          Pending Review
-          {listings.length > 0 && (
-            <span className="ml-2 px-1.5 py-0.5 rounded-full text-xs bg-amber-100 text-amber-700 font-bold">{listings.length}</span>
-          )}
-        </button>
-        <button
-          onClick={() => setTab('live')}
-          className={`px-5 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
-            tab === 'live' ? 'bg-gray-900 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'
-          }`}
-        >
-          Live Listings
-        </button>
       </div>
 
       {/* Flash message */}
       {actionMsg && (
         <div className={`mb-5 px-4 py-3 rounded-xl text-sm font-medium ${
-          actionMsg.startsWith('✓') || actionMsg.startsWith('⭐')
-            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-            : 'bg-red-50 text-red-700 border border-red-200'
+          actionMsg.startsWith('✓') ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-700 border border-red-200'
         }`}>
           {actionMsg}
         </div>
       )}
 
-      {/* Pending Tab */}
-      {tab === 'pending' && (
-        loading ? (
-          <div className="text-center py-16 text-gray-400">Loading pending listings...</div>
-        ) : listings.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
-            <div className="text-4xl mb-3">✓</div>
-            <p className="text-gray-600 font-semibold">All listings reviewed</p>
-            <p className="text-gray-400 text-sm mt-1">New operator submissions will appear here.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-5">
-            {listings.map((l) => (
-              <div
-                key={l._id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
-              >
-                <div className="relative">
-                  <img src={l.img} alt={l.name} className="w-full h-44 object-cover" />
-                  <span className="absolute top-3 left-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-600 border border-sky-200 tracking-wide">
-                    EXPERIENCE
-                  </span>
-                </div>
-                <div className="p-4">
-                  <h3 className="text-gray-900 font-bold text-sm mb-1 truncate">{l.name}</h3>
-                  <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium mb-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    {l.host}
-                    {l.kycStatus && (
-                      <span className={`ml-1 px-1.5 py-0.5 rounded-full text-xs font-semibold ${
-                        l.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
-                      }`}>
-                        KYC: {l.kycStatus}
-                      </span>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-400 text-xs mb-4">
-                    <span className="flex items-center gap-1"><CalIcon /> {l.date}</span>
-                    <span className="flex items-center gap-1"><MapPinIcon /> {l.location}</span>
-                  </div>
-                  {l.price && (
-                    <p className="text-gray-700 text-xs font-semibold mb-3">
-                      ₹{Number(l.price).toLocaleString()} per person · {l.duration || '—'}
-                    </p>
-                  )}
-                  <div className="flex items-center gap-2">
-                    <button
-                      onClick={() => handleApprove(l)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold bg-gray-900 text-white hover:bg-gray-800 transition-all cursor-pointer"
-                    >
-                      <CheckIcon /> Approve
-                    </button>
-                    <button
-                      onClick={() => setRejectTarget(l)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold border border-red-200 text-red-500 bg-white hover:bg-red-50 transition-all cursor-pointer"
-                    >
-                      <XCircleIcon /> Reject
-                    </button>
-                    <button
-                      onClick={() => setDetailListing(l)}
-                      className="ml-auto flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-medium text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition-all cursor-pointer"
-                    >
-                      <EyeIcon /> Details
-                    </button>
-                  </div>
-                </div>
+      {loading ? (
+        <div className="text-center py-16 text-gray-400">Loading pending listings...</div>
+      ) : listings.length === 0 ? (
+        <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
+          <div className="text-4xl mb-3">✓</div>
+          <p className="text-gray-600 font-semibold text-lg">No Pending Reviews</p>
+          <p className="text-gray-400 text-sm mt-1">New operator submissions will appear here.</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-3 gap-5">
+          {listings.map((l) => (
+            <div
+              key={l._id}
+              className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
+            >
+              {/* Image */}
+              <div className="relative">
+                <img src={l.img} alt={l.name} className="w-full h-44 object-cover" />
+                <span className="absolute top-3 left-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-sky-100 text-sky-600 border border-sky-200 tracking-wide">
+                  EXPERIENCE
+                </span>
               </div>
-            ))}
-          </div>
-        )
-      )}
 
-      {/* Live Listings Tab */}
-      {tab === 'live' && (
-        liveLoading ? (
-          <div className="text-center py-16 text-gray-400">Loading live listings...</div>
-        ) : liveListings.length === 0 ? (
-          <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
-            <div className="text-4xl mb-3">📭</div>
-            <p className="text-gray-600 font-semibold">No live listings yet</p>
-            <p className="text-gray-400 text-sm mt-1">Approved listings will appear here.</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-3 gap-5">
-            {liveListings.map((l) => (
-              <div
-                key={l._id}
-                className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
-              >
-                <div className="relative">
-                  <img src={l.img} alt={l.name} className="w-full h-44 object-cover" />
-                  <span className="absolute top-3 left-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-700 border border-emerald-200 tracking-wide">
-                    LIVE
-                  </span>
-                  {l.isFeatured && (
-                    <span className="absolute top-3 right-3 text-xs font-bold px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-700 border border-amber-200 tracking-wide">
-                      ⭐ FEATURED
+              {/* Content */}
+              <div className="p-4">
+                <h3 className="text-gray-900 font-bold text-sm mb-1 truncate">{l.name}</h3>
+                <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium mb-1">
+                  <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
+                  {l.host}
+                  {l.kycStatus && (
+                    <span className={`ml-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold ${
+                      l.kycStatus === 'approved' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    }`}>
+                      KYC: {l.kycStatus}
                     </span>
                   )}
                 </div>
-                <div className="p-4">
-                  <h3 className="text-gray-900 font-bold text-sm mb-1 truncate">{l.name}</h3>
-                  <div className="flex items-center gap-1.5 text-emerald-600 text-xs font-medium mb-1">
-                    <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full" />
-                    {l.host}
-                  </div>
-                  <div className="flex items-center gap-3 text-gray-400 text-xs mb-4">
-                    <span className="flex items-center gap-1"><MapPinIcon /> {l.location}</span>
-                    {l.price && <span>₹{Number(l.price).toLocaleString()}</span>}
-                  </div>
+                <div className="flex items-center gap-3 text-gray-400 text-xs mb-4">
+                  <span className="flex items-center gap-1"><CalIcon /> {l.date}</span>
+                  <span className="flex items-center gap-1"><MapPinIcon /> {l.location}</span>
+                </div>
+                {l.price && (
+                  <p className="text-gray-700 text-xs font-semibold mb-3">
+                    ₹{Number(l.price).toLocaleString()} per person · {l.duration || '—'}
+                  </p>
+                )}
+
+                {/* Action buttons */}
+                <div className="flex items-center justify-between gap-1.5 mt-2">
                   <button
-                    onClick={() => handleToggleFeatured(l)}
-                    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
-                      l.isFeatured
-                        ? 'bg-amber-50 text-amber-700 border border-amber-300 hover:bg-amber-100'
-                        : 'bg-gray-50 text-gray-600 border border-gray-200 hover:bg-gray-100'
-                    }`}
+                    onClick={() => {
+                      if (window.confirm(`Approve "${l.name}"?`)) {
+                        handleApprove(l);
+                      }
+                    }}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold bg-emerald-600 text-white hover:bg-emerald-700 transition-all cursor-pointer"
                   >
-                    {l.isFeatured ? '⭐ Remove from Featured' : '☆ Mark as Featured'}
+                    Approve
+                  </button>
+                  <button
+                    onClick={() => setFeedbackTarget({ listing: l, actionType: 'changes_requested' })}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold bg-amber-500 text-white hover:bg-amber-600 transition-all cursor-pointer"
+                  >
+                    Changes
+                  </button>
+                  <button
+                    onClick={() => setFeedbackTarget({ listing: l, actionType: 'rejected' })}
+                    className="flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[10px] font-bold bg-red-600 text-white hover:bg-red-700 transition-all cursor-pointer"
+                  >
+                    Reject
+                  </button>
+                  <button
+                    onClick={() => setDetailListing(l)}
+                    className="flex items-center justify-center p-1.5 rounded-lg text-gray-500 border border-gray-200 bg-white hover:bg-gray-50 transition-all cursor-pointer"
+                    title="Detailed View & Safety Panel"
+                  >
+                    <EyeIcon />
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )
+            </div>
+          ))}
+        </div>
       )}
 
       {/* Detail modal */}
@@ -463,16 +440,24 @@ export default function ListingsApprovalQueue() {
               handleApprove(detailListing);
             }
           }}
-          onReject={() => { setRejectTarget(detailListing); setDetailListing(null); }}
+          onRequestChanges={() => {
+            setFeedbackTarget({ listing: detailListing, actionType: 'changes_requested' });
+            setDetailListing(null);
+          }}
+          onReject={() => {
+            setFeedbackTarget({ listing: detailListing, actionType: 'rejected' });
+            setDetailListing(null);
+          }}
         />
       )}
 
-      {/* Rejection reason modal */}
-      {rejectTarget && (
-        <RejectionModal
-          listing={rejectTarget}
-          onConfirm={(reason) => handleRejectConfirm(rejectTarget, reason)}
-          onCancel={() => setRejectTarget(null)}
+      {/* Rejection / Request changes reason modal */}
+      {feedbackTarget && (
+        <FeedbackModal
+          listing={feedbackTarget.listing}
+          actionType={feedbackTarget.actionType}
+          onConfirm={(reason) => handleActionConfirm(feedbackTarget.listing, feedbackTarget.actionType, reason)}
+          onCancel={() => setFeedbackTarget(null)}
         />
       )}
     </div>
