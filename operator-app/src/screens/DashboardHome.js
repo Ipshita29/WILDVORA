@@ -1,28 +1,100 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   ScrollView,
   TouchableOpacity,
   StyleSheet,
+  ActivityIndicator,
+  RefreshControl,
+  Image,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { theme } from '../theme';
-import { StatusBadge } from '../components/SharedComponents';
+import { useAuth } from '../context/AuthContext';
+import { operatorAPI } from '../services/api';
+
+const STATUS_MAP = {
+  pending:   { bg: '#FDDDBD', text: '#5C3D11',  label: 'Pending' },
+  confirmed: { bg: '#A3F3CD', text: '#002115',  label: 'Confirmed' },
+  cancelled: { bg: '#FFDAD6', text: '#93000A',  label: 'Cancelled' },
+  completed: { bg: '#C2E8FF', text: '#001E2C',  label: 'Completed' },
+};
+
+const StatusBadge = ({ status }) => {
+  const s = STATUS_MAP[status?.toLowerCase()] || STATUS_MAP.pending;
+  return (
+    <View style={[styles.statusPill, { backgroundColor: s.bg }]}>
+      <Text style={[styles.statusText, { color: s.text }]}>{s.label}</Text>
+    </View>
+  );
+};
 
 const BAR_DATA = [40, 60, 55, 80, 70, 90, 100];
 const BAR_MAX_HEIGHT = 80;
 
-export default function DashboardHome({ bookings, setActiveTab }) {
-  const confirmedBookings = bookings.filter(b => b.status === 'confirmed');
-  const revenue = confirmedBookings.reduce((s, b) => s + b.amount, 0);
-  const upcomingBookings = bookings.slice(0, 3);
+export default function DashboardHome({ setActiveTab }) {
+  const { user } = useAuth();
+  const [stats, setStats] = useState(null);
+  const [bookings, setBookings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+
+  const fetchDashboardData = useCallback(async (silent = false) => {
+    if (!silent) setLoading(true);
+    try {
+      const [statsRes, bookingsRes] = await Promise.all([
+        operatorAPI.getStats(),
+        operatorAPI.getBookings()
+      ]);
+      if (statsRes.data.success) {
+        setStats(statsRes.data.stats);
+      }
+      if (bookingsRes.data.success) {
+        setBookings(bookingsRes.data.bookings || []);
+      }
+    } catch (err) {
+      console.error('Failed to load dashboard data:', err);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchDashboardData(true);
+  };
+
+  const upcomingBookings = bookings
+    .filter(b => b.status === 'confirmed' || b.status === 'pending')
+    .slice(0, 3);
+
+  if (loading && !refreshing) {
+    return (
+      <View style={styles.loadingWrap}>
+        <ActivityIndicator size="large" color={theme.primary} />
+        <Text style={styles.loadingText}>Loading dashboard...</Text>
+      </View>
+    );
+  }
+
+  const hostName = user?.name || 'Operator';
+  const totalRevenue = stats?.revenueThisMonth || 0;
+  const liveListings = stats?.totalListings || 0;
 
   return (
     <ScrollView
       style={styles.screen}
       showsVerticalScrollIndicator={false}
       contentContainerStyle={{ paddingBottom: 32 }}
+      refreshControl={
+        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
+      }
     >
       {/* ── Welcome Banner ── */}
       <View style={styles.banner}>
@@ -30,7 +102,7 @@ export default function DashboardHome({ bookings, setActiveTab }) {
         <View style={styles.blobBL} />
 
         <Text style={styles.bannerLabel}>DASHBOARD</Text>
-        <Text style={styles.bannerTitle}>Good morning, Everest Basecamp Tours</Text>
+        <Text style={styles.bannerTitle}>Welcome back, {hostName}</Text>
 
         <View style={styles.bannerActions}>
           <TouchableOpacity
@@ -55,11 +127,11 @@ export default function DashboardHome({ bookings, setActiveTab }) {
         <View style={styles.rowBetween}>
           <Text style={styles.cardTitle}>Revenue Overview</Text>
           <Text style={styles.revenueAmount}>
-            ₹{(revenue / 1000).toFixed(0)}k
+            ₹{totalRevenue.toLocaleString()}
             <Text style={styles.revenueUnit}> / mo</Text>
           </Text>
         </View>
-        <Text style={styles.revenueSubtitle}>12% increase from last month</Text>
+        <Text style={styles.revenueSubtitle}>Based on confirmed & completed bookings this month</Text>
         <View style={styles.chartRow}>
           {BAR_DATA.map((pct, i) => (
             <View key={i} style={styles.barWrapper}>
@@ -86,12 +158,12 @@ export default function DashboardHome({ bookings, setActiveTab }) {
           Active Listings
         </Text>
         <View style={[styles.listingRow, { marginTop: 16 }]}>
-          <Text style={styles.listingRowLabel}>Live Experiences</Text>
-          <Text style={styles.listingRowValue}>8</Text>
+          <Text style={styles.listingRowLabel}>Total Listed Experiences</Text>
+          <Text style={styles.listingRowValue}>{liveListings}</Text>
         </View>
         <View style={[styles.listingRow, { marginTop: 10 }]}>
-          <Text style={styles.listingRowLabel}>Drafts</Text>
-          <Text style={styles.listingRowValue}>2</Text>
+          <Text style={styles.listingRowLabel}>Total Reviews</Text>
+          <Text style={styles.listingRowValue}>{stats?.totalReviews || 0}</Text>
         </View>
       </View>
 
@@ -102,73 +174,74 @@ export default function DashboardHome({ bookings, setActiveTab }) {
             <Feather name="trending-up" size={20} color={theme.secondary} />
           </View>
           <View>
-            <Text style={styles.metricTitle}>Conversion Rate</Text>
-            <Text style={styles.metricSubtitle}>Checkout completions</Text>
+            <Text style={styles.metricTitle}>Average Rating</Text>
+            <Text style={styles.metricSubtitle}>Quality feedback</Text>
           </View>
         </View>
         <View style={styles.metricRow}>
-          <Text style={styles.metricBig}>4.8%</Text>
-          <Text style={styles.metricPositive}>  +0.6%</Text>
+          <Text style={styles.metricBig}>{stats?.averageRating ? stats.averageRating.toFixed(1) : '0.0'}</Text>
+          <Text style={styles.metricPositive}>  / 5.0</Text>
         </View>
         <View style={styles.progressBg}>
-          <View style={[styles.progressFill, { width: '65%', backgroundColor: theme.primary }]} />
-        </View>
-      </View>
-
-      {/* ── Booking Growth ── */}
-      <View style={styles.card}>
-        <View style={styles.metricHeader}>
-          <View style={[styles.metricIcon, { backgroundColor: theme.tertiaryFixed }]}>
-            <Ionicons name="bar-chart-outline" size={20} color={theme.tertiary} />
-          </View>
-          <View>
-            <Text style={styles.metricTitle}>Booking Growth</Text>
-            <Text style={styles.metricSubtitle}>Monthly volume</Text>
-          </View>
-        </View>
-        <View style={styles.metricRow}>
-          <Text style={[styles.metricBig, { color: theme.text }]}>312</Text>
-          <Text style={styles.metricNegative}>  -2.1%</Text>
-        </View>
-        <View style={styles.progressBg}>
-          <View style={[styles.progressFill, { width: '45%', backgroundColor: theme.tertiary }]} />
+          <View style={[styles.progressFill, { width: `${(stats?.averageRating || 0) * 20}%`, backgroundColor: theme.primary }]} />
         </View>
       </View>
 
       {/* ── Upcoming Bookings ── */}
-      <View style={[styles.rowBetween, { marginBottom: 12 }]}>
+      <View style={[styles.rowBetween, { marginBottom: 12, marginTop: 8 }]}>
         <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
         <TouchableOpacity onPress={() => setActiveTab('bookings')}>
           <Text style={styles.viewAll}>View All</Text>
         </TouchableOpacity>
       </View>
 
-      {upcomingBookings.map(b => (
-        <TouchableOpacity key={b.id} style={styles.bookingCard} activeOpacity={0.85}>
-          <View style={styles.bookingThumb}>
-            <Ionicons name="image-outline" size={28} color={theme.outlineVariant} />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.bookingTitle} numberOfLines={2}>{b.listingTitle}</Text>
-            <View style={styles.bookingMeta}>
-              <Ionicons name="calendar-outline" size={12} color={theme.textLight} />
-              <Text style={styles.bookingMetaText}>  {b.date}</Text>
-              <Ionicons name="people-outline" size={12} color={theme.textLight} style={{ marginLeft: 10 }} />
-              <Text style={styles.bookingMetaText}>  {b.groupSize} Guests</Text>
+      {upcomingBookings.map(b => {
+        const thumb = b.experience?.images?.[0];
+        const groupSize = b.guests || 1;
+        const dateFormatted = b.startDate ? new Date(b.startDate).toLocaleDateString(undefined, {
+          month: 'short', day: 'numeric', year: 'numeric'
+        }) : 'Recent';
+
+        return (
+          <TouchableOpacity key={b._id} style={styles.bookingCard} activeOpacity={0.85}>
+            <View style={styles.bookingThumb}>
+              {thumb ? (
+                <Image source={{ uri: thumb }} style={{ width: '100%', height: '100%', borderRadius: 12 }} />
+              ) : (
+                <Ionicons name="image-outline" size={28} color={theme.outlineVariant} />
+              )}
             </View>
-            <View style={{ marginTop: 8 }}>
-              <StatusBadge status={b.status} />
+            <View style={{ flex: 1 }}>
+              <Text style={styles.bookingTitle} numberOfLines={2}>{b.experience?.title || 'Unknown Experience'}</Text>
+              <View style={styles.bookingMeta}>
+                <Ionicons name="calendar-outline" size={12} color={theme.textLight} />
+                <Text style={styles.bookingMetaText}>  {dateFormatted}</Text>
+                <Ionicons name="people-outline" size={12} color={theme.textLight} style={{ marginLeft: 10 }} />
+                <Text style={styles.bookingMetaText}>  {groupSize} Guests</Text>
+              </View>
+              <View style={{ marginTop: 8 }}>
+                <StatusBadge status={b.status} />
+              </View>
             </View>
-          </View>
-          <Ionicons name="chevron-forward" size={20} color={theme.outlineVariant} />
-        </TouchableOpacity>
-      ))}
+            <Ionicons name="chevron-forward" size={20} color={theme.outlineVariant} />
+          </TouchableOpacity>
+        );
+      })}
+
+      {upcomingBookings.length === 0 && (
+        <View style={styles.emptyState}>
+          <Feather name="calendar" size={32} color={theme.outlineVariant} />
+          <Text style={styles.emptyStateText}>No upcoming bookings</Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
   screen: { flex: 1, backgroundColor: theme.bg, paddingHorizontal: 16, paddingTop: 8 },
+  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
+  loadingText: { color: theme.textLight, fontSize: 14 },
 
   banner: {
     backgroundColor: theme.primary,
@@ -260,7 +333,6 @@ const styles = StyleSheet.create({
   metricRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 10 },
   metricBig: { color: theme.primary, fontSize: 32, fontWeight: '800' },
   metricPositive: { color: theme.primary, fontSize: 14, fontWeight: '600' },
-  metricNegative: { color: theme.danger, fontSize: 14, fontWeight: '600' },
   progressBg: { height: 8, backgroundColor: theme.surfaceVariant, borderRadius: 99 },
   progressFill: { height: 8, borderRadius: 99 },
 
@@ -290,4 +362,10 @@ const styles = StyleSheet.create({
   bookingTitle: { color: theme.text, fontSize: 15, fontWeight: '700', lineHeight: 20 },
   bookingMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
   bookingMetaText: { color: theme.textLight, fontSize: 12 },
+
+  statusPill: { borderRadius: 99, paddingHorizontal: 12, paddingVertical: 4, alignSelf: 'flex-start' },
+  statusText: { fontSize: 11, fontWeight: '600' },
+
+  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 32, gap: 8 },
+  emptyStateText: { color: theme.textLight, fontSize: 14 },
 });

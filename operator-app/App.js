@@ -6,7 +6,6 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 
 import { theme } from './src/theme';
-import { initialBookings } from './src/data/mockData';
 
 import DashboardHome     from './src/screens/DashboardHome';
 import MyListings        from './src/screens/MyListings';
@@ -39,7 +38,6 @@ function MainApp() {
   const { user, loading, logout } = useAuth();
   const [activeTab,    setActiveTab]    = useState('home');
   const [listings,     setListings]     = useState([]);
-  const [bookings,     setBookings]     = useState(initialBookings);
   const [editListing,  setEditListing]  = useState(null);
   const [listingsLoading, setListingsLoading] = useState(false);
   const [authScreen,   setAuthScreen]   = useState('login');
@@ -99,7 +97,7 @@ function MainApp() {
   const renderScreen = () => {
     switch (activeTab) {
       case 'home':
-        return <DashboardHome bookings={bookings} setActiveTab={setActiveTab} />;
+        return <DashboardHome setActiveTab={setActiveTab} />;
       case 'listings':
         return (
           <MyListings
@@ -119,13 +117,13 @@ function MainApp() {
           />
         );
       case 'bookings':
-        return <BookingsManager bookings={bookings} setBookings={setBookings} />;
+        return <BookingsManager />;
       case 'payouts':
-        return <Payouts bookings={bookings} />;
+        return <Payouts />;
       case 'reviews':
         return <ReviewsRatings />;
       default:
-        return <DashboardHome bookings={bookings} setActiveTab={setActiveTab} />;
+        return <DashboardHome setActiveTab={setActiveTab} />;
     }
   };
 
