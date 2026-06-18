@@ -33,6 +33,10 @@ export default function BookingsDisputes() {
   const [activeTab, setActiveTab] = useState('All Bookings');
   const [searchQuery, setSearchQuery] = useState('');
 
+  // Payment status filter states
+  const [paymentFilter, setPaymentFilter] = useState('All');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
   const fetchBookings = async () => {
     try {
       setLoading(true);
@@ -99,9 +103,14 @@ export default function BookingsDisputes() {
       
     if (!matchesSearch) return false;
     
-    if (activeTab === 'Disputed') return b.disputed === true;
-    if (activeTab === 'Cancelled') return b.status === 'cancelled';
-    return true;
+    if (activeTab === 'Disputed') {
+      if (b.disputed !== true) return false;
+    } else if (activeTab === 'Cancelled') {
+      if (b.status !== 'cancelled') return false;
+    }
+
+    const matchesPayment = paymentFilter === 'All' || b.paymentStatus === paymentFilter;
+    return matchesPayment;
   });
 
   const totalDisputes = bookings.filter(b => b.disputed).length;
@@ -109,6 +118,8 @@ export default function BookingsDisputes() {
   const totalRevenue = bookings
     .filter(b => b.paymentStatus === 'paid')
     .reduce((sum, b) => sum + b.totalPrice, 0);
+
+  const activeFilterCount = paymentFilter !== 'All' ? 1 : 0;
 
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ backgroundColor: '#f5f1ea' }}>
@@ -126,6 +137,60 @@ export default function BookingsDisputes() {
             onChange={e => setSearchQuery(e.target.value)}
             className="px-4 py-2 border border-gray-300 rounded-lg text-sm bg-white focus:outline-none focus:ring-1 focus:ring-emerald-500 w-64"
           />
+
+          {/* Filter dropdown button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterPanel(p => !p)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium border shadow-sm transition cursor-pointer ${
+                activeFilterCount > 0
+                  ? 'bg-emerald-600 text-white border-emerald-600'
+                  : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <FilterIcon />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-white text-emerald-650 text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {showFilterPanel && (
+              <div className="absolute right-0 top-full mt-2 z-35 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter Bookings</span>
+                  <button
+                    onClick={() => { setPaymentFilter('All'); }}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1.5">Payment Status</p>
+                  <div className="flex gap-1.5">
+                    {['All', 'paid', 'unpaid'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setPaymentFilter(opt)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition ${
+                          paymentFilter === opt
+                            ? 'bg-emerald-600 text-white border-emerald-600'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {opt === 'All' ? 'All' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button 
             onClick={fetchBookings}
             className="flex items-center gap-2 px-4 py-2 bg-white border border-gray-300 rounded-lg text-sm font-medium text-gray-600 hover:bg-gray-50 transition-all cursor-pointer"

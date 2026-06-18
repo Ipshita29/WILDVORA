@@ -77,6 +77,12 @@ export default function Hosts() {
   const [kycUpdating, setKycUpdating] = useState(false);
   const [payoutUpdating, setPayoutUpdating] = useState(false);
 
+  // Filter state
+  const [searchText, setSearchText] = useState('');
+  const [kycFilter, setKycFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
   useEffect(() => {
     if (isGrowthMapOpen) {
       const fetchGrowthMap = async () => {
@@ -264,6 +270,21 @@ export default function Hosts() {
     }
   };
 
+  // Derived filtered list
+  const filteredHosts = hosts.filter(h => {
+    const q = searchText.toLowerCase();
+    const matchesSearch = !searchText ||
+      h.name.toLowerCase().includes(q) ||
+      (h.businessName || '').toLowerCase().includes(q) ||
+      (h.location || '').toLowerCase().includes(q);
+    const matchesKyc = kycFilter === 'All' || h.kyc?.toLowerCase() === kycFilter;
+    const matchesStatus = statusFilter === 'All' ||
+      (statusFilter === 'active' ? h.isActive : !h.isActive);
+    return matchesSearch && matchesKyc && matchesStatus;
+  });
+
+  const activeFilterCount = (kycFilter !== 'All' ? 1 : 0) + (statusFilter !== 'All' ? 1 : 0);
+
   return (
     <div className="px-8 py-8 flex flex-col gap-8 select-none font-sans bg-[#F5F0EB]">
       {/* Header section */}
@@ -346,7 +367,19 @@ export default function Hosts() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {hosts.map(host => (
+            {filteredHosts.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-16 text-center text-gray-400">
+                  <div className="text-4xl mb-2">🔍</div>
+                  <p className="font-semibold text-gray-500">No hosts match your filters</p>
+                  <p className="text-sm mt-1">Try adjusting your search or clearing the filters.</p>
+                  <button
+                    onClick={() => { setSearchText(''); setKycFilter('All'); setStatusFilter('All'); }}
+                    className="mt-3 text-sm text-[#052618] font-semibold underline cursor-pointer"
+                  >Clear Filters</button>
+                </td>
+              </tr>
+            ) : filteredHosts.map(host => (
               <tr 
                 key={host._id} 
                 onClick={() => {
@@ -429,7 +462,10 @@ export default function Hosts() {
 
         {/* Table Footer */}
         <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-500">Showing 1 to {hosts.length} of 1,240 hosts</span>
+          <span className="text-xs font-semibold text-gray-500">
+            Showing {filteredHosts.length} of {hosts.length} host{hosts.length !== 1 ? 's' : ''}
+            {activeFilterCount > 0 && <span className="text-[#052618] ml-1">({activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active)</span>}
+          </span>
           <div className="flex items-center gap-2">
             <button className="bg-white border border-gray-200 text-[13px] font-semibold text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition cursor-pointer">Previous</button>
             <button className="bg-white border border-gray-200 text-[13px] font-semibold text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition cursor-pointer">Next</button>
