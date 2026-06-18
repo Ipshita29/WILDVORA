@@ -23,7 +23,11 @@ export default function Layout({ children }) {
             <button id="btn-help" onClick={() => navigate('/support')} className="w-9 h-9 flex items-center justify-center rounded-xl text-gray-500 hover:bg-gray-100 transition">
               <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={1.8} viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>
             </button>
-            <div className="flex items-center gap-2.5 pl-3 border-l border-gray-200">
+            <div 
+              id="topbar-profile"
+              onClick={() => navigate('/settings')} 
+              className="flex items-center gap-2.5 pl-3 border-l border-gray-200 cursor-pointer hover:opacity-80 transition"
+            >
               <div className="text-right">
                 <p className="text-[13px] font-semibold text-gray-800 leading-tight">{user?.name || 'Host'}</p>
                 <p className="text-[11px] text-gray-400 leading-tight">Mountain Guide</p>

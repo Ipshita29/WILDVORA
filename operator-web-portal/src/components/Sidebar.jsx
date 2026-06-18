@@ -21,7 +21,10 @@ export default function Sidebar() {
     <>
       <aside className="w-[160px] min-w-[160px] h-screen bg-white border-r border-gray-100 flex flex-col sticky top-0 overflow-y-auto">
         {/* Brand */}
-        <div className="px-5 pt-6 pb-4">
+        <div 
+          onClick={() => navigate('/')}
+          className="px-5 pt-6 pb-4 cursor-pointer hover:opacity-85 transition-opacity"
+        >
           <div className="flex items-center gap-2 mb-0.5">
             <svg width="28" height="28" viewBox="0 0 80 82" fill="none" className="flex-shrink-0">
               <polygon points="40,12 80,82 0,82" fill="#397858" />

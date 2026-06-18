@@ -1,22 +1,21 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import Layout from '../components/Layout';
+import api from '../api/axios';
 
 export default function Settings() {
-  const { user } = useAuth();
+  const { user, setUser } = useAuth();
   
   // Local form states
-  const [fullName, setFullName] = useState('Alex Riverton');
-  const [email, setEmail] = useState('alex@wildvora-expeditions.com');
-  const [phone, setPhone] = useState('+1 (555) 234-8901');
-  const [bio, setBio] = useState(
-    'Lead guide and founder of Wildvora Expeditions. 15 years of experience in high-altitude mountaineering and wilderness survival instruction. Passionate about sustainable tourism and connecting people with the untamed beauty of the Pacific Northwest.'
-  );
+  const [fullName, setFullName] = useState(user?.name || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState(user?.phone || '');
+  const [bio, setBio] = useState(user?.bio || '');
 
-  const [businessName, setBusinessName] = useState('Wildvora Adventure Operators LLC');
-  const [taxId, setTaxId] = useState('XX-XXXX452');
-  const [businessAddress, setBusinessAddress] = useState('742 Evergreen Ridge Trail, Bend, OR 97701');
-  const [website, setWebsite] = useState('wildvora.com');
+  const [businessName, setBusinessName] = useState(user?.name ? `${user.name} Adventures` : 'Wildvora Adventure Operators LLC');
+  const [taxId, setTaxId] = useState(user?.bankAccount?.ifscCode || 'XX-XXXX452');
+  const [businessAddress, setBusinessAddress] = useState(user?.city || '742 Evergreen Ridge Trail, Bend, OR 97701');
+  const [website, setWebsite] = useState(user?.email ? user.email.split('@')[1] : 'wildvora.com');
 
   const [notifications, setNotifications] = useState({
     newBookings: true,
@@ -28,6 +27,20 @@ export default function Settings() {
   const [activeSection, setActiveSection] = useState('profile');
   const [saving, setSaving] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
+
+  // Sync user details dynamically when loaded/updated
+  useEffect(() => {
+    if (user) {
+      setFullName(user.name || '');
+      setEmail(user.email || '');
+      setPhone(user.phone || '');
+      setBio(user.bio || '');
+      setBusinessAddress(user.city || '');
+      if (user.name) setBusinessName(`${user.name} Adventures`);
+      if (user.bankAccount?.ifscCode) setTaxId(user.bankAccount.ifscCode);
+      if (user.email) setWebsite(user.email.split('@')[1]);
+    }
+  }, [user]);
 
   // Load Google Fonts Material Symbols dynamically
   useEffect(() => {
@@ -47,13 +60,25 @@ export default function Settings() {
     }));
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     setSaving(true);
-    setTimeout(() => {
+    try {
+      const response = await api.patch('/users/profile', {
+        name: fullName,
+        phone: phone,
+        bio: bio,
+        city: businessAddress,
+      });
+      if (response.data && response.data.success) {
+        setUser(response.data.user);
+        setSaveSuccess(true);
+        setTimeout(() => setSaveSuccess(false), 3000);
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to save settings.');
+    } finally {
       setSaving(false);
-      setSaveSuccess(true);
-      setTimeout(() => setSaveSuccess(false), 3000);
-    }, 1000);
+    }
   };
 
   const handleNavClick = (sectionId) => {
