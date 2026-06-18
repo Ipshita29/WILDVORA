@@ -77,6 +77,12 @@ export default function Hosts() {
   const [kycUpdating, setKycUpdating] = useState(false);
   const [payoutUpdating, setPayoutUpdating] = useState(false);
 
+  // Filter state
+  const [searchText, setSearchText] = useState('');
+  const [kycFilter, setKycFilter] = useState('All');
+  const [statusFilter, setStatusFilter] = useState('All');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
   useEffect(() => {
     if (isGrowthMapOpen) {
       const fetchGrowthMap = async () => {
@@ -264,6 +270,21 @@ export default function Hosts() {
     }
   };
 
+  // Derived filtered list
+  const filteredHosts = hosts.filter(h => {
+    const q = searchText.toLowerCase();
+    const matchesSearch = !searchText ||
+      h.name.toLowerCase().includes(q) ||
+      (h.businessName || '').toLowerCase().includes(q) ||
+      (h.location || '').toLowerCase().includes(q);
+    const matchesKyc = kycFilter === 'All' || h.kyc?.toLowerCase() === kycFilter;
+    const matchesStatus = statusFilter === 'All' ||
+      (statusFilter === 'active' ? h.isActive : !h.isActive);
+    return matchesSearch && matchesKyc && matchesStatus;
+  });
+
+  const activeFilterCount = (kycFilter !== 'All' ? 1 : 0) + (statusFilter !== 'All' ? 1 : 0);
+
   return (
     <div className="px-8 py-8 flex flex-col gap-8 select-none font-sans bg-[#F5F0EB]">
       {/* Header section */}
@@ -274,12 +295,96 @@ export default function Hosts() {
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="bg-white border border-gray-200 text-gray-700 text-sm font-semibold rounded-lg px-4 py-2.5 flex items-center gap-2 hover:bg-gray-50 transition shadow-sm cursor-pointer">
-            <svg className="w-4 h-4 text-gray-500" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-            </svg>
-            Filters
-          </button>
+          {/* Search bar */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search hosts..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              className="pl-9 pr-3 py-2.5 text-sm border border-gray-200 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#052618] w-52 transition"
+            />
+          </div>
+
+          {/* Filter dropdown button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterPanel(p => !p)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-semibold border shadow-sm transition cursor-pointer ${
+                activeFilterCount > 0
+                  ? 'bg-[#052618] text-white border-[#052618]'
+                  : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50'
+              }`}
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
+              </svg>
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-white text-[#052618] text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {showFilterPanel && (
+              <div className="absolute right-0 top-full mt-2 z-30 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter Hosts</span>
+                  <button
+                    onClick={() => { setKycFilter('All'); setStatusFilter('All'); }}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-1.5">KYC Status</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['All', 'approved', 'pending', 'rejected'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setKycFilter(opt)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition ${
+                          kycFilter === opt
+                            ? 'bg-[#052618] text-white border-[#052618]'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {opt === 'All' ? 'All' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1.5">Account Status</p>
+                  <div className="flex gap-1.5">
+                    {[['All', 'All'], ['active', 'Active'], ['inactive', 'Suspended']].map(([val, label]) => (
+                      <button
+                        key={val}
+                        onClick={() => setStatusFilter(val)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition ${
+                          statusFilter === val
+                            ? 'bg-[#052618] text-white border-[#052618]'
+                            : 'bg-gray-50 text-gray-600 border-gray-200 hover:bg-gray-100'
+                        }`}
+                      >
+                        {label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button className="bg-[#052618] hover:bg-[#073622] text-white text-sm font-semibold rounded-lg px-4 py-2.5 flex items-center gap-2 transition shadow-sm cursor-pointer">
             <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2.5} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
@@ -352,7 +457,19 @@ export default function Hosts() {
             </tr>
           </thead>
           <tbody className="divide-y divide-gray-200">
-            {hosts.map(host => (
+            {filteredHosts.length === 0 ? (
+              <tr>
+                <td colSpan={7} className="px-6 py-16 text-center text-gray-400">
+                  <div className="text-4xl mb-2">🔍</div>
+                  <p className="font-semibold text-gray-500">No hosts match your filters</p>
+                  <p className="text-sm mt-1">Try adjusting your search or clearing the filters.</p>
+                  <button
+                    onClick={() => { setSearchText(''); setKycFilter('All'); setStatusFilter('All'); }}
+                    className="mt-3 text-sm text-[#052618] font-semibold underline cursor-pointer"
+                  >Clear Filters</button>
+                </td>
+              </tr>
+            ) : filteredHosts.map(host => (
               <tr 
                 key={host._id} 
                 onClick={() => {
@@ -435,7 +552,10 @@ export default function Hosts() {
 
         {/* Table Footer */}
         <div className="bg-gray-50 border-t border-gray-200 px-6 py-4 flex items-center justify-between">
-          <span className="text-xs font-semibold text-gray-500">Showing 1 to {hosts.length} of 1,240 hosts</span>
+          <span className="text-xs font-semibold text-gray-500">
+            Showing {filteredHosts.length} of {hosts.length} host{hosts.length !== 1 ? 's' : ''}
+            {activeFilterCount > 0 && <span className="text-[#052618] ml-1">({activeFilterCount} filter{activeFilterCount > 1 ? 's' : ''} active)</span>}
+          </span>
           <div className="flex items-center gap-2">
             <button className="bg-white border border-gray-200 text-[13px] font-semibold text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition cursor-pointer">Previous</button>
             <button className="bg-white border border-gray-200 text-[13px] font-semibold text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition cursor-pointer">Next</button>

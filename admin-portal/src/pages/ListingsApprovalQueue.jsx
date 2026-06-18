@@ -255,6 +255,12 @@ export default function ListingsApprovalQueue() {
   const [feedbackTarget, setFeedbackTarget] = useState(null);
   const [actionMsg, setActionMsg]         = useState('');
 
+  // Search and Filter states
+  const [searchText, setSearchText] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('All');
+  const [difficultyFilter, setDifficultyFilter] = useState('All');
+  const [showFilterPanel, setShowFilterPanel] = useState(false);
+
   const fetchPendingListings = async () => {
     setLoading(true);
     try {
@@ -320,6 +326,22 @@ export default function ListingsApprovalQueue() {
     }
   };
 
+  // Derived filtered listings
+  const filteredListings = listings.filter(l => {
+    const q = searchText.toLowerCase();
+    const matchesSearch = !searchText ||
+      (l.name || '').toLowerCase().includes(q) ||
+      (l.host || '').toLowerCase().includes(q) ||
+      (l.location || '').toLowerCase().includes(q);
+
+    const matchesCategory = categoryFilter === 'All' || l.category === categoryFilter;
+    const matchesDifficulty = difficultyFilter === 'All' || l.difficulty === difficultyFilter;
+
+    return matchesSearch && matchesCategory && matchesDifficulty;
+  });
+
+  const activeFilterCount = (categoryFilter !== 'All' ? 1 : 0) + (difficultyFilter !== 'All' ? 1 : 0);
+
   return (
     <div className="flex-1 overflow-y-auto px-8 py-8" style={{ backgroundColor: '#f5f1ea' }}>
       {/* Header */}
@@ -329,12 +351,100 @@ export default function ListingsApprovalQueue() {
           <p className="text-gray-500 text-sm mt-1">
             {loading
               ? 'Loading...'
-              : listings.length === 0
+              : filteredListings.length === 0
               ? 'All listings have been reviewed — nothing pending.'
-              : `${listings.length} listing${listings.length > 1 ? 's' : ''} awaiting approval, newest first.`}
+              : `${filteredListings.length} listing${filteredListings.length > 1 ? 's' : ''} awaiting approval, newest first.`}
           </p>
         </div>
         <div className="flex items-center gap-2">
+          {/* Search bar */}
+          <div className="relative">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+              </svg>
+            </span>
+            <input
+              type="text"
+              placeholder="Search listings..."
+              value={searchText}
+              onChange={e => setSearchText(e.target.value)}
+              className="pl-9 pr-3 py-2 text-sm border border-gray-350 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-[#052618] w-52 transition"
+            />
+          </div>
+
+          {/* Filter dropdown button */}
+          <div className="relative">
+            <button
+              onClick={() => setShowFilterPanel(p => !p)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold border shadow-sm transition cursor-pointer ${
+                activeFilterCount > 0
+                  ? 'bg-[#052618] text-white border-[#052618]'
+                  : 'bg-white text-gray-755 border-gray-300 hover:bg-gray-50'
+              }`}
+            >
+              <FilterIcon />
+              Filters
+              {activeFilterCount > 0 && (
+                <span className="w-5 h-5 rounded-full bg-white text-[#052618] text-[10px] font-bold flex items-center justify-center">
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {showFilterPanel && (
+              <div className="absolute right-0 top-full mt-2 z-30 bg-white border border-gray-200 rounded-xl shadow-lg p-4 w-64">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Filter Listings</span>
+                  <button
+                    onClick={() => { setCategoryFilter('All'); setDifficultyFilter('All'); }}
+                    className="text-xs text-red-500 hover:text-red-700 font-semibold cursor-pointer"
+                  >
+                    Clear All
+                  </button>
+                </div>
+
+                <div className="mb-3">
+                  <p className="text-xs font-semibold text-gray-500 mb-1.5">Category</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['All', 'Trekking', 'Climbing', 'Water Sports', 'Skiing', 'Camping'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setCategoryFilter(opt)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition ${
+                          categoryFilter === opt
+                            ? 'bg-[#052618] text-white border-[#052618]'
+                            : 'bg-gray-50 text-gray-600 border-gray-205 hover:bg-gray-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="text-xs font-semibold text-gray-500 mb-1.5">Difficulty</p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {['All', 'Easy', 'Moderate', 'Hard', 'Expert'].map(opt => (
+                      <button
+                        key={opt}
+                        onClick={() => setDifficultyFilter(opt)}
+                        className={`px-2.5 py-1 rounded-full text-xs font-semibold border cursor-pointer transition ${
+                          difficultyFilter === opt
+                            ? 'bg-[#052618] text-white border-[#052618]'
+                            : 'bg-gray-50 text-gray-600 border-gray-205 hover:bg-gray-100'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+
           <button
             onClick={fetchPendingListings}
             className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-gray-600 border border-gray-300 bg-white hover:bg-gray-50 transition-all cursor-pointer"
@@ -355,15 +465,21 @@ export default function ListingsApprovalQueue() {
 
       {loading ? (
         <div className="text-center py-16 text-gray-400">Loading pending listings...</div>
-      ) : listings.length === 0 ? (
+      ) : filteredListings.length === 0 ? (
         <div className="bg-white rounded-2xl border border-gray-200 p-16 text-center">
-          <div className="text-4xl mb-3">✓</div>
-          <p className="text-gray-600 font-semibold text-lg">No Pending Reviews</p>
-          <p className="text-gray-400 text-sm mt-1">New operator submissions will appear here.</p>
+          <div className="text-4xl mb-3">🔍</div>
+          <p className="text-gray-600 font-semibold text-lg">No Pending Reviews Match Your Criteria</p>
+          <p className="text-gray-400 text-sm mt-1">Try adjusting your search query or filters.</p>
+          <button
+            onClick={() => { setSearchText(''); setCategoryFilter('All'); setDifficultyFilter('All'); }}
+            className="mt-3 text-sm text-[#052618] font-semibold underline cursor-pointer"
+          >
+            Clear Filters
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-3 gap-5">
-          {listings.map((l) => (
+          {filteredListings.map((l) => (
             <div
               key={l._id}
               className="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm hover:border-gray-300 hover:shadow-md transition-all"
