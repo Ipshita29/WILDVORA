@@ -301,34 +301,46 @@ export default function TripDashboardScreen({ route, navigation }) {
         </View>
 
         {/* ── Quick Actions Strip ──────────────────────────────────────────── */}
-        {(mapsLink || guideContact || emergContact) && (
-          <View style={s.quickActions}>
-            {mapsLink && (
-              <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(mapsLink)} activeOpacity={0.8}>
-                <View style={[s.quickBtnIcon, { backgroundColor: C.primary + '18' }]}>
-                  <MaterialCommunityIcons name="map-marker-outline" size={20} color={C.primary} />
-                </View>
-                <Text style={s.quickBtnText}>Directions</Text>
-              </TouchableOpacity>
-            )}
-            {guideContact && (
-              <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(`tel:${guideContact}`)} activeOpacity={0.8}>
-                <View style={[s.quickBtnIcon, { backgroundColor: C.primary + '18' }]}>
-                  <MaterialCommunityIcons name="phone-outline" size={20} color={C.primary} />
-                </View>
-                <Text style={s.quickBtnText}>Call Guide</Text>
-              </TouchableOpacity>
-            )}
-            {emergContact && (
-              <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(`tel:${emergContact}`)} activeOpacity={0.8}>
-                <View style={[s.quickBtnIcon, { backgroundColor: C.error + '14' }]}>
-                  <MaterialCommunityIcons name="phone-alert-outline" size={20} color="#b91c1c" />
-                </View>
-                <Text style={s.quickBtnText}>Emergency</Text>
-              </TouchableOpacity>
-            )}
-          </View>
-        )}
+        <View style={s.quickActions}>
+          <TouchableOpacity 
+            style={s.quickBtn} 
+            onPress={() => navigation.navigate('Chat', {
+              bookingId: booking._id,
+              hostName: exp.hostName,
+              title: exp.title,
+            })} 
+            activeOpacity={0.8}
+          >
+            <View style={[s.quickBtnIcon, { backgroundColor: C.primary + '18' }]}>
+              <MaterialCommunityIcons name="chat-processing-outline" size={20} color={C.primary} />
+            </View>
+            <Text style={s.quickBtnText}>Message Host</Text>
+          </TouchableOpacity>
+          {mapsLink && (
+            <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(mapsLink)} activeOpacity={0.8}>
+              <View style={[s.quickBtnIcon, { backgroundColor: C.primary + '18' }]}>
+                <MaterialCommunityIcons name="map-marker-outline" size={20} color={C.primary} />
+              </View>
+              <Text style={s.quickBtnText}>Directions</Text>
+            </TouchableOpacity>
+          )}
+          {guideContact && (
+            <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(`tel:${guideContact}`)} activeOpacity={0.8}>
+              <View style={[s.quickBtnIcon, { backgroundColor: C.primary + '18' }]}>
+                <MaterialCommunityIcons name="phone-outline" size={20} color={C.primary} />
+              </View>
+              <Text style={s.quickBtnText}>Call Guide</Text>
+            </TouchableOpacity>
+          )}
+          {emergContact && (
+            <TouchableOpacity style={s.quickBtn} onPress={() => Linking.openURL(`tel:${emergContact}`)} activeOpacity={0.8}>
+              <View style={[s.quickBtnIcon, { backgroundColor: C.error + '14' }]}>
+                <MaterialCommunityIcons name="phone-alert-outline" size={20} color="#b91c1c" />
+              </View>
+              <Text style={s.quickBtnText}>Emergency</Text>
+            </TouchableOpacity>
+          )}
+        </View>
 
         <View style={s.content}>
 

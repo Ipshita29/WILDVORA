@@ -64,4 +64,10 @@ export const aiAPI = {
   getGuidedTripPlan: (data) => api.post('/ai/plan-trip-guided', data),
 };
 
+// ─── Messages ────────────────────────────────────────────────
+export const messageAPI = {
+  getByBooking: (bookingId) => api.get(`/messages/booking/${bookingId}`),
+  sendMessage:  (data)      => api.post('/messages', data),
+};
+
 export default api;

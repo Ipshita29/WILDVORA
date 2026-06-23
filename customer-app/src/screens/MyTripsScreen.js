@@ -132,7 +132,15 @@ function UpcomingCard({ booking, index, onPress, onViewDetails }) {
               <MaterialCommunityIcons name="near-me" size={15} color={C.white} />
               <Text style={s.dirBtnText}>Get Directions</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={s.hostBtn} activeOpacity={0.85}>
+            <TouchableOpacity 
+              style={s.hostBtn} 
+              activeOpacity={0.85}
+              onPress={() => navigation.navigate('Chat', {
+                bookingId: booking._id,
+                hostName: booking.experience?.hostName,
+                title: booking.experience?.title,
+              })}
+            >
               <MaterialCommunityIcons name="chat-outline" size={15} color={C.primary} />
               <Text style={s.hostBtnText}>Contact Host</Text>
             </TouchableOpacity>

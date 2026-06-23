@@ -45,4 +45,10 @@ export const operatorAPI = {
   respondToReview:    (id, data) => api.patch(`/operator/reviews/${id}/reply`, data),
 };
 
+// Message API endpoints
+export const messageAPI = {
+  getByBooking: (bookingId) => api.get(`/messages/booking/${bookingId}`),
+  sendMessage:  (data)      => api.post('/messages', data),
+};
+
 export default api;
