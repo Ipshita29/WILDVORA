@@ -163,7 +163,7 @@ const editListing = async (req, res) => {
     const experience = await Experience.findByIdAndUpdate(
       req.params.id,
       updateQuery,
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     if (becamePending || experience.status === 'pending') {
@@ -360,7 +360,7 @@ const updateBankAccount = async (req, res) => {
       {
         bankAccount: { holderName, accountNumber, bankName, ifscCode }
       },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
 
     res.json({ success: true, bankAccount: user.bankAccount });

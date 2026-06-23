@@ -104,7 +104,7 @@ const approveListing = async (req, res) => {
         $set:  { status: 'live', approvedAt: new Date(), rejectionReason: '' },
         $push: { auditLog: { action: 'approved', actorId: req.user._id, actorRole: 'admin', timestamp: new Date() } },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json({ success: true, message: 'Experience listing approved and is now live', experience });
   } catch (err) {
@@ -133,7 +133,7 @@ const rejectListing = async (req, res) => {
         $set:  { status, rejectionReason: reason.trim() },
         $push: { auditLog: { action: status, actorId: req.user._id, actorRole: 'admin', reason: reason.trim(), timestamp: new Date() } },
       },
-      { new: true }
+      { returnDocument: 'after' }
     );
     res.json({ success: true, message: `Listing status updated to ${status}`, experience });
   } catch (err) {

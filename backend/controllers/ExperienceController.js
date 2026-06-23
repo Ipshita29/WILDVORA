@@ -38,7 +38,12 @@ const getExperience = async (req, res) => {
   try {
     const experience = await Experience.findById(req.params.id).populate('host', 'name email avatar');
     if (!experience) return res.status(404).json({ success: false, message: 'Experience not found' });
-    res.json({ success: true, experience });
+
+    const hostExperiencesCount = experience.host
+      ? await Experience.countDocuments({ host: experience.host._id, status: 'live' })
+      : 0;
+
+    res.json({ success: true, experience: { ...experience.toObject(), hostExperiencesCount } });
   } catch (err) {
     res.status(500).json({ success: false, message: err.message });
   }

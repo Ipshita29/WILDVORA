@@ -67,7 +67,7 @@ function Accordion({ title, icon, children, defaultOpen = false }) {
 
 // ── Main screen ──────────────────────────────────────────────────────────────
 export default function ExperienceDetailScreen({ route, navigation }) {
-  const { experienceId } = route.params;
+  const { experienceId, bookingId } = route.params;
   const { user } = useAuth();
   const insets = useSafeAreaInsets();
 
@@ -285,22 +285,70 @@ export default function ExperienceDetailScreen({ route, navigation }) {
             </View>
           )}
 
-          {/* ── Host row ── */}
-          <View style={styles.hostRow}>
-            {hostAvatarUrl
-              ? <Image source={{ uri: hostAvatarUrl }} style={styles.avatar} />
-              : <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.avatarInitials}>{getInitials(experience.hostName)}</Text></View>
-            }
-            <View style={{ flex: 1 }}>
-              <Text style={styles.hostName}>{experience.hostName || 'Wildvora Host'}</Text>
-              <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 2 }}>
-                <MaterialIcons name="verified" size={12} color="#1A5F45" />
-                <Text style={styles.hostVerifiedText}>Verified Host · 98% response</Text>
+          {/* ── Host card ── */}
+          <View style={styles.hostCard}>
+            {/* Top row: avatar + info + action button */}
+            <View style={styles.hostCardRow}>
+              {hostAvatarUrl
+                ? <Image source={{ uri: hostAvatarUrl }} style={styles.avatar} />
+                : <View style={[styles.avatar, styles.avatarFallback]}><Text style={styles.avatarInitials}>{getInitials(experience.hostName)}</Text></View>
+              }
+              <View style={{ flex: 1 }}>
+                <Text style={styles.hostName}>{experience.hostName || 'Wildvora Host'}</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 3 }}>
+                  {experience.hostVerified && (
+                    <>
+                      <MaterialIcons name="verified" size={12} color="#1A5F45" />
+                      <Text style={styles.hostVerifiedText}>Verified Host</Text>
+                      <Text style={styles.hostStatSep}>·</Text>
+                    </>
+                  )}
+                  <MaterialCommunityIcons name="star" size={11} color="#F59E0B" />
+                  <Text style={styles.hostStatText}>{experience.rating || '4.9'}</Text>
+                </View>
+                {experience.hostExperiencesCount > 0 && (
+                  <Text style={styles.hostExpCount}>
+                    {experience.hostExperiencesCount} trip{experience.hostExperiencesCount !== 1 ? 's' : ''} hosted
+                  </Text>
+                )}
               </View>
+              {bookingId ? (
+                <TouchableOpacity
+                  style={styles.askHostBtn}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('Chat', {
+                    bookingId,
+                    hostName: experience.hostName,
+                    title: experience.title,
+                  })}
+                >
+                  <MaterialCommunityIcons name="chat-processing-outline" size={13} color="#1A5F45" />
+                  <Text style={styles.askHostBtnText}>Message</Text>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.askHostBtn}
+                  activeOpacity={0.8}
+                  onPress={() => navigation.navigate('InquiryChat', {
+                    experienceId: experience._id,
+                    hostName: experience.hostName,
+                    experienceTitle: experience.title,
+                  })}
+                >
+                  <MaterialCommunityIcons name="chat-question-outline" size={13} color="#1A5F45" />
+                  <Text style={styles.askHostBtnText}>Ask Host</Text>
+                </TouchableOpacity>
+              )}
             </View>
-            <TouchableOpacity style={styles.contactBtn} activeOpacity={0.8}>
-              <Text style={styles.contactBtnText}>Contact</Text>
-            </TouchableOpacity>
+            {/* Lock notice — only shown pre-booking */}
+            {!bookingId && (
+              <View style={styles.hostLockRow}>
+                <MaterialCommunityIcons name="lock-outline" size={12} color="#b45309" />
+                <Text style={styles.hostLockText}>
+                  Direct contact details are shared after a confirmed booking.
+                </Text>
+              </View>
+            )}
           </View>
 
           {/* ── Description ── */}
@@ -710,15 +758,21 @@ const styles = StyleSheet.create({
   highlightValue: { fontSize: 13, fontWeight: '700', color: '#111', marginTop: 6 },
   highlightLabel: { fontSize: 11, color: '#888', marginTop: 2 },
 
-  /* Host */
-  hostRow:          { flexDirection: 'row', alignItems: 'center', gap: 12, paddingVertical: 16, borderTopWidth: 1, borderBottomWidth: 1, borderColor: '#f2f2f2', marginBottom: 18 },
-  avatar:           { width: 44, height: 44, borderRadius: 22, borderWidth: 1.5, borderColor: '#dde8e2' },
+  /* Host card */
+  hostCard:         { borderWidth: 1, borderColor: '#e5ede9', borderRadius: 14, padding: 14, marginBottom: 18, backgroundColor: '#fafcfb' },
+  hostCardRow:      { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  avatar:           { width: 46, height: 46, borderRadius: 23, borderWidth: 1.5, borderColor: '#dde8e2' },
   avatarFallback:   { backgroundColor: '#1A5F45', justifyContent: 'center', alignItems: 'center' },
   avatarInitials:   { color: '#fff', fontSize: 15, fontWeight: '700' },
   hostName:         { fontSize: 14, fontWeight: '700', color: '#111' },
   hostVerifiedText: { fontSize: 11, color: '#1A5F45', fontWeight: '600' },
-  contactBtn:       { paddingHorizontal: 14, paddingVertical: 7, borderRadius: 20, borderWidth: 1, borderColor: '#cce0d8' },
-  contactBtnText:   { fontSize: 12, color: '#1A5F45', fontWeight: '700' },
+  hostStatSep:      { fontSize: 11, color: '#bbb' },
+  hostStatText:     { fontSize: 11, color: '#444', fontWeight: '600' },
+  hostExpCount:     { fontSize: 11, color: '#888', marginTop: 3 },
+  askHostBtn:       { flexDirection: 'row', alignItems: 'center', gap: 5, paddingHorizontal: 12, paddingVertical: 8, borderRadius: 20, borderWidth: 1, borderColor: '#cce0d8', backgroundColor: '#f0faf5' },
+  askHostBtnText:   { fontSize: 12, color: '#1A5F45', fontWeight: '700' },
+  hostLockRow:      { flexDirection: 'row', alignItems: 'center', gap: 5, marginTop: 10, paddingTop: 10, borderTopWidth: 1, borderTopColor: '#f0f0f0' },
+  hostLockText:     { fontSize: 11, color: '#b45309', flex: 1, lineHeight: 16 },
 
   /* Description */
   description:  { fontSize: 14, color: '#444', lineHeight: 22, marginBottom: 8 },
