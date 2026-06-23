@@ -333,7 +333,7 @@ export default function MyTripsScreen({ navigation }) {
   const pastBookings     = bookings.filter(b => ['completed', 'cancelled'].includes(b.status));
   // Countdown banner only for trips that haven't started yet
   const nextCountdownBooking = upcomingBookings.find(b => b.status === 'confirmed' || b.status === 'pending');
-  const goToExp     = (b) => navigation.navigate('ExperienceDetail', { experienceId: b.experience?._id });
+  const goToExp     = (b) => navigation.navigate('ExperienceDetail', { experienceId: b.experience?._id, bookingId: b._id });
   const goToDashboard = (b) => navigation.navigate('TripDashboard', { bookingId: b._id });
 
   return (

@@ -70,4 +70,10 @@ export const messageAPI = {
   sendMessage:  (data)      => api.post('/messages', data),
 };
 
+// ─── Inquiries (pre-booking host Q&A) ────────────────────────
+export const inquiryAPI = {
+  getOrCreate: (experienceId)        => api.get(`/inquiries/experience/${experienceId}`),
+  sendMessage: (inquiryId, text)     => api.post(`/inquiries/${inquiryId}/messages`, { text }),
+};
+
 export default api;

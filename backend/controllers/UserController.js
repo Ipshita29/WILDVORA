@@ -25,7 +25,7 @@ const updateProfile = async (req, res) => {
     const user = await User.findByIdAndUpdate(
       req.user._id,
       { name, phone, bio, avatar, city, dateOfBirth, gender, emergencyContactName, emergencyContactPhone },
-      { new: true, runValidators: true }
+      { returnDocument: 'after', runValidators: true }
     );
     res.json({ success: true, user });
   } catch (err) {

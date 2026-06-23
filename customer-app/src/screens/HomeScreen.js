@@ -617,7 +617,7 @@ const s = StyleSheet.create({
   hero:        { width: '100%', height: 360, justifyContent: 'flex-end' },
   heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
   heroContent: { padding: 20, paddingBottom: 32 },
-  heroEyebrow: { fontSize: 11, fontWeight: '600', color: 'rgba(255,255,255,0.65)', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase' },
+  heroEyebrow: { fontSize: 11, fontWeight: '600', color: 'rgba(255, 255, 255, 0.96)', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase' },
   heroTitle:   { fontSize: 36, fontWeight: '800', color: C.white, lineHeight: 44, letterSpacing: -0.5, marginBottom: 22 },
   searchRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14 },
   searchPlaceholder: { flex: 1, fontSize: 14, color: '#9aafa5' },
