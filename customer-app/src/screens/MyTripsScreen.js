@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, FlatList, TouchableOpacity, StyleSheet,
   ActivityIndicator, RefreshControl, ScrollView, Image,
-  Modal, TextInput, KeyboardAvoidingView, Platform,
+  ImageBackground, Modal, TextInput, KeyboardAvoidingView, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -61,28 +61,39 @@ function CountdownBanner({ booking }) {
   }, [booking]);
 
   if (!booking) return null;
+  const imgUri = booking.experience?.images?.[0];
   return (
-    <View style={s.countdownBanner}>
-      <View>
-        <Text style={s.countdownLabel}>NEXT ADVENTURE IN</Text>
-        <View style={s.countdownRow}>
-          {[[timeLeft.days, 'DAYS'], [timeLeft.hours, 'HRS'], [timeLeft.minutes, 'MIN']].map(([num, lbl], i) => (
-            <React.Fragment key={lbl}>
-              <View style={s.countUnit}>
-                <Text style={s.countNum}>{num}</Text>
-                <Text style={s.countUnitLabel}>{lbl}</Text>
-              </View>
-              {i < 2 && <Text style={s.countSep}>:</Text>}
-            </React.Fragment>
-          ))}
+    <ImageBackground
+      source={imgUri ? { uri: imgUri } : null}
+      style={s.countdownCard}
+      imageStyle={{ borderRadius: 22 }}
+      resizeMode="cover"
+    >
+      <View style={s.countdownOverlay}>
+        <View>
+          <Text style={s.countdownEyebrow}>Next Adventure In</Text>
+          <View style={s.countdownTimerRow}>
+            {[[timeLeft.days, 'Days'], [timeLeft.hours, 'Hrs'], [timeLeft.minutes, 'Min']].map(([num, lbl], i) => (
+              <React.Fragment key={lbl}>
+                <View style={s.countBox}>
+                  <Text style={s.countBoxNum}>{num}</Text>
+                  <Text style={s.countBoxLbl}>{lbl}</Text>
+                </View>
+                {i < 2 && <Text style={s.countColon}>:</Text>}
+              </React.Fragment>
+            ))}
+          </View>
+        </View>
+        <View>
+          <View style={s.countdownHr} />
+          <Text style={s.countdownExpTitle} numberOfLines={1}>{booking.experience?.title}</Text>
+          <View style={s.countdownExpMeta}>
+            <MaterialCommunityIcons name="calendar-outline" size={13} color="rgba(255,255,255,0.72)" />
+            <Text style={s.countdownExpSub}>{booking.startDate} – {booking.endDate} · {booking.experience?.location?.city}</Text>
+          </View>
         </View>
       </View>
-      <View style={s.countDivider} />
-      <View>
-        <Text style={s.countTitle} numberOfLines={1}>{booking.experience?.title}</Text>
-        <Text style={s.countSub}>{booking.startDate} – {booking.endDate} · {booking.experience?.location?.city}</Text>
-      </View>
-    </View>
+    </ImageBackground>
   );
 }
 
@@ -100,24 +111,18 @@ function UpcomingCard({ booking, index, onPress, onViewDetails, onContactHost })
 
   return (
     <TouchableOpacity style={s.upCard} onPress={onPress} activeOpacity={0.92}>
-      <Image source={{ uri: imgUri }} style={s.upCardImg} resizeMode="cover" />
-      <View style={s.upCardBody}>
-        <View style={s.upCardTopRow}>
-          <Text style={s.upCardTitle} numberOfLines={2}>{booking.experience?.title}</Text>
-          <View style={[s.confirmedBadge, { backgroundColor: badgeCfg.bg }]}>
-            <Text style={[s.confirmedText, { color: badgeCfg.text }]}>
-              {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
-            </Text>
-          </View>
+      <View style={s.upCardImgWrap}>
+        <Image source={{ uri: imgUri }} style={s.upCardImg} resizeMode="cover" />
+        <View style={s.upCardImgOverlay} />
+        <View style={[s.upCardBadge, { backgroundColor: badgeCfg.bg }]}>
+          <Text style={[s.upCardBadgeText, { color: badgeCfg.text }]}>
+            {booking.status.charAt(0).toUpperCase() + booking.status.slice(1)}
+          </Text>
         </View>
+      </View>
 
-        {/* Postponed note */}
-        {booking.status === 'postponed' && booking.statusNote ? (
-          <View style={s.statusNoteRow}>
-            <MaterialCommunityIcons name="information-outline" size={14} color="#7C5800" />
-            <Text style={s.statusNoteText}>{booking.statusNote}</Text>
-          </View>
-        ) : null}
+      <View style={s.upCardBody}>
+        <Text style={s.upCardTitle} numberOfLines={2}>{booking.experience?.title}</Text>
 
         <View style={s.upCardMeta}>
           <MaterialCommunityIcons name="calendar-outline" size={15} color={C.onSurfaceVariant} />
@@ -126,20 +131,10 @@ function UpcomingCard({ booking, index, onPress, onViewDetails, onContactHost })
           </Text>
         </View>
 
-        {booking.status !== 'ongoing' && (
-          <View style={s.upCardActions}>
-            <TouchableOpacity style={s.dirBtn} activeOpacity={0.85}>
-              <MaterialCommunityIcons name="near-me" size={15} color={C.white} />
-              <Text style={s.dirBtnText}>Get Directions</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={s.hostBtn} 
-              activeOpacity={0.85}
-              onPress={onContactHost}
-            >
-              <MaterialCommunityIcons name="chat-outline" size={15} color={C.primary} />
-              <Text style={s.hostBtnText}>Contact Host</Text>
-            </TouchableOpacity>
+        {booking.status === 'postponed' && booking.statusNote && (
+          <View style={s.statusNoteRow}>
+            <MaterialCommunityIcons name="information-outline" size={14} color="#7C5800" />
+            <Text style={s.statusNoteText}>{booking.statusNote}</Text>
           </View>
         )}
 
@@ -150,11 +145,23 @@ function UpcomingCard({ booking, index, onPress, onViewDetails, onContactHost })
           </View>
         )}
 
+        {booking.status !== 'ongoing' && (
+          <View style={s.upCardActions}>
+            <TouchableOpacity style={s.dirBtn} activeOpacity={0.85}>
+              <MaterialCommunityIcons name="near-me" size={15} color={C.white} />
+              <Text style={s.dirBtnText}>Directions</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={s.hostBtn} activeOpacity={0.85} onPress={onContactHost}>
+              <MaterialCommunityIcons name="chat-outline" size={15} color={C.primary} />
+              <Text style={s.hostBtnText}>Contact Host</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
         <TouchableOpacity style={s.detailsBtn} onPress={onViewDetails} activeOpacity={0.85}>
-          <MaterialCommunityIcons name="clipboard-text-outline" size={15} color={C.white} />
+          <MaterialCommunityIcons name="clipboard-text-outline" size={15} color={C.onSurfaceVariant} />
           <Text style={s.detailsBtnText}>View Booking Details</Text>
         </TouchableOpacity>
-
       </View>
     </TouchableOpacity>
   );
@@ -168,46 +175,49 @@ function PastCard({ booking, index, onPress, onReview, hasReviewed, onViewDetail
 
   return (
     <TouchableOpacity style={s.pastCard} onPress={onPress} activeOpacity={0.88}>
-      <View style={{ position: 'relative' }}>
-        <Image source={{ uri: imgUri }} style={[s.pastCardImg, cancelled && { opacity: 0.5 }]} resizeMode="cover" />
-        {/* Status badge on image */}
-        <View style={[s.statusBadge, cancelled ? s.statusBadgeCancelled : s.statusBadgeCompleted]}>
-          <MaterialCommunityIcons
-            name={cancelled ? 'close-circle-outline' : 'check-circle-outline'}
-            size={12}
-            color={cancelled ? '#b91c1c' : '#15803d'}
+      <View style={s.pastCardInner}>
+        <View style={s.pastImgWrap}>
+          <Image
+            source={{ uri: imgUri }}
+            style={[s.pastCardImg, cancelled && { opacity: 0.55 }]}
+            resizeMode="cover"
           />
-          <Text style={[s.statusBadgeText, { color: cancelled ? '#b91c1c' : '#15803d' }]}>
-            {cancelled ? 'Cancelled' : 'Completed'}
-          </Text>
+          <View style={[s.pastStatusDot, cancelled ? s.pastStatusDotCancelled : s.pastStatusDotCompleted]}>
+            <MaterialCommunityIcons
+              name={cancelled ? 'close' : 'check'}
+              size={11}
+              color={cancelled ? '#b91c1c' : '#15803d'}
+            />
+          </View>
         </View>
-      </View>
 
-      <View style={s.pastCardBody}>
-        <Text style={s.pastCardTitle} numberOfLines={1}>{booking.experience?.title}</Text>
-        <Text style={s.pastCardMeta}>
-          {booking.startDate} · {booking.experience?.location?.city || ''}
-        </Text>
+        <View style={s.pastCardBody}>
+          <Text style={s.pastCardCat}>{booking.experience?.category || 'Experience'}</Text>
+          <Text style={s.pastCardTitle} numberOfLines={2}>{booking.experience?.title}</Text>
+          <View style={s.pastCardMetaRow}>
+            <MaterialCommunityIcons name="calendar-outline" size={12} color={C.onSurfaceVariant} />
+            <Text style={s.pastCardMetaText}>{booking.startDate} · {booking.experience?.location?.city || ''}</Text>
+          </View>
 
-        {/* Only completed trips get the review option */}
-        {completed && (
-          hasReviewed ? (
-            <View style={s.reviewedBadge}>
-              <MaterialCommunityIcons name="check-circle" size={14} color="#15803d" />
-              <Text style={s.reviewedText}>Review submitted</Text>
-            </View>
-          ) : (
-            <TouchableOpacity style={s.reviewBtn} onPress={onReview} activeOpacity={0.8}>
-              <MaterialCommunityIcons name="star-outline" size={15} color={C.primary} />
-              <Text style={s.reviewBtnText}>Leave a Review</Text>
-            </TouchableOpacity>
-          )
-        )}
+          {completed && (
+            hasReviewed ? (
+              <View style={s.reviewedBadge}>
+                <MaterialCommunityIcons name="check-circle" size={13} color="#15803d" />
+                <Text style={s.reviewedText}>Reviewed</Text>
+              </View>
+            ) : (
+              <TouchableOpacity style={s.reviewBtn} onPress={onReview} activeOpacity={0.8}>
+                <MaterialCommunityIcons name="star-outline" size={14} color={C.primary} />
+                <Text style={s.reviewBtnText}>Rate trip</Text>
+              </TouchableOpacity>
+            )
+          )}
 
-        <TouchableOpacity style={s.pastDetailsBtn} onPress={onViewDetails} activeOpacity={0.82}>
-          <MaterialCommunityIcons name="clipboard-text-outline" size={14} color={C.primary} />
-          <Text style={s.pastDetailsBtnText}>View Booking Details</Text>
-        </TouchableOpacity>
+          <TouchableOpacity style={s.pastDetailsBtn} onPress={onViewDetails} activeOpacity={0.82}>
+            <Text style={s.pastDetailsBtnText}>View Details</Text>
+            <MaterialCommunityIcons name="chevron-right" size={14} color={C.primary} />
+          </TouchableOpacity>
+        </View>
       </View>
     </TouchableOpacity>
   );
@@ -341,13 +351,10 @@ export default function MyTripsScreen({ navigation }) {
 
       {/* App bar */}
       <View style={s.appBar}>
-        <View style={s.appBarLeft}>
-          <MaterialCommunityIcons name="menu" size={24} color={C.onSurfaceVariant} />
-          <Text style={s.appBarLogo}>Wildvora</Text>
-        </View>
+        <Text style={s.appBarLogo}>Wildvora</Text>
         <View style={s.appBarAvatar}>
           {user?.avatar
-            ? <Image source={{ uri: user.avatar }} style={{ width: '100%', height: '100%', borderRadius: 18 }} />
+            ? <Image source={{ uri: user.avatar }} style={{ width: '100%', height: '100%', borderRadius: 19 }} />
             : <Text style={s.appBarAvatarText}>{user?.name ? user.name.charAt(0).toUpperCase() : 'U'}</Text>
           }
         </View>
@@ -363,81 +370,85 @@ export default function MyTripsScreen({ navigation }) {
           />
         }
       >
-        <View style={s.content}>
+        {/* Page header */}
+        <View style={s.pageHeader}>
           <Text style={s.pageTitle}>My Trips</Text>
-
-          {/* Segmented control */}
-          <View style={s.segWrap}>
-            {['upcoming', 'past'].map(tab => (
-              <TouchableOpacity
-                key={tab}
-                style={[s.segBtn, uiTab === tab && s.segBtnActive]}
-                onPress={() => setUiTab(tab)}
-                activeOpacity={0.85}
-              >
-                <Text style={[s.segText, uiTab === tab && s.segTextActive]}>
-                  {tab.charAt(0).toUpperCase() + tab.slice(1)}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-
-          {loading ? (
-            <View style={s.center}><ActivityIndicator size="large" color={C.primary} /></View>
-          ) : uiTab === 'upcoming' ? (
-            <>
-              <CountdownBanner booking={nextCountdownBooking} />
-              {upcomingBookings.length === 0 ? (
-                <View style={s.empty}>
-                  <MaterialCommunityIcons name="map-search-outline" size={48} color={C.outlineVariant} style={{ marginBottom: 12 }} />
-                  <Text style={s.emptyTitle}>No upcoming trips</Text>
-                  <Text style={s.emptyText}>Your confirmed adventures will appear here.</Text>
-                  <TouchableOpacity style={s.exploreBtn} onPress={() => navigation.navigate('Home')}>
-                    <Text style={s.exploreBtnText}>Explore Experiences</Text>
-                  </TouchableOpacity>
-                </View>
-              ) : (
-                upcomingBookings.map((b, i) => (
-                  <UpcomingCard 
-                    key={b._id} 
-                    booking={b} 
-                    index={i} 
-                    onPress={() => goToExp(b)} 
-                    onViewDetails={() => goToDashboard(b)} 
-                    onContactHost={() => navigation.navigate('Chat', {
-                      bookingId: b._id,
-                      hostName: b.experience?.hostName,
-                      title: b.experience?.title,
-                    })}
-                  />
-                ))
-              )}
-            </>
-          ) : (
-            <>
-              {pastBookings.length === 0 ? (
-                <View style={s.empty}>
-                  <MaterialCommunityIcons name="history" size={48} color={C.outlineVariant} style={{ marginBottom: 12 }} />
-                  <Text style={s.emptyTitle}>No past trips</Text>
-                  <Text style={s.emptyText}>Completed adventures will appear here.</Text>
-                </View>
-              ) : (
-                pastBookings.map((b, i) => (
-                  <PastCard
-                    key={b._id}
-                    booking={b}
-                    index={i}
-                    onPress={() => goToExp(b)}
-                    hasReviewed={reviewedExpIds.has(b.experience?._id)}
-                    onReview={() => openReviewModal(b)}
-                    onViewDetails={() => goToDashboard(b)}
-                  />
-                ))
-              )}
-            </>
+          {!loading && (
+            <Text style={s.pageSub}>{upcomingBookings.length} upcoming · {pastBookings.length} past</Text>
           )}
         </View>
-        <View style={{ height: 28 }} />
+
+        {/* Segmented control */}
+        <View style={s.segWrap}>
+          {['upcoming', 'past'].map(tab => (
+            <TouchableOpacity
+              key={tab}
+              style={[s.segBtn, uiTab === tab && s.segBtnActive]}
+              onPress={() => setUiTab(tab)}
+              activeOpacity={0.85}
+            >
+              <Text style={[s.segText, uiTab === tab && s.segTextActive]}>
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+
+        {loading ? (
+          <View style={s.center}><ActivityIndicator size="large" color={C.primary} /></View>
+        ) : uiTab === 'upcoming' ? (
+          <>
+            <CountdownBanner booking={nextCountdownBooking} />
+            {upcomingBookings.length === 0 ? (
+              <View style={s.empty}>
+                <MaterialCommunityIcons name="map-search-outline" size={56} color={C.outlineVariant} style={{ marginBottom: 16 }} />
+                <Text style={s.emptyTitle}>No upcoming trips</Text>
+                <Text style={s.emptyText}>Your confirmed adventures will appear here.</Text>
+                <TouchableOpacity style={s.exploreBtn} onPress={() => navigation.navigate('Home')}>
+                  <Text style={s.exploreBtnText}>Explore Experiences</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              upcomingBookings.map((b, i) => (
+                <UpcomingCard
+                  key={b._id}
+                  booking={b}
+                  index={i}
+                  onPress={() => goToExp(b)}
+                  onViewDetails={() => goToDashboard(b)}
+                  onContactHost={() => navigation.navigate('Chat', {
+                    bookingId: b._id,
+                    hostName: b.experience?.hostName,
+                    title: b.experience?.title,
+                  })}
+                />
+              ))
+            )}
+          </>
+        ) : (
+          <>
+            {pastBookings.length === 0 ? (
+              <View style={s.empty}>
+                <MaterialCommunityIcons name="history" size={56} color={C.outlineVariant} style={{ marginBottom: 16 }} />
+                <Text style={s.emptyTitle}>No past trips</Text>
+                <Text style={s.emptyText}>Completed adventures will appear here.</Text>
+              </View>
+            ) : (
+              pastBookings.map((b, i) => (
+                <PastCard
+                  key={b._id}
+                  booking={b}
+                  index={i}
+                  onPress={() => goToExp(b)}
+                  hasReviewed={reviewedExpIds.has(b.experience?._id)}
+                  onReview={() => openReviewModal(b)}
+                  onViewDetails={() => goToDashboard(b)}
+                />
+              ))
+            )}
+          </>
+        )}
+        <View style={{ height: 32 }} />
       </ScrollView>
 
       {/* ── Review modal ── */}
@@ -507,118 +518,116 @@ export default function MyTripsScreen({ navigation }) {
 }
 
 const s = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: C.background },
-  center:  { paddingTop: 60, alignItems: 'center' },
-  content: { paddingHorizontal: 20, paddingTop: 6 },
+  safe:   { flex: 1, backgroundColor: C.background },
+  center: { paddingTop: 60, alignItems: 'center' },
 
   /* App bar */
-  appBar:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: C.surface + 'CC', borderBottomWidth: 1, borderColor: C.outlineVariant + '40' },
-  appBarLeft:       { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  appBarLogo:       { fontSize: 20, fontWeight: '700', color: C.primary, letterSpacing: -0.3 },
-  appBarAvatar:     { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surfaceContainerLow, borderWidth: 2, borderColor: C.primary + '30', justifyContent: 'center', alignItems: 'center' },
+  appBar:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 14, backgroundColor: C.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
+  appBarLogo:       { fontSize: 22, fontWeight: '800', color: C.primary, letterSpacing: -0.5 },
+  appBarAvatar:     { width: 38, height: 38, borderRadius: 19, backgroundColor: C.surfaceContainerLow, borderWidth: 2, borderColor: C.primary + '40', justifyContent: 'center', alignItems: 'center' },
   appBarAvatarText: { fontSize: 14, fontWeight: '700', color: C.primary },
 
-  pageTitle: { fontSize: 28, fontWeight: '700', color: C.onSurface, marginBottom: 18, marginTop: 6, letterSpacing: -0.3 },
+  /* Page header */
+  pageHeader: { paddingHorizontal: 22, paddingTop: 24, paddingBottom: 4 },
+  pageTitle:  { fontSize: 34, fontWeight: '800', color: C.onSurface, letterSpacing: -0.5 },
+  pageSub:    { fontSize: 14, color: C.onSurfaceVariant, marginTop: 5, fontWeight: '500' },
 
-  /* Segment */
-  segWrap:       { flexDirection: 'row', backgroundColor: C.surfaceContainerLow, borderRadius: 50, padding: 4, marginBottom: 20 },
-  segBtn:        { flex: 1, paddingVertical: 11, borderRadius: 50, alignItems: 'center' },
-  segBtnActive:  { backgroundColor: C.primary, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.28, shadowRadius: 6, elevation: 3 },
-  segText:       { fontSize: 14, fontWeight: '600', color: C.onSurfaceVariant },
+  /* Segmented control */
+  segWrap:       { flexDirection: 'row', backgroundColor: C.surfaceContainerLow, borderRadius: 50, padding: 4, marginHorizontal: 22, marginTop: 20, marginBottom: 24 },
+  segBtn:        { flex: 1, paddingVertical: 12, borderRadius: 50, alignItems: 'center' },
+  segBtnActive:  { backgroundColor: C.primary, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.28, shadowRadius: 6, elevation: 3 },
+  segText:       { fontSize: 15, fontWeight: '600', color: C.onSurfaceVariant },
   segTextActive: { color: C.white, fontWeight: '700' },
 
-  /* Countdown */
-  countdownBanner: { backgroundColor: C.primaryContainer, borderRadius: 16, padding: 20, marginBottom: 20 },
-  countdownLabel:  { fontSize: 11, fontWeight: '700', color: C.onPrimaryContainer + 'BB', letterSpacing: 1.5, marginBottom: 10, textTransform: 'uppercase' },
-  countdownRow:    { flexDirection: 'row', alignItems: 'center', marginBottom: 16 },
-  countUnit:       { alignItems: 'center' },
-  countNum:        { fontSize: 36, fontWeight: '700', color: C.onPrimaryContainer, lineHeight: 40 },
-  countUnitLabel:  { fontSize: 10, fontWeight: '700', color: C.onPrimaryContainer + 'AA', letterSpacing: 1, textTransform: 'uppercase' },
-  countSep:        { fontSize: 30, fontWeight: '300', color: C.onPrimaryContainer + '50', marginHorizontal: 10, marginBottom: 12 },
-  countDivider:    { height: 1, backgroundColor: C.onPrimaryContainer + '25', marginBottom: 14 },
-  countTitle:      { fontSize: 18, fontWeight: '700', color: C.onPrimaryContainer, marginBottom: 3 },
-  countSub:        { fontSize: 13, color: C.onPrimaryContainer + 'CC' },
+  /* Countdown banner — trip image as background */
+  countdownCard:     { marginHorizontal: 22, marginBottom: 22, borderRadius: 22, overflow: 'hidden', height: 216, backgroundColor: C.primaryContainer },
+  countdownOverlay:  { flex: 1, justifyContent: 'space-between', padding: 22, backgroundColor: 'rgba(0,0,0,0.50)' },
+  countdownEyebrow:  { fontSize: 11, fontWeight: '800', color: 'rgba(255,255,255,0.62)', letterSpacing: 2, textTransform: 'uppercase', marginBottom: 12 },
+  countdownTimerRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  countBox:          { alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.14)', borderRadius: 14, paddingHorizontal: 14, paddingVertical: 10, minWidth: 64, borderWidth: 1, borderColor: 'rgba(255,255,255,0.22)' },
+  countBoxNum:       { fontSize: 34, fontWeight: '900', color: '#FFFFFF', lineHeight: 38, letterSpacing: -1 },
+  countBoxLbl:       { fontSize: 10, fontWeight: '700', color: 'rgba(255,255,255,0.62)', letterSpacing: 1.2, textTransform: 'uppercase', marginTop: 3 },
+  countColon:        { fontSize: 28, fontWeight: '300', color: 'rgba(255,255,255,0.4)', marginBottom: 14 },
+  countdownHr:       { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(255,255,255,0.22)', marginBottom: 14 },
+  countdownExpTitle: { fontSize: 18, fontWeight: '800', color: '#FFFFFF', marginBottom: 6, letterSpacing: -0.3 },
+  countdownExpMeta:  { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  countdownExpSub:   { fontSize: 13, color: 'rgba(255,255,255,0.70)' },
 
   /* Upcoming card */
-  upCard:        { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '50', overflow: 'hidden', marginBottom: 16, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.06, shadowRadius: 6, elevation: 2 },
-  upCardImg:     { width: '100%', height: 200 },
-  upCardBody:    { padding: 16 },
-  upCardTopRow:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 8 },
-  upCardTitle:   { fontSize: 18, fontWeight: '700', color: C.onSurface, flex: 1, marginRight: 10, lineHeight: 24 },
-  confirmedBadge:{ backgroundColor: C.secondaryContainer, paddingHorizontal: 12, paddingVertical: 4, borderRadius: 50 },
-  confirmedText: { fontSize: 11, fontWeight: '700', color: C.onSecondaryContainer },
-  upCardMeta:    { flexDirection: 'row', alignItems: 'center', gap: 6, marginBottom: 14 },
-  metaText:      { fontSize: 13, color: C.onSurfaceVariant },
-  upCardActions: { flexDirection: 'row', gap: 10, marginBottom: 8 },
-  dirBtn:        { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.primary, borderRadius: 50, paddingVertical: 11, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.25, shadowRadius: 5, elevation: 3 },
-  dirBtnText:    { color: C.white, fontWeight: '700', fontSize: 13 },
-  hostBtn:       { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: C.outline, borderRadius: 50, paddingVertical: 11 },
-  hostBtnText:   { color: C.primary, fontWeight: '700', fontSize: 13 },
-  detailsBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, backgroundColor: C.primary, borderRadius: 50, paddingVertical: 11, marginTop: 4, marginBottom: 4, shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.22, shadowRadius: 5, elevation: 3 },
-  detailsBtnText: { color: C.white, fontWeight: '700', fontSize: 13 },
+  upCard:           { marginHorizontal: 22, backgroundColor: C.white, borderRadius: 22, overflow: 'hidden', marginBottom: 20, shadowColor: '#000', shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.09, shadowRadius: 10, elevation: 4 },
+  upCardImgWrap:    { position: 'relative' },
+  upCardImg:        { width: '100%', height: 220 },
+  upCardImgOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.16)' },
+  upCardBadge:      { position: 'absolute', top: 14, right: 14, paddingHorizontal: 14, paddingVertical: 6, borderRadius: 50 },
+  upCardBadgeText:  { fontSize: 12, fontWeight: '800', letterSpacing: 0.2 },
+  upCardBody:       { padding: 18, paddingTop: 16 },
+  upCardTitle:      { fontSize: 20, fontWeight: '800', color: C.onSurface, lineHeight: 27, letterSpacing: -0.3, marginBottom: 10 },
+  upCardMeta:       { flexDirection: 'row', alignItems: 'center', gap: 7, marginBottom: 16 },
+  metaText:         { fontSize: 14, color: C.onSurfaceVariant, fontWeight: '500' },
+  upCardActions:    { flexDirection: 'row', gap: 10, marginBottom: 10 },
+  dirBtn:           { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, backgroundColor: C.primary, borderRadius: 50, paddingVertical: 13, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 6, elevation: 3 },
+  dirBtnText:       { color: C.white, fontWeight: '700', fontSize: 14 },
+  hostBtn:          { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, borderWidth: 1.5, borderColor: C.primary + '55', borderRadius: 50, paddingVertical: 13 },
+  hostBtnText:      { color: C.primary, fontWeight: '700', fontSize: 14 },
+  detailsBtn:       { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, borderWidth: 1.5, borderColor: C.outlineVariant, borderRadius: 50, paddingVertical: 13, marginTop: 2 },
+  detailsBtnText:   { color: C.onSurfaceVariant, fontWeight: '700', fontSize: 14 },
+  statusNoteRow:    { flexDirection: 'row', alignItems: 'flex-start', gap: 7, backgroundColor: '#FFF8E1', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 12, marginBottom: 14 },
+  statusNoteText:   { fontSize: 13, color: '#7C5800', flex: 1, lineHeight: 19 },
+  ongoingBanner:    { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E3F2FD', borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, marginBottom: 12 },
+  ongoingBannerText:{ fontSize: 14, fontWeight: '600', color: '#0D47A1' },
 
-  statusNoteRow:  { flexDirection: 'row', alignItems: 'flex-start', gap: 6, backgroundColor: '#FFF8E1', borderRadius: 8, paddingHorizontal: 10, paddingVertical: 8, marginBottom: 4 },
-  statusNoteText: { fontSize: 12, color: '#7C5800', flex: 1, lineHeight: 17 },
-  ongoingBanner:  { flexDirection: 'row', alignItems: 'center', gap: 8, backgroundColor: '#E3F2FD', borderRadius: 10, paddingHorizontal: 14, paddingVertical: 10, marginBottom: 4 },
-  ongoingBannerText: { fontSize: 13, fontWeight: '600', color: '#0D47A1' },
-
-  /* Past card */
-  pastCard:     { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '40', overflow: 'hidden', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-  pastCardImg:  { width: '100%', height: 160 },
-  pastCardBody: { padding: 14 },
-  pastCardTitle:{ fontSize: 16, fontWeight: '700', color: C.onSurface, marginBottom: 3 },
-  pastCardMeta: { fontSize: 13, color: C.onSurfaceVariant, marginBottom: 12 },
-
-  /* Status badge on image */
-  statusBadge:           { position: 'absolute', top: 10, left: 10, flexDirection: 'row', alignItems: 'center', gap: 4, paddingHorizontal: 10, paddingVertical: 5, borderRadius: 20 },
-  statusBadgeCompleted:  { backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0' },
-  statusBadgeCancelled:  { backgroundColor: '#fef2f2', borderWidth: 1, borderColor: '#fecaca' },
-  statusBadgeText:       { fontSize: 11, fontWeight: '700' },
-
-  /* Review button / badge */
-  reviewBtn:    { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 7, paddingVertical: 11, borderRadius: 50, borderWidth: 1.5, borderColor: C.primary + '50', backgroundColor: C.primary + '08', marginBottom: 10 },
-  reviewBtnText:{ fontSize: 13, fontWeight: '700', color: C.primary },
-  reviewedBadge:{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 50, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', marginBottom: 10 },
-  reviewedText: { fontSize: 13, fontWeight: '600', color: '#15803d' },
-  pastDetailsBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingVertical: 10, borderRadius: 50, borderWidth: 1.5, borderColor: C.primary + '40', backgroundColor: C.primary + '08', marginTop: 2 },
-  pastDetailsBtnText: { fontSize: 13, fontWeight: '700', color: C.primary },
+  /* Past card — horizontal layout */
+  pastCard:               { marginHorizontal: 22, backgroundColor: C.white, borderRadius: 20, overflow: 'hidden', marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
+  pastCardInner:          { flexDirection: 'row' },
+  pastImgWrap:            { width: 112, height: 152, flexShrink: 0 },
+  pastCardImg:            { width: 112, height: 152 },
+  pastStatusDot:          { position: 'absolute', top: 10, left: 10, width: 24, height: 24, borderRadius: 12, justifyContent: 'center', alignItems: 'center' },
+  pastStatusDotCompleted: { backgroundColor: '#dcfce7', borderWidth: 1.5, borderColor: '#86efac' },
+  pastStatusDotCancelled: { backgroundColor: '#fee2e2', borderWidth: 1.5, borderColor: '#fca5a5' },
+  pastCardBody:           { flex: 1, padding: 14, paddingTop: 13 },
+  pastCardCat:            { fontSize: 10, fontWeight: '800', color: C.onSurfaceVariant, letterSpacing: 1.4, textTransform: 'uppercase', marginBottom: 5 },
+  pastCardTitle:          { fontSize: 15, fontWeight: '700', color: C.onSurface, lineHeight: 21, letterSpacing: -0.2, marginBottom: 5 },
+  pastCardMetaRow:        { flexDirection: 'row', alignItems: 'center', gap: 5, marginBottom: 12 },
+  pastCardMetaText:       { fontSize: 12, color: C.onSurfaceVariant },
+  reviewBtn:              { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, borderWidth: 1.5, borderColor: C.primary + '45', backgroundColor: C.primary + '0A', alignSelf: 'flex-start', marginBottom: 10 },
+  reviewBtnText:          { fontSize: 12, fontWeight: '700', color: C.primary },
+  reviewedBadge:          { flexDirection: 'row', alignItems: 'center', gap: 5, paddingVertical: 6, paddingHorizontal: 10, borderRadius: 8, backgroundColor: '#f0fdf4', borderWidth: 1, borderColor: '#bbf7d0', alignSelf: 'flex-start', marginBottom: 10 },
+  reviewedText:           { fontSize: 12, fontWeight: '600', color: '#15803d' },
+  pastDetailsBtn:         { flexDirection: 'row', alignItems: 'center', gap: 2 },
+  pastDetailsBtnText:     { fontSize: 13, fontWeight: '700', color: C.primary },
 
   /* Empty state */
-  empty:          { alignItems: 'center', paddingTop: 50, paddingHorizontal: 24 },
-  emptyTitle:     { fontSize: 20, fontWeight: '700', color: C.onSurface, marginBottom: 8 },
-  emptyText:      { fontSize: 14, color: C.onSurfaceVariant, textAlign: 'center', marginBottom: 24, lineHeight: 20 },
-  exploreBtn:     { backgroundColor: C.primary, borderRadius: 50, paddingVertical: 13, paddingHorizontal: 28 },
-  exploreBtnText: { color: C.white, fontWeight: '700', fontSize: 14 },
+  empty:         { alignItems: 'center', paddingTop: 60, paddingHorizontal: 32 },
+  emptyTitle:    { fontSize: 22, fontWeight: '800', color: C.onSurface, marginBottom: 8, letterSpacing: -0.3 },
+  emptyText:     { fontSize: 15, color: C.onSurfaceVariant, textAlign: 'center', marginBottom: 28, lineHeight: 22 },
+  exploreBtn:    { backgroundColor: C.primary, borderRadius: 50, paddingVertical: 14, paddingHorizontal: 32, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
+  exploreBtnText:{ color: C.white, fontWeight: '700', fontSize: 15 },
 
   /* Review modal */
-  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.45)' },
+  modalOverlay: { flex: 1, justifyContent: 'flex-end', backgroundColor: 'rgba(0,0,0,0.48)' },
   modalSheet:   {
     backgroundColor: C.white,
-    borderTopLeftRadius: 28, borderTopRightRadius: 28,
+    borderTopLeftRadius: 30, borderTopRightRadius: 30,
     paddingHorizontal: 24, paddingBottom: 40, paddingTop: 14,
     shadowColor: '#000', shadowOffset: { width: 0, height: -4 }, shadowOpacity: 0.1, shadowRadius: 16,
     elevation: 20,
   },
-  modalHandle:   { width: 40, height: 4, borderRadius: 2, backgroundColor: C.outlineVariant, alignSelf: 'center', marginBottom: 22 },
-  modalTitle:    { fontSize: 22, fontWeight: '800', color: C.onSurface, marginBottom: 4, letterSpacing: -0.3 },
+  modalHandle:   { width: 42, height: 4, borderRadius: 2, backgroundColor: C.outlineVariant, alignSelf: 'center', marginBottom: 24 },
+  modalTitle:    { fontSize: 24, fontWeight: '800', color: C.onSurface, marginBottom: 4, letterSpacing: -0.3 },
   modalSubtitle: { fontSize: 14, color: C.onSurfaceVariant, marginBottom: 24, lineHeight: 20 },
-
-  starRow:    { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 10 },
-  ratingLabel:{ fontSize: 15, fontWeight: '700', color: '#f59e0b', textAlign: 'center', marginBottom: 20, height: 22 },
-
+  starRow:       { flexDirection: 'row', justifyContent: 'center', gap: 10, marginBottom: 10 },
+  ratingLabel:   { fontSize: 16, fontWeight: '700', color: '#f59e0b', textAlign: 'center', marginBottom: 20, height: 22 },
   reviewInput: {
     borderWidth: 1.5, borderColor: C.outlineVariant,
-    borderRadius: 14, padding: 14,
-    fontSize: 14, color: C.onSurface, lineHeight: 21,
+    borderRadius: 16, padding: 16,
+    fontSize: 15, color: C.onSurface, lineHeight: 22,
     minHeight: 120, marginBottom: 6,
     backgroundColor: C.surfaceContainerLow,
   },
-  charCount: { fontSize: 11, color: C.outline, textAlign: 'right', marginBottom: 20 },
-
-  submitBtn: { backgroundColor: C.primary, borderRadius: 50, paddingVertical: 15, alignItems: 'center', marginBottom: 12, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
+  charCount:         { fontSize: 12, color: C.outline, textAlign: 'right', marginBottom: 22 },
+  submitBtn:         { backgroundColor: C.primary, borderRadius: 50, paddingVertical: 16, alignItems: 'center', marginBottom: 12, shadowColor: C.primary, shadowOffset: { width: 0, height: 3 }, shadowOpacity: 0.25, shadowRadius: 8, elevation: 4 },
   submitBtnDisabled: { opacity: 0.55 },
-  submitBtnText: { color: C.white, fontWeight: '700', fontSize: 15 },
-
-  cancelModalBtn: { alignItems: 'center', paddingVertical: 10 },
-  cancelModalText:{ fontSize: 14, color: C.outline, fontWeight: '600' },
+  submitBtnText:     { color: C.white, fontWeight: '700', fontSize: 16 },
+  cancelModalBtn:    { alignItems: 'center', paddingVertical: 10 },
+  cancelModalText:   { fontSize: 14, color: C.outline, fontWeight: '600' },
 });

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
-  TextInput, ActivityIndicator, Modal,
+  TextInput, ActivityIndicator, Modal, Platform,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
@@ -11,22 +11,23 @@ import Alert from '../utils/alert';
 
 const C = {
   primary:             '#1A5F45',
-  primaryContainer:    '#338263',
-  onPrimaryContainer:  '#f5fff7',
+  primaryDark:         '#154d38',
+  primaryLight:        '#e8f5ee',
+  primaryContainer:    '#2D7A5A',
+  onPrimaryContainer:  '#FFFFFF',
   secondary:           '#0a6687',
   onSecondary:         '#ffffff',
-  background:          '#f7faf6',
-  surface:             '#f7faf6',
-  surfaceContainer:    '#ebefea',
-  surfaceContainerLow: '#f1f4f0',
-  surfaceContainerHigh:'#e6e9e5',
-  white:               '#ffffff',
-  onSurface:           '#181d1a',
-  onSurfaceVariant:    '#3f4943',
-  outline:             '#6f7a73',
-  outlineVariant:      '#bec9c1',
-  tertiary:            '#8f4645',
-  error:               '#ba1a1a',
+  background:          '#F5F5F5',
+  surface:             '#FFFFFF',
+  surfaceContainer:    '#F0F0F0',
+  surfaceContainerLow: '#F7F7F7',
+  white:               '#FFFFFF',
+  onSurface:           '#222222',
+  onSurfaceVariant:    '#717171',
+  outline:             '#B0B0B0',
+  outlineVariant:      '#E0E0E0',
+  tertiary:            '#C05621',
+  error:               '#C13515',
 };
 
 const GENDERS = ['Male', 'Female', 'Non-binary', 'Prefer not to say'];
@@ -47,7 +48,7 @@ function StarRow({ count, total = 5 }) {
           key={i}
           name={i < count ? 'star' : 'star-outline'}
           size={13}
-          color={i < count ? C.secondary : C.outlineVariant}
+          color={i < count ? '#FFB400' : C.outlineVariant}
         />
       ))}
     </View>
@@ -58,9 +59,7 @@ function InfoRow({ icon, label, value }) {
   if (!value) return null;
   return (
     <View style={s.infoRow}>
-      <View style={s.infoIcon}>
-        <MaterialCommunityIcons name={icon} size={16} color={C.primary} />
-      </View>
+      <MaterialCommunityIcons name={icon} size={18} color={C.onSurfaceVariant} style={{ marginTop: 1 }} />
       <View style={{ flex: 1 }}>
         <Text style={s.infoLabel}>{label}</Text>
         <Text style={s.infoValue}>{value}</Text>
@@ -76,11 +75,11 @@ function FieldInput({ label, value, onChangeText, placeholder, keyboardType, mul
         {label}{required && <Text style={{ color: C.error }}> *</Text>}
       </Text>
       <TextInput
-        style={[s.input, multiline && { height: 80, textAlignVertical: 'top', paddingTop: 12 }]}
+        style={[s.input, multiline && { height: 90, textAlignVertical: 'top', paddingTop: 12 }]}
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder || ''}
-        placeholderTextColor={C.outlineVariant}
+        placeholderTextColor={C.outline}
         keyboardType={keyboardType || 'default'}
         multiline={!!multiline}
       />
@@ -100,15 +99,14 @@ export default function ProfileScreen({ navigation }) {
   const [saving, setSaving]             = useState(false);
   const [genderPicker, setGenderPicker] = useState(false);
 
-  // Edit state
-  const [editName,       setEditName]       = useState('');
-  const [editPhone,      setEditPhone]      = useState('');
-  const [editBio,        setEditBio]        = useState('');
-  const [editCity,       setEditCity]       = useState('');
-  const [editDob,        setEditDob]        = useState('');
-  const [editGender,     setEditGender]     = useState('');
-  const [editEmerName,   setEditEmerName]   = useState('');
-  const [editEmerPhone,  setEditEmerPhone]  = useState('');
+  const [editName,      setEditName]      = useState('');
+  const [editPhone,     setEditPhone]     = useState('');
+  const [editBio,       setEditBio]       = useState('');
+  const [editCity,      setEditCity]      = useState('');
+  const [editDob,       setEditDob]       = useState('');
+  const [editGender,    setEditGender]    = useState('');
+  const [editEmerName,  setEditEmerName]  = useState('');
+  const [editEmerPhone, setEditEmerPhone] = useState('');
 
   const syncEditState = (u) => {
     setEditName(u.name || '');
@@ -146,13 +144,13 @@ export default function ProfileScreen({ navigation }) {
     setSaving(true);
     try {
       const res = await userAPI.updateProfile({
-        name:                 editName.trim(),
-        phone:                editPhone.trim(),
-        bio:                  editBio.trim(),
-        city:                 editCity.trim(),
-        dateOfBirth:          editDob.trim(),
-        gender:               editGender,
-        emergencyContactName: editEmerName.trim(),
+        name:                  editName.trim(),
+        phone:                 editPhone.trim(),
+        bio:                   editBio.trim(),
+        city:                  editCity.trim(),
+        dateOfBirth:           editDob.trim(),
+        gender:                editGender,
+        emergencyContactName:  editEmerName.trim(),
         emergencyContactPhone: editEmerPhone.trim(),
       });
       const u = res.data.user;
@@ -177,262 +175,267 @@ export default function ProfileScreen({ navigation }) {
     );
   }
 
-  const displayUser  = profile || user;
-  const joinYear     = displayUser?.createdAt
-    ? new Date(displayUser.createdAt).getFullYear()
-    : null;
-  const avgRating    = reviews.length
+  const displayUser    = profile || user;
+  const joinYear       = displayUser?.createdAt ? new Date(displayUser.createdAt).getFullYear() : null;
+  const avgRating      = reviews.length
     ? (reviews.reduce((a, r) => a + r.rating, 0) / reviews.length).toFixed(1)
     : null;
   const previewReviews = reviews.slice(0, 2);
+  const initial        = displayUser?.name?.[0]?.toUpperCase() || 'U';
 
   return (
     <SafeAreaView style={s.safe} edges={['top']}>
+      <ScrollView showsVerticalScrollIndicator={false} bounces>
 
-      {/* App bar */}
-      <View style={s.appBar}>
-        <View style={s.appBarLeft}>
-          <MaterialCommunityIcons name="menu" size={24} color={C.onSurfaceVariant} />
-          <Text style={s.appBarLogo}>Wildvora</Text>
+        {/* ── Cover + Avatar ── */}
+        <View style={s.cover}>
+          <View style={s.coverPattern}>
+            {[...Array(6)].map((_, i) => (
+              <View key={i} style={[s.coverDot, { top: 20 + i * 22, left: 30 + (i % 3) * 60, opacity: 0.12 }]} />
+            ))}
+          </View>
+          <Text style={s.coverLogo}>Wildvora</Text>
         </View>
-        <View style={s.appBarAvatar}>
-          <Text style={s.appBarAvatarText}>{displayUser?.name?.[0]?.toUpperCase() || 'U'}</Text>
-        </View>
-      </View>
 
-      <ScrollView showsVerticalScrollIndicator={false}>
+        <View style={s.avatarArea}>
+          <View style={s.avatarRing}>
+            <View style={s.avatarInner}>
+              <Text style={s.avatarInitial}>{initial}</Text>
+            </View>
+          </View>
+          {displayUser?.isPro && (
+            <View style={s.proBadge}><Text style={s.proBadgeText}>PRO</Text></View>
+          )}
+        </View>
+
         <View style={s.content}>
 
-          {/* Hero card */}
-          <View style={s.heroCard}>
-            <View style={s.avatarWrap}>
-              <View style={s.avatar}>
-                <Text style={s.avatarInitial}>{displayUser?.name?.[0]?.toUpperCase() || 'U'}</Text>
-              </View>
-              {displayUser?.isPro && (
-                <View style={s.proBadge}><Text style={s.proBadgeText}>PRO</Text></View>
-              )}
-            </View>
-
-            <Text style={s.heroName}>{displayUser?.name}</Text>
-
-            {displayUser?.bio
-              ? <Text style={s.heroBio}>{displayUser.bio}</Text>
-              : <Text style={[s.heroBio, { color: C.outlineVariant }]}>No bio yet</Text>
-            }
-
-            <View style={s.heroMeta}>
+          {/* ── Identity ── */}
+          <View style={s.identity}>
+            <Text style={s.userName}>{displayUser?.name}</Text>
+            <View style={s.metaRow}>
               {joinYear && (
-                <View style={s.heroMetaItem}>
-                  <MaterialCommunityIcons name="calendar-outline" size={13} color={C.outline} />
-                  <Text style={s.heroMetaText}>Member since {joinYear}</Text>
+                <View style={s.metaChip}>
+                  <MaterialCommunityIcons name="calendar-check-outline" size={12} color={C.onSurfaceVariant} />
+                  <Text style={s.metaChipText}>Since {joinYear}</Text>
                 </View>
               )}
-              {displayUser?.city ? (
-                <View style={s.heroMetaItem}>
-                  <MaterialCommunityIcons name="map-marker-outline" size={13} color={C.outline} />
-                  <Text style={s.heroMetaText}>{displayUser.city}</Text>
+              {displayUser?.city && (
+                <View style={s.metaChip}>
+                  <MaterialCommunityIcons name="map-marker-outline" size={12} color={C.onSurfaceVariant} />
+                  <Text style={s.metaChipText}>{displayUser.city}</Text>
                 </View>
-              ) : null}
+              )}
             </View>
-
-            <TouchableOpacity style={s.editBtn} onPress={() => setEditModal(true)} activeOpacity={0.85}>
-              <MaterialCommunityIcons name="pencil-outline" size={14} color={C.onSurface} />
-              <Text style={s.editBtnText}>Edit Profile</Text>
+            {displayUser?.bio
+              ? <Text style={s.userBio}>{displayUser.bio}</Text>
+              : <Text style={[s.userBio, { color: C.outline, fontStyle: 'italic' }]}>No bio yet</Text>
+            }
+            <TouchableOpacity style={s.editBtn} onPress={() => setEditModal(true)} activeOpacity={0.8}>
+              <MaterialCommunityIcons name="pencil" size={14} color={C.primary} />
+              <Text style={s.editBtnText}>Edit profile</Text>
             </TouchableOpacity>
           </View>
 
-          {/* Stats */}
-          <View style={s.statsRow}>
-            <View style={[s.statCard, { backgroundColor: C.primaryContainer }]}>
-              <Text style={[s.statNum, { color: C.onPrimaryContainer }]}>{completedTrips}</Text>
-              <Text style={[s.statLabel, { color: C.onPrimaryContainer + 'BB' }]}>TRIPS COMPLETED</Text>
+          {/* ── Stats strip ── */}
+          <View style={s.statsStrip}>
+            <View style={s.statCell}>
+              <Text style={s.statNum}>{completedTrips}</Text>
+              <Text style={s.statLabel}>Trips</Text>
             </View>
-            <View style={[s.statCard, { backgroundColor: C.secondary }]}>
-              {avgRating ? (
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
-                  <Text style={[s.statNum, { color: C.onSecondary }]}>{avgRating}</Text>
-                  <MaterialCommunityIcons name="star" size={18} color={C.onSecondary} />
-                </View>
-              ) : (
-                <Text style={[s.statNum, { color: C.onSecondary }]}>—</Text>
-              )}
-              <Text style={[s.statLabel, { color: C.onSecondary + 'BB' }]}>AVG REVIEW SCORE</Text>
+            <View style={s.statDivider} />
+            <View style={s.statCell}>
+              {avgRating
+                ? <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
+                    <Text style={s.statNum}>{avgRating}</Text>
+                    <MaterialCommunityIcons name="star" size={16} color="#FFB400" />
+                  </View>
+                : <Text style={s.statNum}>—</Text>
+              }
+              <Text style={s.statLabel}>Rating</Text>
+            </View>
+            <View style={s.statDivider} />
+            <View style={s.statCell}>
+              <Text style={s.statNum}>{reviews.length}</Text>
+              <Text style={s.statLabel}>Reviews</Text>
             </View>
           </View>
 
-          {/* Profile info card */}
+          {/* ── Personal Info ── */}
           {(displayUser?.email || displayUser?.phone || displayUser?.gender || displayUser?.dateOfBirth || displayUser?.emergencyContactName) && (
-            <View style={s.infoCard}>
-              <Text style={s.infoCardTitle}>Personal Info</Text>
-              <InfoRow icon="email-outline"       label="Email"               value={displayUser.email} />
-              <InfoRow icon="phone-outline"       label="Phone"               value={displayUser.phone} />
-              <InfoRow icon="gender-male-female"  label="Gender"              value={displayUser.gender} />
-              <InfoRow icon="cake-variant-outline"label="Date of Birth"       value={displayUser.dateOfBirth} />
-              <InfoRow icon="account-heart-outline" label="Emergency Contact" value={
-                displayUser.emergencyContactName
-                  ? `${displayUser.emergencyContactName}${displayUser.emergencyContactPhone ? ' · ' + displayUser.emergencyContactPhone : ''}`
-                  : null
-              } />
+            <View style={s.section}>
+              <Text style={s.sectionHeading}>Personal info</Text>
+              <View style={s.card}>
+                <InfoRow icon="email-outline"          label="Email"             value={displayUser.email} />
+                <InfoRow icon="phone-outline"          label="Phone"             value={displayUser.phone} />
+                <InfoRow icon="gender-male-female"     label="Gender"            value={displayUser.gender} />
+                <InfoRow icon="cake-variant-outline"   label="Date of Birth"     value={displayUser.dateOfBirth} />
+                <InfoRow icon="account-heart-outline"  label="Emergency Contact" value={
+                  displayUser.emergencyContactName
+                    ? `${displayUser.emergencyContactName}${displayUser.emergencyContactPhone ? ' · ' + displayUser.emergencyContactPhone : ''}`
+                    : null
+                } />
+              </View>
             </View>
           )}
 
-          {/* Account Settings */}
-          <Text style={s.sectionTitle}>Account Settings</Text>
-
-          <View style={s.menuCard}>
-            {MENU_ITEMS.map((item, i) => (
-              <TouchableOpacity
-                key={item.key}
-                style={[
-                  s.menuRow,
-                  item.special && s.menuRowSpecial,
-                  i === MENU_ITEMS.length - 1 && { borderBottomWidth: 0 },
-                ]}
-                onPress={() => handleMenuPress(item)}
-                activeOpacity={0.75}
-              >
-                <View style={[s.menuIconBox, item.special && s.menuIconBoxSpecial]}>
-                  <MaterialCommunityIcons name={item.icon} size={20} color={item.special ? C.white : C.primary} />
-                </View>
-                <View style={s.menuLabelWrap}>
-                  <Text style={s.menuLabel}>{item.label}</Text>
-                  {item.sub && <Text style={s.menuSubLabel}>{item.sub}</Text>}
-                </View>
-                <MaterialCommunityIcons name="chevron-right" size={20} color={item.special ? C.tertiary : C.outline} />
-              </TouchableOpacity>
-            ))}
+          {/* ── Account Settings menu ── */}
+          <View style={s.section}>
+            <Text style={s.sectionHeading}>Account settings</Text>
+            <View style={s.card}>
+              {MENU_ITEMS.map((item, i) => (
+                <TouchableOpacity
+                  key={item.key}
+                  style={[s.menuRow, i < MENU_ITEMS.length - 1 && s.menuRowBorder]}
+                  onPress={() => handleMenuPress(item)}
+                  activeOpacity={0.6}
+                >
+                  <View style={[s.menuIconWrap, item.special && { backgroundColor: C.tertiary + '18' }]}>
+                    <MaterialCommunityIcons
+                      name={item.icon}
+                      size={20}
+                      color={item.special ? C.tertiary : C.primary}
+                    />
+                  </View>
+                  <View style={s.menuLabelWrap}>
+                    <Text style={[s.menuLabel, item.special && { color: C.tertiary }]}>{item.label}</Text>
+                    {item.sub && <Text style={s.menuSub}>{item.sub}</Text>}
+                  </View>
+                  <MaterialCommunityIcons name="chevron-right" size={20} color={C.outline} />
+                </TouchableOpacity>
+              ))}
+            </View>
           </View>
 
-          {/* Logout */}
-          <TouchableOpacity style={s.logoutRow} onPress={() => setLogoutModal(true)} activeOpacity={0.75}>
-            <MaterialCommunityIcons name="logout" size={22} color={C.error} />
-            <Text style={s.logoutText}>Logout</Text>
-          </TouchableOpacity>
-
-          {/* Reviews preview */}
-          <View style={s.reviewsCard}>
-            <View style={s.reviewsHdr}>
-              <Text style={s.reviewsTitle}>Your Reviews</Text>
-              <TouchableOpacity onPress={() => navigation.navigate('ReviewHistory')}>
-                <Text style={s.reviewsViewAll}>View All</Text>
-              </TouchableOpacity>
+          {/* ── Reviews preview ── */}
+          <View style={s.section}>
+            <View style={s.sectionRow}>
+              <Text style={s.sectionHeading}>Your reviews</Text>
+              {reviews.length > 0 && (
+                <TouchableOpacity onPress={() => navigation.navigate('ReviewHistory')}>
+                  <Text style={s.viewAll}>View all</Text>
+                </TouchableOpacity>
+              )}
             </View>
             {previewReviews.length === 0 ? (
-              <View style={s.reviewsEmpty}>
-                <MaterialCommunityIcons name="star-off-outline" size={32} color={C.outlineVariant} />
-                <Text style={s.reviewsEmptyText}>No reviews yet.</Text>
-                <Text style={[s.reviewsEmptyText, { fontSize: 12, marginTop: 2 }]}>
-                  Complete a trip to leave your first review!
-                </Text>
+              <View style={s.emptyBox}>
+                <View style={s.emptyIconWrap}>
+                  <MaterialCommunityIcons name="star-outline" size={28} color={C.primary} />
+                </View>
+                <Text style={s.emptyTitle}>No reviews yet</Text>
+                <Text style={s.emptyBody}>Complete a trip and share your experience!</Text>
               </View>
             ) : (
               previewReviews.map((r, i) => (
-                <View key={i} style={s.reviewItem}>
-                  <View style={s.reviewItemTop}>
-                    <View style={s.reviewExpIcon}>
+                <View key={i} style={[s.reviewCard, i < previewReviews.length - 1 && { marginBottom: 10 }]}>
+                  <View style={s.reviewTop}>
+                    <View style={s.reviewIconWrap}>
                       <MaterialCommunityIcons name="map-marker-outline" size={18} color={C.primary} />
                     </View>
-                    <View style={s.reviewItemInfo}>
-                      <Text style={s.reviewItemTitle} numberOfLines={1}>
+                    <View style={{ flex: 1, gap: 3 }}>
+                      <Text style={s.reviewTitle} numberOfLines={1}>
                         {r.experience?.title || 'Experience'}
                       </Text>
                       <StarRow count={r.rating} />
                     </View>
                   </View>
-                  {r.comment ? (
-                    <Text style={s.reviewItemText} numberOfLines={2}>{r.comment}</Text>
-                  ) : null}
+                  {r.comment
+                    ? <Text style={s.reviewText} numberOfLines={2}>{r.comment}</Text>
+                    : null}
                 </View>
               ))
             )}
           </View>
 
+          {/* ── Logout ── */}
+          <TouchableOpacity style={s.logoutRow} onPress={() => setLogoutModal(true)} activeOpacity={0.7}>
+            <MaterialCommunityIcons name="logout" size={18} color={C.error} />
+            <Text style={s.logoutText}>Log out</Text>
+          </TouchableOpacity>
+
         </View>
-        <View style={{ height: 32 }} />
+        <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Edit Profile Modal */}
+      {/* ─── Edit Profile Modal ─── */}
       <Modal visible={editModal} animationType="slide" presentationStyle="pageSheet">
         <SafeAreaView style={{ flex: 1, backgroundColor: C.white }}>
           <View style={s.modalHeader}>
-            <TouchableOpacity onPress={() => setEditModal(false)}>
-              <Text style={s.modalCancel}>Cancel</Text>
+            <TouchableOpacity onPress={() => setEditModal(false)} style={s.modalCloseBtn}>
+              <Ionicons name="close" size={20} color={C.onSurface} />
             </TouchableOpacity>
             <Text style={s.modalTitle}>Edit Profile</Text>
-            <TouchableOpacity onPress={handleSaveProfile} disabled={saving}>
+            <TouchableOpacity onPress={handleSaveProfile} disabled={saving} style={s.modalSaveBtn}>
               {saving
-                ? <ActivityIndicator size="small" color={C.primary} />
-                : <Text style={s.modalSave}>Save</Text>}
+                ? <ActivityIndicator size="small" color={C.white} />
+                : <Text style={s.modalSaveText}>Save</Text>}
             </TouchableOpacity>
           </View>
 
-          <ScrollView style={{ paddingHorizontal: 20 }} showsVerticalScrollIndicator={false}>
-            <Text style={s.sectionDivider}>BASIC INFO</Text>
-
-            <FieldInput label="Full Name" value={editName} onChangeText={setEditName} placeholder="Your full name" required />
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }} showsVerticalScrollIndicator={false}>
+            <Text style={s.formSection}>Basic info</Text>
+            <FieldInput label="Full Name"    value={editName}  onChangeText={setEditName}  placeholder="Your full name" required />
             <FieldInput label="Phone Number" value={editPhone} onChangeText={setEditPhone} placeholder="+91 00000 00000" keyboardType="phone-pad" />
-            <FieldInput label="City" value={editCity} onChangeText={setEditCity} placeholder="e.g. Mumbai, Delhi..." />
-            <FieldInput label="Bio" value={editBio} onChangeText={setEditBio} placeholder="Tell adventurers about yourself..." multiline />
+            <FieldInput label="City"         value={editCity}  onChangeText={setEditCity}  placeholder="e.g. Mumbai, Delhi…" />
+            <FieldInput label="Bio"          value={editBio}   onChangeText={setEditBio}   placeholder="Tell adventurers about yourself…" multiline />
 
-            <Text style={s.sectionDivider}>PERSONAL DETAILS</Text>
-
+            <Text style={s.formSection}>Personal details</Text>
             <FieldInput label="Date of Birth" value={editDob} onChangeText={setEditDob} placeholder="DD/MM/YYYY" />
 
-            {/* Gender picker */}
             <View style={s.fieldWrap}>
-              <Text style={s.inputLabel}>GENDER</Text>
+              <Text style={s.inputLabel}>Gender</Text>
               <TouchableOpacity style={s.pickerBtn} onPress={() => setGenderPicker(true)} activeOpacity={0.8}>
-                <Text style={[s.pickerBtnText, !editGender && { color: C.outlineVariant }]}>
+                <Text style={[s.pickerBtnText, !editGender && { color: C.outline }]}>
                   {editGender || 'Select gender'}
                 </Text>
                 <Ionicons name="chevron-down" size={16} color={C.outline} />
               </TouchableOpacity>
             </View>
 
-            <Text style={s.sectionDivider}>EMERGENCY CONTACT</Text>
-            <Text style={s.sectionDividerSub}>Shared with operators during your trip for safety purposes.</Text>
-
-            <FieldInput label="Contact Name" value={editEmerName} onChangeText={setEditEmerName} placeholder="e.g. Parent / Spouse / Friend" />
+            <Text style={s.formSection}>Emergency contact</Text>
+            <Text style={s.formSectionSub}>Shared with operators during your trip for safety.</Text>
+            <FieldInput label="Contact Name"  value={editEmerName}  onChangeText={setEditEmerName}  placeholder="e.g. Parent / Spouse / Friend" />
             <FieldInput label="Contact Phone" value={editEmerPhone} onChangeText={setEditEmerPhone} placeholder="+91 00000 00000" keyboardType="phone-pad" />
-
-            <View style={{ height: 40 }} />
           </ScrollView>
         </SafeAreaView>
       </Modal>
 
-      {/* Gender picker modal */}
-      <Modal visible={genderPicker} transparent animationType="fade">
-        <TouchableOpacity style={s.pickerOverlay} activeOpacity={1} onPress={() => setGenderPicker(false)}>
-          <View style={s.pickerBox}>
-            <Text style={s.pickerTitle}>Select Gender</Text>
-            {GENDERS.map(g => (
+      {/* ─── Gender picker ─── */}
+      <Modal visible={genderPicker} transparent animationType="slide">
+        <TouchableOpacity style={s.sheetOverlay} activeOpacity={1} onPress={() => setGenderPicker(false)}>
+          <View style={s.sheet}>
+            <View style={s.sheetHandle} />
+            <Text style={s.sheetTitle}>Select Gender</Text>
+            {GENDERS.map((g) => (
               <TouchableOpacity
                 key={g}
-                style={[s.pickerOption, editGender === g && s.pickerOptionActive]}
+                style={s.sheetOption}
                 onPress={() => { setEditGender(g); setGenderPicker(false); }}
               >
-                <Text style={[s.pickerOptionText, editGender === g && s.pickerOptionTextActive]}>{g}</Text>
-                {editGender === g && <Ionicons name="checkmark" size={18} color={C.primary} />}
+                <Text style={[s.sheetOptionText, editGender === g && { color: C.primary, fontWeight: '700' }]}>{g}</Text>
+                {editGender === g && <Ionicons name="checkmark-circle" size={20} color={C.primary} />}
               </TouchableOpacity>
             ))}
           </View>
         </TouchableOpacity>
       </Modal>
 
-      {/* Logout Confirm Modal */}
+      {/* ─── Logout confirm ─── */}
       <Modal visible={logoutModal} transparent animationType="fade">
-        <View style={s.logoutOverlay}>
-          <View style={s.logoutBox}>
-            <Text style={s.logoutTitle}>Log Out?</Text>
-            <Text style={s.logoutSubText}>
+        <View style={s.dialogOverlay}>
+          <View style={s.dialog}>
+            <View style={s.dialogIconWrap}>
+              <MaterialCommunityIcons name="logout" size={26} color={C.error} />
+            </View>
+            <Text style={s.dialogTitle}>Log out?</Text>
+            <Text style={s.dialogBody}>
               Are you sure you want to log out of your Wildvora account?
             </Text>
-            <TouchableOpacity style={s.logoutConfirmBtn} onPress={() => { setLogoutModal(false); logout(); }}>
-              <Text style={s.logoutConfirmText}>LOG OUT</Text>
+            <TouchableOpacity style={s.dialogConfirm} onPress={() => { setLogoutModal(false); logout(); }}>
+              <Text style={s.dialogConfirmText}>Log Out</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={s.logoutCancelBtn} onPress={() => setLogoutModal(false)}>
-              <Text style={s.logoutCancelText}>CANCEL</Text>
+            <TouchableOpacity style={s.dialogCancel} onPress={() => setLogoutModal(false)}>
+              <Text style={s.dialogCancelText}>Cancel</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -442,99 +445,145 @@ export default function ProfileScreen({ navigation }) {
   );
 }
 
+const SHADOW = Platform.select({
+  ios:     { shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8 },
+  android: { elevation: 2 },
+});
+
 const s = StyleSheet.create({
-  safe:    { flex: 1, backgroundColor: C.background },
-  center:  { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  content: { paddingHorizontal: 20, paddingTop: 8 },
+  safe:   { flex: 1, backgroundColor: C.background },
+  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
 
-  appBar:           { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 12, backgroundColor: C.surface + 'CC', borderBottomWidth: 1, borderColor: C.outlineVariant + '40' },
-  appBarLeft:       { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  appBarLogo:       { fontSize: 20, fontWeight: '700', color: C.primary, letterSpacing: -0.3 },
-  appBarAvatar:     { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surfaceContainerLow, borderWidth: 2, borderColor: C.primary + '30', justifyContent: 'center', alignItems: 'center' },
-  appBarAvatarText: { fontSize: 14, fontWeight: '700', color: C.primary },
+  /* Cover banner */
+  cover: {
+    height: 150,
+    backgroundColor: C.primary,
+    justifyContent: 'flex-start',
+    alignItems: 'flex-start',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    overflow: 'hidden',
+  },
+  coverPattern: { ...StyleSheet.absoluteFillObject },
+  coverDot:     { position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: C.white },
+  coverLogo:    { fontSize: 22, fontWeight: '800', color: C.white, letterSpacing: -0.5, opacity: 0.92 },
 
-  heroCard:      { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '50', padding: 24, alignItems: 'center', marginTop: 14, marginBottom: 14, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 1 },
-  avatarWrap:    { position: 'relative', marginBottom: 12 },
-  avatar:        { width: 100, height: 100, borderRadius: 50, backgroundColor: C.primaryContainer, justifyContent: 'center', alignItems: 'center', borderWidth: 3, borderColor: C.primaryContainer + '60' },
-  avatarInitial: { fontSize: 36, fontWeight: '700', color: C.onPrimaryContainer },
-  proBadge:      { position: 'absolute', bottom: -2, right: -4, backgroundColor: C.primary, paddingHorizontal: 10, paddingVertical: 3, borderRadius: 50 },
-  proBadgeText:  { fontSize: 10, fontWeight: '700', color: C.white, letterSpacing: 0.5 },
-  heroName:      { fontSize: 24, fontWeight: '700', color: C.onSurface, marginBottom: 6, letterSpacing: -0.3, textAlign: 'center' },
-  heroBio:       { fontSize: 14, color: C.onSurfaceVariant, marginBottom: 10, textAlign: 'center', lineHeight: 20 },
-  heroMeta:      { flexDirection: 'row', gap: 14, marginBottom: 16, flexWrap: 'wrap', justifyContent: 'center' },
-  heroMetaItem:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
-  heroMetaText:  { fontSize: 12, color: C.outline },
-  editBtn:       { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: C.outlineVariant, borderRadius: 50, paddingHorizontal: 20, paddingVertical: 9 },
-  editBtnText:   { fontSize: 13, fontWeight: '600', color: C.onSurface },
+  /* Avatar */
+  avatarArea: { alignItems: 'center', marginTop: -52 },
+  avatarRing: {
+    width: 108, height: 108, borderRadius: 54,
+    backgroundColor: C.white,
+    justifyContent: 'center', alignItems: 'center',
+    ...SHADOW,
+  },
+  avatarInner: {
+    width: 96, height: 96, borderRadius: 48,
+    backgroundColor: C.primaryContainer,
+    justifyContent: 'center', alignItems: 'center',
+  },
+  avatarInitial: { fontSize: 38, fontWeight: '700', color: C.onPrimaryContainer },
+  proBadge:      { position: 'absolute', bottom: 2, right: 4, backgroundColor: C.tertiary, paddingHorizontal: 8, paddingVertical: 3, borderRadius: 50 },
+  proBadgeText:  { fontSize: 9, fontWeight: '800', color: C.white, letterSpacing: 1 },
 
-  statsRow:  { flexDirection: 'row', gap: 12, marginBottom: 16 },
-  statCard:  { flex: 1, borderRadius: 14, padding: 18, alignItems: 'center', justifyContent: 'center', minHeight: 80 },
-  statNum:   { fontSize: 30, fontWeight: '700', lineHeight: 34 },
-  statLabel: { fontSize: 10, fontWeight: '700', letterSpacing: 0.8, marginTop: 2, textTransform: 'uppercase', textAlign: 'center' },
+  /* Identity block */
+  content:  { paddingHorizontal: 20, paddingTop: 4 },
+  identity: { alignItems: 'center', paddingTop: 14, paddingBottom: 20 },
+  userName: { fontSize: 26, fontWeight: '700', color: C.onSurface, letterSpacing: -0.5, marginBottom: 8 },
+  metaRow:  { flexDirection: 'row', gap: 10, marginBottom: 10, flexWrap: 'wrap', justifyContent: 'center' },
+  metaChip: { flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: C.surfaceContainer, paddingHorizontal: 10, paddingVertical: 4, borderRadius: 50 },
+  metaChipText: { fontSize: 12, color: C.onSurfaceVariant, fontWeight: '500' },
+  userBio:  { fontSize: 14, color: C.onSurfaceVariant, textAlign: 'center', lineHeight: 21, marginBottom: 14, maxWidth: '90%' },
+  editBtn:  { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1.5, borderColor: C.primary + '50', borderRadius: 50, paddingHorizontal: 20, paddingVertical: 9, backgroundColor: C.primaryLight },
+  editBtnText: { fontSize: 13, fontWeight: '700', color: C.primary },
 
-  infoCard:      { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '40', padding: 18, marginBottom: 20 },
-  infoCardTitle: { fontSize: 13, fontWeight: '700', color: C.onSurfaceVariant, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 12 },
-  infoRow:       { flexDirection: 'row', alignItems: 'flex-start', gap: 12, marginBottom: 14 },
-  infoIcon:      { width: 36, height: 36, borderRadius: 10, backgroundColor: C.primary + '12', justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
-  infoLabel:     { fontSize: 11, color: C.outline, marginBottom: 2, fontWeight: '500' },
-  infoValue:     { fontSize: 14, color: C.onSurface, fontWeight: '600' },
+  /* Stats */
+  statsStrip: {
+    flexDirection: 'row', backgroundColor: C.white, borderRadius: 16,
+    marginBottom: 24, ...SHADOW,
+    overflow: 'hidden',
+  },
+  statCell:    { flex: 1, alignItems: 'center', paddingVertical: 18 },
+  statDivider: { width: 1, backgroundColor: C.outlineVariant, marginVertical: 14 },
+  statNum:     { fontSize: 24, fontWeight: '700', color: C.onSurface, lineHeight: 28 },
+  statLabel:   { fontSize: 11, color: C.onSurfaceVariant, marginTop: 3, fontWeight: '500' },
 
-  sectionTitle: { fontSize: 20, fontWeight: '700', color: C.onSurface, marginBottom: 12, letterSpacing: -0.2 },
+  /* Generic section */
+  section:      { marginBottom: 24 },
+  sectionRow:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 },
+  sectionHeading: { fontSize: 18, fontWeight: '700', color: C.onSurface, letterSpacing: -0.2, marginBottom: 10 },
+  viewAll:      { fontSize: 13, fontWeight: '700', color: C.primary },
 
-  menuCard:           { backgroundColor: C.white, borderRadius: 16, borderWidth: 1, borderColor: C.outlineVariant + '40', overflow: 'hidden', marginBottom: 8, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 4, elevation: 1 },
-  menuRow:            { flexDirection: 'row', alignItems: 'center', padding: 16, borderBottomWidth: 1, borderColor: C.outlineVariant + '30' },
-  menuRowSpecial:     { backgroundColor: C.tertiary + '08' },
-  menuIconBox:        { width: 40, height: 40, borderRadius: 10, backgroundColor: C.surfaceContainer, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
-  menuIconBoxSpecial: { backgroundColor: C.tertiary },
-  menuLabelWrap:      { flex: 1 },
-  menuLabel:          { fontSize: 15, color: C.onSurface, fontWeight: '500' },
-  menuSubLabel:       { fontSize: 12, color: C.tertiary, marginTop: 1, fontWeight: '600' },
+  /* White card */
+  card: { backgroundColor: C.white, borderRadius: 16, overflow: 'hidden', ...SHADOW },
 
-  logoutRow:  { flexDirection: 'row', alignItems: 'center', gap: 10, paddingVertical: 14, paddingHorizontal: 4, marginBottom: 20, marginTop: 8 },
-  logoutText: { fontSize: 18, fontWeight: '700', color: C.error },
+  /* Info rows */
+  infoRow:   { flexDirection: 'row', gap: 14, alignItems: 'flex-start', padding: 14, borderBottomWidth: 1, borderColor: C.outlineVariant },
+  infoLabel: { fontSize: 11, color: C.onSurfaceVariant, marginBottom: 2, fontWeight: '500' },
+  infoValue: { fontSize: 14, color: C.onSurface, fontWeight: '600' },
 
-  reviewsCard:      { backgroundColor: C.surfaceContainerLow, borderRadius: 16, padding: 18, borderWidth: 1, borderColor: C.outlineVariant + '30', marginBottom: 8 },
-  reviewsHdr:       { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 },
-  reviewsTitle:     { fontSize: 18, fontWeight: '700', color: C.onSurface },
-  reviewsViewAll:   { fontSize: 13, fontWeight: '700', color: C.primary },
-  reviewsEmpty:     { alignItems: 'center', paddingVertical: 20, gap: 6 },
-  reviewsEmptyText: { fontSize: 14, color: C.outline },
-  reviewItem:       { backgroundColor: C.white, borderRadius: 12, padding: 14, marginBottom: 10, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.04, shadowRadius: 3, elevation: 1 },
-  reviewItemTop:    { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
-  reviewExpIcon:    { width: 44, height: 44, borderRadius: 10, backgroundColor: C.primary + '12', justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
-  reviewItemInfo:   { flex: 1, gap: 4 },
-  reviewItemTitle:  { fontSize: 13, fontWeight: '700', color: C.onSurface },
-  reviewItemText:   { fontSize: 13, color: C.onSurfaceVariant, lineHeight: 19 },
+  /* Menu */
+  menuRow:       { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14 },
+  menuRowBorder: { borderBottomWidth: 1, borderColor: C.outlineVariant },
+  menuIconWrap:  { width: 38, height: 38, borderRadius: 10, backgroundColor: C.primaryLight, justifyContent: 'center', alignItems: 'center', marginRight: 14 },
+  menuLabelWrap: { flex: 1 },
+  menuLabel:     { fontSize: 15, color: C.onSurface, fontWeight: '500' },
+  menuSub:       { fontSize: 12, color: C.tertiary, marginTop: 1, fontWeight: '600' },
 
-  // Modal
-  modalHeader:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: 18, borderBottomWidth: 1, borderColor: C.outlineVariant + '50' },
-  modalTitle:   { fontSize: 16, fontWeight: '700', color: C.onSurface },
-  modalCancel:  { fontSize: 15, color: C.onSurfaceVariant },
-  modalSave:    { fontSize: 15, fontWeight: '700', color: C.primary },
+  /* Logout */
+  logoutRow:  { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 14, justifyContent: 'center', marginBottom: 4 },
+  logoutText: { fontSize: 15, fontWeight: '700', color: C.error },
 
-  sectionDivider:    { fontSize: 11, fontWeight: '700', color: C.onSurfaceVariant, letterSpacing: 0.8, marginTop: 24, marginBottom: 4 },
-  sectionDividerSub: { fontSize: 12, color: C.outline, marginBottom: 12, lineHeight: 17 },
+  /* Review cards */
+  reviewCard:    { backgroundColor: C.white, borderRadius: 14, padding: 14, ...SHADOW },
+  reviewTop:     { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 8 },
+  reviewIconWrap:{ width: 42, height: 42, borderRadius: 10, backgroundColor: C.primaryLight, justifyContent: 'center', alignItems: 'center', flexShrink: 0 },
+  reviewTitle:   { fontSize: 13, fontWeight: '700', color: C.onSurface },
+  reviewText:    { fontSize: 13, color: C.onSurfaceVariant, lineHeight: 19 },
 
-  fieldWrap:   { marginBottom: 14 },
-  inputLabel:  { fontSize: 11, fontWeight: '700', color: C.onSurfaceVariant, letterSpacing: 0.8, marginBottom: 6 },
-  input:       { borderWidth: 1, borderColor: C.outlineVariant, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 12, fontSize: 14, color: C.onSurface, backgroundColor: C.surfaceContainerLow },
+  /* Empty state */
+  emptyBox:     { backgroundColor: C.white, borderRadius: 16, padding: 32, alignItems: 'center', ...SHADOW },
+  emptyIconWrap:{ width: 60, height: 60, borderRadius: 30, backgroundColor: C.primaryLight, justifyContent: 'center', alignItems: 'center', marginBottom: 14 },
+  emptyTitle:   { fontSize: 16, fontWeight: '700', color: C.onSurface, marginBottom: 4 },
+  emptyBody:    { fontSize: 13, color: C.onSurfaceVariant, textAlign: 'center', lineHeight: 19 },
 
-  pickerBtn:         { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: C.outlineVariant, borderRadius: 10, paddingHorizontal: 14, paddingVertical: 13, backgroundColor: C.surfaceContainerLow },
-  pickerBtnText:     { fontSize: 14, color: C.onSurface },
-  pickerOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
-  pickerBox:         { backgroundColor: C.white, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 24 },
-  pickerTitle:       { fontSize: 15, fontWeight: '700', color: C.onSurface, marginBottom: 16 },
-  pickerOption:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 14, borderBottomWidth: 1, borderColor: C.outlineVariant + '30' },
-  pickerOptionActive:{ backgroundColor: C.primary + '08', marginHorizontal: -8, paddingHorizontal: 8, borderRadius: 8 },
-  pickerOptionText:  { fontSize: 15, color: C.onSurface },
-  pickerOptionTextActive: { color: C.primary, fontWeight: '600' },
+  /* Edit modal */
+  modalHeader:   { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 16, paddingVertical: 14, borderBottomWidth: 1, borderColor: C.outlineVariant },
+  modalCloseBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surfaceContainer, justifyContent: 'center', alignItems: 'center' },
+  modalTitle:    { fontSize: 16, fontWeight: '700', color: C.onSurface },
+  modalSaveBtn:  { backgroundColor: C.primary, borderRadius: 50, paddingHorizontal: 18, paddingVertical: 8 },
+  modalSaveText: { fontSize: 14, fontWeight: '700', color: C.white },
 
-  logoutOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 32 },
-  logoutBox:         { backgroundColor: C.white, borderRadius: 20, padding: 28, width: '100%', alignItems: 'center' },
-  logoutTitle:       { fontSize: 22, fontWeight: '700', color: C.onSurface, marginBottom: 8 },
-  logoutSubText:     { fontSize: 14, color: C.onSurfaceVariant, textAlign: 'center', marginBottom: 24, lineHeight: 21 },
-  logoutConfirmBtn:  { backgroundColor: C.error, borderRadius: 50, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10 },
-  logoutConfirmText: { color: C.white, fontWeight: '700', fontSize: 14, letterSpacing: 0.5 },
-  logoutCancelBtn:   { borderWidth: 1.5, borderColor: C.outlineVariant, borderRadius: 50, paddingVertical: 14, width: '100%', alignItems: 'center' },
-  logoutCancelText:  { color: C.onSurface, fontWeight: '700', fontSize: 14 },
+  formSection:    { fontSize: 13, fontWeight: '700', color: C.onSurfaceVariant, letterSpacing: 0.5, marginTop: 24, marginBottom: 8, textTransform: 'uppercase' },
+  formSectionSub: { fontSize: 12, color: C.outline, marginTop: -4, marginBottom: 12, lineHeight: 17 },
+
+  fieldWrap:  { marginBottom: 14 },
+  inputLabel: { fontSize: 12, fontWeight: '600', color: C.onSurfaceVariant, marginBottom: 6 },
+  input: {
+    borderWidth: 1, borderColor: C.outlineVariant, borderRadius: 12,
+    paddingHorizontal: 14, paddingVertical: 13,
+    fontSize: 15, color: C.onSurface, backgroundColor: C.white,
+  },
+
+  /* Gender sheet */
+  sheetOverlay:     { flex: 1, backgroundColor: 'rgba(0,0,0,0.4)', justifyContent: 'flex-end' },
+  sheet:            { backgroundColor: C.white, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: 12, paddingHorizontal: 20, paddingBottom: 36 },
+  sheetHandle:      { width: 36, height: 4, borderRadius: 2, backgroundColor: C.outlineVariant, alignSelf: 'center', marginBottom: 16 },
+  sheetTitle:       { fontSize: 16, fontWeight: '700', color: C.onSurface, marginBottom: 8 },
+  sheetOption:      { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingVertical: 16, borderBottomWidth: 1, borderColor: C.outlineVariant },
+  sheetOptionText:  { fontSize: 15, color: C.onSurface },
+
+  /* Picker btn */
+  pickerBtn:     { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderWidth: 1, borderColor: C.outlineVariant, borderRadius: 12, paddingHorizontal: 14, paddingVertical: 13, backgroundColor: C.white },
+  pickerBtnText: { fontSize: 15, color: C.onSurface },
+
+  /* Logout dialog */
+  dialogOverlay:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.45)', justifyContent: 'center', alignItems: 'center', padding: 28 },
+  dialog:           { backgroundColor: C.white, borderRadius: 24, padding: 28, width: '100%', alignItems: 'center' },
+  dialogIconWrap:   { width: 60, height: 60, borderRadius: 30, backgroundColor: C.error + '14', justifyContent: 'center', alignItems: 'center', marginBottom: 16 },
+  dialogTitle:      { fontSize: 20, fontWeight: '700', color: C.onSurface, marginBottom: 8 },
+  dialogBody:       { fontSize: 14, color: C.onSurfaceVariant, textAlign: 'center', marginBottom: 24, lineHeight: 21 },
+  dialogConfirm:    { backgroundColor: C.error, borderRadius: 50, paddingVertical: 14, width: '100%', alignItems: 'center', marginBottom: 10 },
+  dialogConfirmText:{ color: C.white, fontWeight: '700', fontSize: 14, letterSpacing: 0.3 },
+  dialogCancel:     { paddingVertical: 14, width: '100%', alignItems: 'center' },
+  dialogCancelText: { color: C.onSurfaceVariant, fontWeight: '600', fontSize: 14 },
 });
