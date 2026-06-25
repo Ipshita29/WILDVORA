@@ -9,16 +9,16 @@ import {
   RefreshControl,
   Image,
 } from 'react-native';
-import { Ionicons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Ionicons } from '@expo/vector-icons';
 import { theme } from '../theme';
 import { useAuth } from '../context/AuthContext';
 import { operatorAPI } from '../services/api';
 
 const STATUS_MAP = {
-  pending:   { bg: '#FDDDBD', text: '#5C3D11',  label: 'Pending' },
-  confirmed: { bg: '#A3F3CD', text: '#002115',  label: 'Confirmed' },
-  cancelled: { bg: '#FFDAD6', text: '#93000A',  label: 'Cancelled' },
-  completed: { bg: '#C2E8FF', text: '#001E2C',  label: 'Completed' },
+  pending:   { bg: '#FEF3C7', text: '#92400E', label: 'Pending' },
+  confirmed: { bg: '#D1FAE5', text: '#065F46', label: 'Confirmed' },
+  cancelled: { bg: '#FEE2E2', text: '#991B1B', label: 'Cancelled' },
+  completed: { bg: '#DBEAFE', text: '#1E40AF', label: 'Completed' },
 };
 
 const StatusBadge = ({ status }) => {
@@ -30,14 +30,21 @@ const StatusBadge = ({ status }) => {
   );
 };
 
-const BAR_DATA = [40, 60, 55, 80, 70, 90, 100];
-const BAR_MAX_HEIGHT = 80;
+const getGreeting = () => {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+};
+
+const getTodayLabel = () =>
+  new Date().toLocaleDateString(undefined, { weekday: 'long', month: 'long', day: 'numeric' });
 
 export default function DashboardHome({ setActiveTab, goToCreate }) {
   const { user } = useAuth();
-  const [stats, setStats] = useState(null);
+  const [stats, setStats]       = useState(null);
   const [bookings, setBookings] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading]   = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
   const fetchDashboardData = useCallback(async (silent = false) => {
@@ -45,30 +52,19 @@ export default function DashboardHome({ setActiveTab, goToCreate }) {
     try {
       const [statsRes, bookingsRes] = await Promise.all([
         operatorAPI.getStats(),
-        operatorAPI.getBookings()
+        operatorAPI.getBookings(),
       ]);
-      if (statsRes.data.success) {
-        setStats(statsRes.data.stats);
-      }
-      if (bookingsRes.data.success) {
-        setBookings(bookingsRes.data.bookings || []);
-      }
+      if (statsRes.data.success)   setStats(statsRes.data.stats);
+      if (bookingsRes.data.success) setBookings(bookingsRes.data.bookings || []);
     } catch (err) {
-      console.error('Failed to load dashboard data:', err);
+      console.error('Dashboard fetch failed:', err);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   }, []);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
-
-  const onRefresh = () => {
-    setRefreshing(true);
-    fetchDashboardData(true);
-  };
+  useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
   const upcomingBookings = bookings
     .filter(b => b.status === 'confirmed' || b.status === 'pending')
@@ -78,294 +74,230 @@ export default function DashboardHome({ setActiveTab, goToCreate }) {
     return (
       <View style={styles.loadingWrap}>
         <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>Loading dashboard...</Text>
       </View>
     );
   }
 
-  const hostName = user?.name || 'Operator';
-  const totalRevenue = stats?.revenueThisMonth || 0;
-  const liveListings = stats?.totalListings || 0;
+  const firstName = user?.name?.split(' ')[0] || 'there';
+
+  const totalBookings  = bookings.length;
+  const activeBookings = bookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length;
+
+  const statItems = [
+    { value: totalBookings,  label: 'Total bookings' },
+    { value: activeBookings, label: 'Active bookings' },
+    {
+      value: stats?.averageRating ? stats.averageRating.toFixed(1) : '—',
+      label: 'Avg rating',
+      suffix: stats?.averageRating ? ' ★' : '',
+    },
+    { value: stats?.totalListings ?? '—', label: 'Listings' },
+  ];
+
+  const quickActions = [
+    { icon: 'add-circle-outline', label: 'Add listing', onPress: () => goToCreate?.()          },
+    { icon: 'calendar-outline',   label: 'Bookings',    onPress: () => setActiveTab('bookings') },
+    { icon: 'chatbubble-outline', label: 'Messages',    onPress: () => setActiveTab('inbox')    },
+    { icon: 'list-outline',       label: 'My listings', onPress: () => setActiveTab('listings') },
+  ];
 
   return (
     <ScrollView
       style={styles.screen}
       showsVerticalScrollIndicator={false}
-      contentContainerStyle={{ paddingBottom: 32 }}
+      contentContainerStyle={{ paddingBottom: 40 }}
       refreshControl={
-        <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[theme.primary]} />
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={() => { setRefreshing(true); fetchDashboardData(true); }}
+          colors={[theme.primary]}
+          tintColor={theme.primary}
+        />
       }
     >
-      {/* ── Welcome Banner ── */}
-      <View style={styles.banner}>
-        <View style={styles.blobTR} />
-        <View style={styles.blobBL} />
-
-        <Text style={styles.bannerLabel}>DASHBOARD</Text>
-        <Text style={styles.bannerTitle}>Welcome back, {hostName}</Text>
-
-        <View style={styles.bannerActions}>
-          <TouchableOpacity
-            style={styles.bannerBtnWhite}
-            onPress={() => goToCreate?.()}
-          >
-            <Ionicons name="add" size={16} color={theme.primary} />
-            <Text style={styles.bannerBtnWhiteText}>  Add Listing</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={styles.bannerBtnGreen}
-            onPress={() => setActiveTab('bookings')}
-          >
-            <Ionicons name="calendar-outline" size={16} color="#fff" />
-            <Text style={styles.bannerBtnGreenText}>  View Bookings</Text>
-          </TouchableOpacity>
-        </View>
+      {/* ── Greeting ── */}
+      <View style={styles.greeting}>
+        <Text style={styles.greetingDate}>{getTodayLabel()}</Text>
+        <Text style={styles.greetingName}>{getGreeting()}, {firstName}</Text>
       </View>
 
-      {/* ── Revenue Overview ── */}
-      <View style={styles.card}>
-        <View style={styles.rowBetween}>
-          <Text style={styles.cardTitle}>Revenue Overview</Text>
-          <Text style={styles.revenueAmount}>
-            ₹{totalRevenue.toLocaleString()}
-            <Text style={styles.revenueUnit}> / mo</Text>
-          </Text>
-        </View>
-        <Text style={styles.revenueSubtitle}>Based on confirmed & completed bookings this month</Text>
-        <View style={styles.chartRow}>
-          {BAR_DATA.map((pct, i) => (
-            <View key={i} style={styles.barWrapper}>
-              <View
-                style={[
-                  styles.bar,
-                  {
-                    height: (pct / 100) * BAR_MAX_HEIGHT,
-                    backgroundColor:
-                      i === BAR_DATA.length - 1
-                        ? theme.primary
-                        : theme.primaryFixed + 'AA',
-                  },
-                ]}
-              />
-            </View>
-          ))}
-        </View>
-      </View>
-
-      {/* ── Active Listings ── */}
-      <View style={[styles.card, styles.activeListingsCard]}>
-        <Text style={[styles.cardTitle, { color: theme.onSecondaryContainer }]}>
-          Active Listings
+      {/* ── Revenue card ── */}
+      <View style={styles.revenueCard}>
+        <Text style={styles.revenueLabel}>Revenue this month</Text>
+        <Text style={styles.revenueValue}>
+          ₹{(stats?.revenueThisMonth || 0).toLocaleString()}
         </Text>
-        <View style={[styles.listingRow, { marginTop: 16 }]}>
-          <Text style={styles.listingRowLabel}>Total Listed Experiences</Text>
-          <Text style={styles.listingRowValue}>{liveListings}</Text>
-        </View>
-        <View style={[styles.listingRow, { marginTop: 10 }]}>
-          <Text style={styles.listingRowLabel}>Total Reviews</Text>
-          <Text style={styles.listingRowValue}>{stats?.totalReviews || 0}</Text>
-        </View>
+        <Text style={styles.revenueNote}>Confirmed &amp; completed bookings</Text>
       </View>
 
-      {/* ── Conversion Rate ── */}
-      <View style={styles.card}>
-        <View style={styles.metricHeader}>
-          <View style={[styles.metricIcon, { backgroundColor: '#C2E8FF' }]}>
-            <Feather name="trending-up" size={20} color={theme.secondary} />
+      {/* ── Stats grid ── */}
+      <View style={styles.statsGrid}>
+        {statItems.map(item => (
+          <View key={item.label} style={styles.statCard}>
+            <Text style={styles.statNumber}>
+              {item.value}{item.suffix ?? ''}
+            </Text>
+            <Text style={styles.statLabel}>{item.label}</Text>
           </View>
-          <View>
-            <Text style={styles.metricTitle}>Average Rating</Text>
-            <Text style={styles.metricSubtitle}>Quality feedback</Text>
-          </View>
-        </View>
-        <View style={styles.metricRow}>
-          <Text style={styles.metricBig}>{stats?.averageRating ? stats.averageRating.toFixed(1) : '0.0'}</Text>
-          <Text style={styles.metricPositive}>  / 5.0</Text>
-        </View>
-        <View style={styles.progressBg}>
-          <View style={[styles.progressFill, { width: `${(stats?.averageRating || 0) * 20}%`, backgroundColor: theme.primary }]} />
-        </View>
+        ))}
       </View>
 
-      {/* ── Upcoming Bookings ── */}
-      <View style={[styles.rowBetween, { marginBottom: 12, marginTop: 8 }]}>
-        <Text style={styles.sectionTitle}>Upcoming Bookings</Text>
+      {/* ── Quick actions ── */}
+      <Text style={[styles.sectionTitle, { marginBottom: 14 }]}>Quick actions</Text>
+      <View style={styles.quickRow}>
+        {quickActions.map(a => (
+          <TouchableOpacity key={a.label} style={styles.quickItem} onPress={a.onPress} activeOpacity={0.7}>
+            <View style={styles.quickIcon}>
+              <Ionicons name={a.icon} size={22} color={theme.primary} />
+            </View>
+            <Text style={styles.quickLabel}>{a.label}</Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* ── Upcoming bookings ── */}
+      <View style={styles.sectionHeader}>
+        <Text style={styles.sectionTitle}>Upcoming bookings</Text>
         <TouchableOpacity onPress={() => setActiveTab('bookings')}>
-          <Text style={styles.viewAll}>View All</Text>
+          <Text style={styles.seeAll}>See all</Text>
         </TouchableOpacity>
       </View>
 
-      {upcomingBookings.map(b => {
-        const thumb = b.experience?.images?.[0];
-        const groupSize = b.guests || 1;
-        const dateFormatted = b.startDate ? new Date(b.startDate).toLocaleDateString(undefined, {
-          month: 'short', day: 'numeric', year: 'numeric'
-        }) : 'Recent';
-
-        return (
-          <TouchableOpacity key={b._id} style={styles.bookingCard} activeOpacity={0.85}>
-            <View style={styles.bookingThumb}>
-              {thumb ? (
-                <Image source={{ uri: thumb }} style={{ width: '100%', height: '100%', borderRadius: 12 }} />
-              ) : (
-                <Ionicons name="image-outline" size={28} color={theme.outlineVariant} />
-              )}
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.bookingTitle} numberOfLines={2}>{b.experience?.title || 'Unknown Experience'}</Text>
-              <View style={styles.bookingMeta}>
-                <Ionicons name="calendar-outline" size={12} color={theme.textLight} />
-                <Text style={styles.bookingMetaText}>  {dateFormatted}</Text>
-                <Ionicons name="people-outline" size={12} color={theme.textLight} style={{ marginLeft: 10 }} />
-                <Text style={styles.bookingMetaText}>  {groupSize} Guests</Text>
-              </View>
-              <View style={{ marginTop: 8 }}>
-                <StatusBadge status={b.status} />
-              </View>
-            </View>
-            <Ionicons name="chevron-forward" size={20} color={theme.outlineVariant} />
-          </TouchableOpacity>
-        );
-      })}
-
-      {upcomingBookings.length === 0 && (
+      {upcomingBookings.length === 0 ? (
         <View style={styles.emptyState}>
-          <Feather name="calendar" size={32} color={theme.outlineVariant} />
-          <Text style={styles.emptyStateText}>No upcoming bookings</Text>
+          <Ionicons name="calendar-outline" size={34} color={theme.outlineVariant} />
+          <Text style={styles.emptyTitle}>No upcoming bookings</Text>
+          <Text style={styles.emptySubtitle}>Confirmed bookings will show here</Text>
         </View>
+      ) : (
+        upcomingBookings.map(b => {
+          const thumb = b.experience?.images?.[0];
+          const dateStr = b.startDate
+            ? new Date(b.startDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })
+            : 'Date TBD';
+          return (
+            <View key={b._id} style={styles.bookingCard}>
+              <View style={styles.bookingThumb}>
+                {thumb
+                  ? <Image source={{ uri: thumb }} style={styles.thumbImg} />
+                  : <Ionicons name="image-outline" size={22} color={theme.outlineVariant} />
+                }
+              </View>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.bookingTitle} numberOfLines={1}>
+                  {b.experience?.title || 'Experience'}
+                </Text>
+                <View style={styles.bookingMeta}>
+                  <Ionicons name="calendar-outline" size={11} color={theme.textLight} />
+                  <Text style={styles.bookingMetaText}>{dateStr}</Text>
+                  <Text style={styles.dot}>·</Text>
+                  <Ionicons name="people-outline" size={11} color={theme.textLight} />
+                  <Text style={styles.bookingMetaText}>{b.guests ?? 1} guests</Text>
+                </View>
+                <View style={{ marginTop: 8 }}>
+                  <StatusBadge status={b.status} />
+                </View>
+              </View>
+            </View>
+          );
+        })
       )}
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  screen: { flex: 1, backgroundColor: theme.bg, paddingHorizontal: 16, paddingTop: 8 },
-  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 12 },
-  loadingText: { color: theme.textLight, fontSize: 14 },
+  screen:      { flex: 1, backgroundColor: theme.bg },
+  loadingWrap: { flex: 1, alignItems: 'center', justifyContent: 'center' },
 
-  banner: {
+  // Greeting
+  greeting: {
+    paddingHorizontal: 20, paddingTop: 18, paddingBottom: 20,
+  },
+  greetingDate: {
+    fontSize: 12, color: theme.textLight, fontWeight: '500', marginBottom: 4,
+  },
+  greetingName: {
+    fontSize: 24, fontWeight: '700', color: theme.text, letterSpacing: -0.3,
+  },
+
+  // Revenue card
+  revenueCard: {
     backgroundColor: theme.primary,
-    borderRadius: 20,
-    padding: 24,
-    marginBottom: 16,
-    overflow: 'hidden',
-    position: 'relative',
-  },
-  blobTR: {
-    position: 'absolute', right: -40, top: -40,
-    width: 130, height: 130, borderRadius: 65,
-    backgroundColor: '#92D8FE44',
-  },
-  blobBL: {
-    position: 'absolute', left: -20, bottom: -20,
-    width: 100, height: 100, borderRadius: 50,
-    backgroundColor: '#88D6B244',
-  },
-  bannerLabel: {
-    color: theme.primaryFixed,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 2,
-    marginBottom: 6,
-  },
-  bannerTitle: {
-    color: '#FFFFFF',
-    fontSize: 22,
-    fontWeight: '700',
-    lineHeight: 30,
-    marginBottom: 20,
-  },
-  bannerActions: { flexDirection: 'row', gap: 10 },
-  bannerBtnWhite: {
-    flex: 1, backgroundColor: '#FFFFFF',
-    borderRadius: 14, paddingVertical: 12,
-    alignItems: 'center', flexDirection: 'row', justifyContent: 'center',
-  },
-  bannerBtnWhiteText: { color: theme.primary, fontWeight: '700', fontSize: 14 },
-  bannerBtnGreen: {
-    flex: 1, backgroundColor: theme.primaryContainer,
-    borderRadius: 14, paddingVertical: 12,
-    alignItems: 'center', flexDirection: 'row', justifyContent: 'center',
-  },
-  bannerBtnGreenText: { color: '#FFFFFF', fontWeight: '700', fontSize: 14 },
-
-  card: {
-    backgroundColor: theme.card,
-    borderRadius: 20,
-    padding: 20,
+    borderRadius: 18,
+    marginHorizontal: 16,
     marginBottom: 14,
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 12,
-    elevation: 3,
+    padding: 20,
   },
-  cardTitle: { color: theme.text, fontSize: 17, fontWeight: '700' },
+  revenueLabel: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500' },
+  revenueValue: { fontSize: 34, fontWeight: '800', color: '#fff', marginTop: 4, letterSpacing: -0.5 },
+  revenueNote:  { fontSize: 12, color: 'rgba(255,255,255,0.55)', marginTop: 6 },
 
-  revenueAmount: { color: theme.text, fontSize: 22, fontWeight: '800' },
-  revenueUnit: { color: theme.textLight, fontSize: 14, fontWeight: '400' },
-  revenueSubtitle: { color: theme.textLight, fontSize: 13, marginTop: 2, marginBottom: 16 },
-  chartRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-end',
-    gap: 5,
-    height: BAR_MAX_HEIGHT + 10,
+  // Stats grid
+  statsGrid: {
+    flexDirection: 'row', flexWrap: 'wrap',
+    marginHorizontal: 12, gap: 10, marginBottom: 28,
   },
-  barWrapper: { flex: 1, justifyContent: 'flex-end' },
-  bar: { borderTopLeftRadius: 4, borderTopRightRadius: 4, minHeight: 4 },
-
-  activeListingsCard: { backgroundColor: theme.secondaryContainer },
-  listingRow: {
-    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.45)',
-    borderRadius: 14, paddingHorizontal: 16, paddingVertical: 14,
+  statCard: {
+    flex: 1, minWidth: '45%',
+    backgroundColor: theme.card,
+    borderRadius: 14, padding: 16,
+    borderWidth: 1, borderColor: theme.cardBorder,
   },
-  listingRowLabel: { color: theme.text, fontSize: 14, fontWeight: '600' },
-  listingRowValue: { color: theme.text, fontSize: 20, fontWeight: '800' },
+  statNumber: { fontSize: 26, fontWeight: '800', color: theme.text, letterSpacing: -0.5 },
+  statLabel:  { fontSize: 12, color: theme.textLight, marginTop: 4, fontWeight: '500' },
 
-  metricHeader: { flexDirection: 'row', alignItems: 'center', gap: 12, marginBottom: 14 },
-  metricIcon: {
-    width: 44, height: 44, borderRadius: 12,
+  // Quick actions
+  quickRow: {
+    flexDirection: 'row', justifyContent: 'space-between',
+    marginHorizontal: 16, marginBottom: 32,
+  },
+  quickItem: { alignItems: 'center', gap: 8 },
+  quickIcon: {
+    width: 52, height: 52, borderRadius: 14,
+    backgroundColor: theme.primaryFixed + '55',
     alignItems: 'center', justifyContent: 'center',
   },
-  metricTitle: { color: theme.text, fontSize: 15, fontWeight: '600' },
-  metricSubtitle: { color: theme.textLight, fontSize: 12, marginTop: 1 },
-  metricRow: { flexDirection: 'row', alignItems: 'baseline', marginBottom: 10 },
-  metricBig: { color: theme.primary, fontSize: 32, fontWeight: '800' },
-  metricPositive: { color: theme.primary, fontSize: 14, fontWeight: '600' },
-  progressBg: { height: 8, backgroundColor: theme.surfaceVariant, borderRadius: 99 },
-  progressFill: { height: 8, borderRadius: 99 },
+  quickLabel: { fontSize: 11, color: theme.textMuted, fontWeight: '500', textAlign: 'center' },
 
-  sectionTitle: { color: theme.text, fontSize: 18, fontWeight: '700' },
-  viewAll: { color: theme.primary, fontSize: 14, fontWeight: '600' },
-  rowBetween: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  // Section headers
+  sectionHeader: {
+    flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center',
+    marginHorizontal: 16, marginBottom: 12,
+  },
+  sectionTitle: { fontSize: 17, fontWeight: '700', color: theme.text, marginHorizontal: 16 },
+  seeAll: { fontSize: 14, color: theme.primary, fontWeight: '600' },
 
+  // Booking cards
   bookingCard: {
+    flexDirection: 'row', alignItems: 'center', gap: 14,
     backgroundColor: theme.card,
-    borderRadius: 20,
-    padding: 16,
-    marginBottom: 12,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    shadowColor: '#1E293B',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.07,
-    shadowRadius: 10,
-    elevation: 2,
+    borderRadius: 16, padding: 14,
+    marginHorizontal: 16, marginBottom: 10,
+    borderWidth: 1, borderColor: theme.cardBorder,
   },
   bookingThumb: {
-    width: 60, height: 60, borderRadius: 12,
+    width: 58, height: 58, borderRadius: 10,
     backgroundColor: theme.surfaceContainerLow,
     alignItems: 'center', justifyContent: 'center',
+    overflow: 'hidden',
   },
-  bookingTitle: { color: theme.text, fontSize: 15, fontWeight: '700', lineHeight: 20 },
-  bookingMeta: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-  bookingMetaText: { color: theme.textLight, fontSize: 12 },
+  thumbImg:      { width: '100%', height: '100%' },
+  bookingTitle:  { fontSize: 14, fontWeight: '600', color: theme.text },
+  bookingMeta:   { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  bookingMetaText:{ fontSize: 12, color: theme.textLight },
+  dot:           { fontSize: 12, color: theme.outlineVariant, marginHorizontal: 2 },
 
-  statusPill: { borderRadius: 99, paddingHorizontal: 12, paddingVertical: 4, alignSelf: 'flex-start' },
-  statusText: { fontSize: 11, fontWeight: '600' },
+  // Status badge
+  statusPill:  { borderRadius: 99, paddingHorizontal: 10, paddingVertical: 3, alignSelf: 'flex-start' },
+  statusText:  { fontSize: 11, fontWeight: '600' },
 
-  emptyState: { alignItems: 'center', justifyContent: 'center', paddingVertical: 32, gap: 8 },
-  emptyStateText: { color: theme.textLight, fontSize: 14 },
+  // Empty state
+  emptyState: {
+    alignItems: 'center', paddingVertical: 36, gap: 6, marginHorizontal: 16,
+    backgroundColor: theme.card, borderRadius: 16,
+    borderWidth: 1, borderColor: theme.cardBorder,
+  },
+  emptyTitle:    { fontSize: 15, fontWeight: '600', color: theme.text },
+  emptySubtitle: { fontSize: 13, color: theme.textLight },
 });

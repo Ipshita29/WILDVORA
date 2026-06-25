@@ -63,13 +63,14 @@ export default function Dashboard() {
     Promise.all([
       hostAPI.getStats(),
       hostAPI.getListings(),
-      hostAPI.getBookings({ status: 'confirmed' }),
+      hostAPI.getBookings(),
     ])
       .then(([s, l, b]) => {
+        const all = b.data.bookings || [];
         setStats(s.data.stats);
         setListings(l.data.experiences.slice(0, 3));
-        setBookings(b.data.bookings.slice(0, 3));
-        setAllBookings(b.data.bookings || []);
+        setBookings(all.filter(bk => bk.status === 'confirmed').slice(0, 3));
+        setAllBookings(all);
       })
       .catch(console.error)
       .finally(() => setLoading(false));
@@ -155,8 +156,8 @@ export default function Dashboard() {
           </StatCard>
           <StatCard
             label="Total Bookings"
-            value={stats?.bookingsToday || 0}
-            meta="28 new this week"
+            value={allBookings.length}
+            meta={`${allBookings.filter(b => b.status === 'confirmed' || b.status === 'pending').length} active`}
           />
           <StatCard
             label="Active Listings"

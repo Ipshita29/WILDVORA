@@ -13,7 +13,7 @@ import CreateEditListing from './src/screens/CreateEditListing';
 import BookingsManager   from './src/screens/BookingsManager';
 import Payouts           from './src/screens/Payouts';
 import ReviewsRatings    from './src/screens/ReviewsRatings';
-import InquiriesScreen   from './src/screens/InquiriesScreen';
+import MessagesScreen    from './src/screens/MessagesScreen';
 import RegisterScreen    from './src/screens/RegisterScreen';
 import LoginScreen       from './src/screens/LoginScreen';
 import ForgotPasswordScreen from './src/screens/ForgotPasswordScreen';
@@ -156,7 +156,7 @@ function MainApp() {
       case 'bookings':
         return <BookingsManager />;
       case 'inbox':
-        return <InquiriesScreen />;
+        return <MessagesScreen />;
       case 'payouts':
         return <Payouts />;
       case 'reviews':

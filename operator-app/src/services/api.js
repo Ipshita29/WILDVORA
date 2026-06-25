@@ -8,7 +8,7 @@ const getBaseUrl = () => {
     return 'http://localhost:3000/api';
   }
   // Configured to local IP (192.168.1.31) so physical devices, emulators, and simulators can all connect
-  return 'http://192.168.100.10:3000/api';
+  return 'http://0.0.0.0:3000/api';
 };
 
 export const BASE_URL = getBaseUrl();
@@ -47,8 +47,9 @@ export const operatorAPI = {
 
 // Message API endpoints
 export const messageAPI = {
-  getByBooking: (bookingId) => api.get(`/messages/booking/${bookingId}`),
-  sendMessage:  (data)      => api.post('/messages', data),
+  getByBooking: (bookingId)       => api.get(`/messages/booking/${bookingId}`),
+  send:         (bookingId, text) => api.post('/messages', { bookingId, text }),
+  getThreads:   ()                => api.get('/operator/message-threads'),
 };
 
 // Inquiry API endpoints (pre-booking Ask Host threads)
