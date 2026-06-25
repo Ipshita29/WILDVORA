@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, TouchableOpacity, TextInput,
   StyleSheet, FlatList, ActivityIndicator, RefreshControl,
-  ImageBackground, Image, Dimensions,
+  Animated, ImageBackground, Image, Dimensions,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -44,6 +44,7 @@ const INTEREST_FILTERS = [
   { key: 'women_friendly', label: 'Women Friendly',  sub: 'Curated for groups of women',    icon: 'account-group-outline', color: C.purple },
 ];
 
+
 const HERO_IMAGE = require('../../assets/heroimage.png');
 
 const CARD_IMAGES = [
@@ -54,6 +55,13 @@ const CARD_IMAGES = [
 ];
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
+
+function getGreeting() {
+  const h = new Date().getHours();
+  if (h < 12) return 'Good morning';
+  if (h < 17) return 'Good afternoon';
+  return 'Good evening';
+}
 
 function useCardImage(item, index) {
   const [imgError, setImgError] = useState(false);
@@ -207,10 +215,39 @@ function ExperienceRow({ item, index, onPress }) {
   );
 }
 
+function WhyRow({ item, index, divider }) {
+  const translateX = useRef(new Animated.Value(-20)).current;
+  const opacity    = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    Animated.parallel([
+      Animated.timing(opacity,    { toValue: 1, duration: 360, delay: index * 100, useNativeDriver: true }),
+      Animated.timing(translateX, { toValue: 0, duration: 360, delay: index * 100, useNativeDriver: true }),
+    ]).start();
+  }, []);
+
+  return (
+    <>
+      <Animated.View style={[s.whyRow, { opacity, transform: [{ translateX }] }]}>
+        <Text style={s.whyNum}>{item.num}</Text>
+        <View style={[s.whyIconDot, { backgroundColor: item.color + '16' }]}>
+          <MaterialCommunityIcons name={item.icon} size={17} color={item.color} />
+        </View>
+        <View style={s.whyRowBody}>
+          <Text style={s.whyRowTitle}>{item.title}</Text>
+          <Text style={s.whyRowDesc}>{item.desc}</Text>
+        </View>
+      </Animated.View>
+      {divider && <View style={s.whyDivider} />}
+    </>
+  );
+}
+
 // ─── Screen ───────────────────────────────────────────────────────────────────
 
 export default function HomeScreen({ navigation }) {
-  const { user } = useAuth();
+  const { user }  = useAuth();
+  const firstName = user?.name?.split(' ')[0] || 'Explorer';
   const [search, setSearch]                 = useState('');
   const [category, setCategory]             = useState('All');
   const [activeFilter, setActiveFilter]     = useState(null);
@@ -321,52 +358,50 @@ export default function HomeScreen({ navigation }) {
           />
         }
       >
-        {/* ── App bar ── */}
-        <View style={s.appBar}>
-          <Text style={s.appBarLogo}>Wildvora</Text>
-          <View style={s.appBarRight}>
-            <TouchableOpacity onPress={() => navigation.navigate('Search')} style={s.iconBtn}>
-              <MaterialCommunityIcons name="magnify" size={22} color={C.onSurfaceVariant} />
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={s.avatar}>
+        {/* ── Header ── */}
+        <ImageBackground source={HERO_IMAGE} style={s.header} resizeMode="cover">
+          <View style={s.headerOverlay} />
+          <View style={s.headerNav}>
+            <Text style={s.headerLogo}>wildvora</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} style={s.headerAvatar}>
               {user?.avatar
                 ? <Image source={{ uri: user.avatar }} style={s.avatarImg} />
-                : <Text style={s.avatarText}>{user?.name?.[0]?.toUpperCase() || 'U'}</Text>
-              }
+                : <Text style={s.headerAvatarText}>{user?.name?.[0]?.toUpperCase() || 'U'}</Text>}
             </TouchableOpacity>
           </View>
-        </View>
-
-        {/* ── Hero ── */}
-        <ImageBackground source={HERO_IMAGE} style={s.hero} resizeMode="cover">
-          <View style={s.heroOverlay} />
-          <View style={s.heroContent}>
-            <Text style={s.heroEyebrow}>Trusted adventure travel in India</Text>
-            <Text style={s.heroTitle}>Find your next{'\n'}adventure</Text>
-            <TouchableOpacity style={s.searchRow} onPress={() => navigation.navigate('Search')} activeOpacity={0.9}>
-              <MaterialCommunityIcons name="magnify" size={18} color="#9aafa5" />
-              <Text style={s.searchPlaceholder}>Search destinations, treks, camps…</Text>
-            </TouchableOpacity>
+          <View style={s.headerGreetWrap}>
+            <Text style={s.headerGreet}>
+              {getGreeting()},{'\n'}<Text style={s.headerGreetName}>{firstName}</Text>
+            </Text>
+            <Text style={s.headerGreetSub}>Where to next?</Text>
           </View>
+          
+          <View style={s.statsStrip}>
+            {[
+              { num: '250+', label: 'Adventures' },
+              { num: '50+',  label: 'Operators'  },
+              { num: '4.8★', label: 'Avg Rating' },
+            ].map((item, i, arr) => (
+              <React.Fragment key={i}>
+                <View style={s.statItem}>
+                  <Text style={s.statNum}>{item.num}</Text>
+                  <Text style={s.statLabel}>{item.label}</Text>
+                </View>
+                {i < arr.length - 1 && <View style={s.statDivider} />}
+              </React.Fragment>
+            ))}
+          </View>
+          <TouchableOpacity style={s.searchPill} onPress={() => navigation.navigate('Search')} activeOpacity={0.88}>
+            <View style={s.searchPillIconWrap}>
+              <MaterialCommunityIcons name="magnify" size={19} color={C.primary} />
+            </View>
+            <View style={s.searchPillDivider} />
+            <Text style={s.searchPillText}>Destinations, treks, camps…</Text>
+            <View style={s.searchPillFilter}>
+              <MaterialCommunityIcons name="tune-variant" size={16} color={C.onSurfaceVariant} />
+            </View>
+          </TouchableOpacity>
         </ImageBackground>
-
-        {/* ── Trust stats ── */}
-        <View style={s.statsStrip}>
-          <View style={s.statItem}>
-            <Text style={s.statNum}>250+</Text>
-            <Text style={s.statLabel}>Adventures</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statItem}>
-            <Text style={s.statNum}>50+</Text>
-            <Text style={s.statLabel}>Verified Operators</Text>
-          </View>
-          <View style={s.statDivider} />
-          <View style={s.statItem}>
-            <Text style={s.statNum}>4.8</Text>
-            <Text style={s.statLabel}>Avg. Rating</Text>
-          </View>
-        </View>
 
         {/* ── Category selector ── */}
         <View style={s.catSection}>
@@ -481,39 +516,47 @@ export default function HomeScreen({ navigation }) {
         )}
 
         {/* ── Browse by interest ── */}
-        <View style={s.section}>
-          <View style={s.sectionHdr}>
-            <View>
-              <Text style={s.sectionTitle}>Browse by Interest</Text>
-              <Text style={s.sectionSub}>Find adventures that match what matters to you</Text>
-            </View>
+        <View style={s.interestSection}>
+          <View style={s.interestSectionHdr}>
+            <Text style={s.sectionTitle}>Browse by Interest</Text>
+            <Text style={s.sectionSub}>Adventures filtered just for you</Text>
           </View>
-          <View style={s.interestGrid}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={s.interestStrip}
+            decelerationRate="fast"
+            snapToInterval={width * 0.44 + 12}
+          >
             {INTEREST_FILTERS.map(f => {
               const active = activeFilter === f.key;
               return (
                 <TouchableOpacity
                   key={f.key}
-                  style={[s.interestCard, active && s.interestCardActive]}
+                  style={[s.interestTile, { backgroundColor: f.color }, active && s.interestTileActive]}
                   onPress={() => handleInterestChange(f.key)}
-                  activeOpacity={0.78}
+                  activeOpacity={0.88}
                 >
-                  <View style={s.interestTopRow}>
-                    <View style={[s.interestIconBg, { backgroundColor: active ? f.color + '22' : f.color + '14' }]}>
-                      <MaterialCommunityIcons name={f.icon} size={20} color={f.color} />
+                  <MaterialCommunityIcons name={f.icon} size={92} color="rgba(255,255,255,0.09)" style={s.interestWatermark} />
+                  {active && (
+                    <View style={s.interestCheckBadge}>
+                      <MaterialCommunityIcons name="check-circle" size={20} color="#fff" />
                     </View>
-                    <MaterialCommunityIcons
-                      name={active ? 'check-circle' : 'chevron-right'}
-                      size={18}
-                      color={active ? C.primary : '#C4C9CE'}
-                    />
+                  )}
+                  <View style={s.interestIconBubble}>
+                    <MaterialCommunityIcons name={f.icon} size={26} color="#fff" />
                   </View>
-                  <Text style={[s.interestTitle, active && s.interestTitleActive]}>{f.label}</Text>
-                  <Text style={s.interestSub}>{f.sub}</Text>
+                  <View style={{ flex: 1 }} />
+                  <Text style={s.interestTileLabel}>{f.label}</Text>
+                  <Text style={s.interestTileSub}>{f.sub}</Text>
+                  <View style={s.interestTileBottom}>
+                    <Text style={s.interestTileExplore}>Explore</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={14} color="rgba(255,255,255,0.75)" />
+                  </View>
                 </TouchableOpacity>
               );
             })}
-          </View>
+          </ScrollView>
         </View>
 
         {/* ── All adventures (filtered) ── */}
@@ -556,54 +599,51 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         {/* ── Why Wildvora ── */}
-        <View style={s.section}>
-          <View style={s.sectionHdr}>
-            <View>
-              <Text style={s.sectionTitle}>Why Wildvora</Text>
-              <Text style={s.sectionSub}>Safety and trust at every step</Text>
-            </View>
+        <View style={s.whySection}>
+          <View style={s.whySectionHdr}>
+            <Text style={s.sectionTitle}>Why Wildvora</Text>
+            <Text style={s.sectionSub}>What sets us apart</Text>
           </View>
-          <View style={s.whyGrid}>
-            {[
-              { icon: 'shield-check-outline', color: C.primary, title: 'Verified Operators',    desc: 'Background-checked and licensed.' },
-              { icon: 'medical-bag',          color: '#b45309', title: 'Safety Audited',         desc: 'Every experience passes our audit.' },
-              { icon: 'headset',              color: C.blue,    title: 'Emergency Support',      desc: '24/7 helpline on every booking.' },
-              { icon: 'certificate-outline',  color: C.purple,  title: 'Certified Guides',       desc: 'Govt-certified local guides only.' },
-            ].map((item, i) => (
-              <View key={i} style={s.whyItem}>
-                <View style={[s.whyIconBg, { backgroundColor: item.color + '14' }]}>
-                  <MaterialCommunityIcons name={item.icon} size={20} color={item.color} />
-                </View>
-                <Text style={s.whyTitle}>{item.title}</Text>
-                <Text style={s.whyDesc}>{item.desc}</Text>
-              </View>
-            ))}
-          </View>
+          {[
+            { num: '01', icon: 'shield-check-outline', color: C.primary, title: 'Verified Operators',  desc: 'Background-checked and licensed operators only.' },
+            { num: '02', icon: 'medical-bag',          color: '#b45309', title: 'Safety Audited',       desc: 'Every experience passes our safety audit.' },
+            { num: '03', icon: 'headset',              color: C.blue,    title: 'Emergency Support',    desc: '24/7 helpline available on every booking.' },
+            { num: '04', icon: 'certificate-outline',  color: C.purple,  title: 'Certified Guides',     desc: 'Govt-certified local guides, always.' },
+          ].map((item, i, arr) => (
+            <WhyRow key={i} item={item} index={i} divider={i < arr.length - 1} />
+          ))}
         </View>
 
         {/* ── Safety & Prep Guides ── */}
-        <View style={s.section}>
-          <View style={s.sectionHdr}>
-            <View>
-              <Text style={s.sectionTitle}>Safety & Prep Guides</Text>
-              <Text style={s.sectionSub}>Mandatory reading before you head out</Text>
-            </View>
+        <View style={s.safetySection}>
+          <View style={s.safetySectionHdr}>
+            <Text style={s.sectionTitle}>Safety & Prep Guides</Text>
+            <Text style={s.sectionSub}>Read before you head out</Text>
           </View>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.safetyList}>
+          <View style={s.safetyStack}>
             {[
-              { title: 'High-Altitude AMS',      icon: 'mountain', color: C.primary,  desc: 'Acclimatization & AMS prevention' },
-              { title: 'River Rafting Grades',    icon: 'wave',     color: C.blue,     desc: 'Understanding rapid grades' },
-              { title: 'Jungle Code of Conduct',  icon: 'tree',     color: '#7c3aed',  desc: 'Wildlife safety rules' },
+              { cat: 'Trekking',     catColor: C.primary, icon: 'summit', title: 'High-Altitude AMS',      desc: 'Acclimatisation, symptoms & prevention', readTime: '5 min' },
+              { cat: 'Water Sports', catColor: C.blue,    icon: 'wave',   title: 'River Rafting Grades',   desc: 'Rapid grades & what they mean for you',   readTime: '3 min' },
+              { cat: 'Jungle',       catColor: '#7c3aed', icon: 'tree',   title: 'Jungle Code of Conduct', desc: 'Wildlife safety rules & field etiquette',  readTime: '4 min' },
             ].map((g, i) => (
-              <TouchableOpacity key={i} style={s.safetyCard} activeOpacity={0.8}>
-                <View style={[s.safetyIconBg, { backgroundColor: g.color + '14' }]}>
-                  <MaterialCommunityIcons name={g.icon} size={20} color={g.color} />
+              <TouchableOpacity key={i} style={s.safetyCard} activeOpacity={0.82}>
+                <View style={[s.safetyCardBar, { backgroundColor: g.catColor }]} />
+                <View style={s.safetyCardBody}>
+                  <View style={s.safetyCardHeader}>
+                    <View style={[s.safetyCardIconWrap, { backgroundColor: g.catColor + '14' }]}>
+                      <MaterialCommunityIcons name={g.icon} size={15} color={g.catColor} />
+                    </View>
+                    <Text style={[s.safetyCardCat, { color: g.catColor }]}>{g.cat}</Text>
+                    <View style={{ flex: 1 }} />
+                    <Text style={s.safetyReadTime}>{g.readTime} read</Text>
+                  </View>
+                  <Text style={s.safetyCardTitle}>{g.title}</Text>
+                  <Text style={s.safetyCardDesc}>{g.desc}</Text>
                 </View>
-                <Text style={s.safetyTitle}>{g.title}</Text>
-                <Text style={s.safetyDesc}>{g.desc}</Text>
+                <MaterialCommunityIcons name="chevron-right" size={18} color="#C4C9CE" style={s.safetyCardArrow} />
               </TouchableOpacity>
             ))}
-          </ScrollView>
+          </View>
         </View>
 
         {/* ── Pro card ── */}
@@ -635,30 +675,31 @@ const s = StyleSheet.create({
   safe:     { flex: 1, backgroundColor: C.background },
   loadWrap: { flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: C.background },
 
-  /* App bar */
-  appBar:     { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 20, paddingVertical: 14, backgroundColor: C.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
-  appBarLogo: { fontSize: 20, fontWeight: '800', color: C.primary, letterSpacing: -0.5 },
-  appBarRight:{ flexDirection: 'row', alignItems: 'center', gap: 10 },
+  /* Shared */
   iconBtn:    { padding: 4 },
-  avatar:     { width: 34, height: 34, borderRadius: 17, backgroundColor: '#E5E7EB', justifyContent: 'center', alignItems: 'center' },
-  avatarImg:  { width: 34, height: 34, borderRadius: 17 },
-  avatarText: { fontSize: 13, fontWeight: '700', color: C.primary },
+  avatarImg:  { width: 36, height: 36, borderRadius: 18 },
 
-  /* Hero */
-  hero:        { width: '100%', height: 360, justifyContent: 'flex-end' },
-  heroOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.45)' },
-  heroContent: { padding: 20, paddingBottom: 32 },
-  heroEyebrow: { fontSize: 11, fontWeight: '600', color: 'rgba(255, 255, 255, 0.96)', letterSpacing: 1.2, marginBottom: 10, textTransform: 'uppercase' },
-  heroTitle:   { fontSize: 36, fontWeight: '800', color: C.white, lineHeight: 44, letterSpacing: -0.5, marginBottom: 22 },
-  searchRow:   { flexDirection: 'row', alignItems: 'center', gap: 10, backgroundColor: C.white, borderRadius: 12, paddingHorizontal: 16, paddingVertical: 14 },
-  searchPlaceholder: { flex: 1, fontSize: 14, color: '#9aafa5' },
-
-  /* Trust stats */
-  statsStrip:  { flexDirection: 'row', backgroundColor: C.surface, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
-  statItem:    { flex: 1, alignItems: 'center', paddingVertical: 18 },
-  statNum:     { fontSize: 20, fontWeight: '800', color: C.primary, letterSpacing: -0.3 },
-  statLabel:   { fontSize: 11, color: C.onSurfaceVariant, marginTop: 3, fontWeight: '500', textAlign: 'center' },
-  statDivider: { width: StyleSheet.hairlineWidth, backgroundColor: C.outlineVariant, marginVertical: 12 },
+  /* Header */
+  header:            { paddingBottom: 22, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.15)' },
+  headerOverlay:     { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.38)' },
+  headerNav:         { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 22, paddingTop: 14, paddingBottom: 20 },
+  headerLogo:        { fontSize: 22, fontWeight: '900', color: '#fff', letterSpacing: -0.5 },
+  headerAvatar:      { width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(255,255,255,0.18)', justifyContent: 'center', alignItems: 'center', borderWidth: 1.5, borderColor: 'rgba(255,255,255,0.35)' },
+  headerAvatarText:  { fontSize: 14, fontWeight: '700', color: '#fff' },
+  headerGreetWrap:   { paddingHorizontal: 22, marginBottom: 22 },
+  headerGreet:       { fontSize: 30, fontWeight: '700', color: '#fff', letterSpacing: -0.5, lineHeight: 38 },
+  headerGreetName:   { fontWeight: '900', color: '#fff' },
+  headerGreetSub:    { fontSize: 15, color: 'rgba(255,255,255,0.75)', marginTop: 5 },
+  searchPill:        { marginHorizontal: 22, marginTop: 26, flexDirection: 'row', alignItems: 'center', backgroundColor: C.white, borderRadius: 50, paddingVertical: 13, paddingLeft: 13, paddingRight: 13, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.12, shadowRadius: 18, elevation: 8, borderWidth: 1, borderColor: C.outlineVariant },
+  searchPillIconWrap:{ width: 36, height: 36, borderRadius: 18, backgroundColor: C.primary + '12', justifyContent: 'center', alignItems: 'center' },
+  searchPillDivider: { width: 1, height: 22, backgroundColor: C.outlineVariant, marginHorizontal: 12 },
+  searchPillText:    { flex: 1, fontSize: 15, color: '#a0afa8', fontWeight: '500' },
+  searchPillFilter:  { width: 36, height: 36, borderRadius: 18, backgroundColor: C.surfaceVariant, justifyContent: 'center', alignItems: 'center' },
+  statsStrip:        { flexDirection: 'row', alignItems: 'center', marginHorizontal: 22, paddingTop: 18, borderTopWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(255,255,255,0.2)' },
+  statItem:          { flex: 1, alignItems: 'center' },
+  statNum:           { fontSize: 17, fontWeight: '800', color: '#fff', letterSpacing: -0.3 },
+  statLabel:         { fontSize: 11, color: 'rgba(255,255,255,0.72)', fontWeight: '500', marginTop: 3 },
+  statDivider:       { width: 1, height: 26, backgroundColor: 'rgba(255,255,255,0.2)' },
 
   /* Category selector */
   catSection: { backgroundColor: C.surface, paddingTop: 20, paddingBottom: 16, borderBottomWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
@@ -724,15 +765,19 @@ const s = StyleSheet.create({
   trendBottom:  { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 2 },
   trendPrice:   { fontSize: 14, fontWeight: '800', color: C.primary },
 
-  /* Browse by interest */
-  interestGrid:      { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  interestCard:      { width: (width - 52) / 2, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: 1.5, borderColor: C.outlineVariant, shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.07, shadowRadius: 4, elevation: 2 },
-  interestCardActive:{ borderColor: C.primary, backgroundColor: '#F0FAF4', shadowColor: C.primary, shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.15, shadowRadius: 6, elevation: 3 },
-  interestTopRow:    { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 12 },
-  interestIconBg:    { width: 42, height: 42, borderRadius: 11, justifyContent: 'center', alignItems: 'center' },
-  interestTitle:     { fontSize: 13, fontWeight: '700', color: C.onSurface, marginBottom: 4 },
-  interestTitleActive: { color: C.primary },
-  interestSub:       { fontSize: 11, color: C.onSurfaceVariant, lineHeight: 15 },
+  /* Browse by interest — horizontal filmstrip */
+  interestSection:     { paddingTop: 32 },
+  interestSectionHdr:  { paddingHorizontal: 22, marginBottom: 18 },
+  interestStrip:       { paddingHorizontal: 22, gap: 12 },
+  interestTile:        { width: width * 0.44, height: 190, borderRadius: 18, padding: 16, overflow: 'hidden', justifyContent: 'flex-start' },
+  interestTileActive:  { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 10, elevation: 6 },
+  interestWatermark:   { position: 'absolute', right: -8, bottom: -8 },
+  interestCheckBadge:  { position: 'absolute', top: 12, right: 12 },
+  interestIconBubble:  { width: 46, height: 46, borderRadius: 23, backgroundColor: 'rgba(255,255,255,0.22)', justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
+  interestTileLabel:   { fontSize: 15, fontWeight: '800', color: '#fff', letterSpacing: -0.2, marginBottom: 4 },
+  interestTileSub:     { fontSize: 11, color: 'rgba(255,255,255,0.78)', lineHeight: 15, marginBottom: 12 },
+  interestTileBottom:  { flexDirection: 'row', alignItems: 'center', gap: 4 },
+  interestTileExplore: { fontSize: 12, fontWeight: '700', color: 'rgba(255,255,255,0.75)' },
 
   /* Experience row */
   rowList:    { gap: 12 },
@@ -760,19 +805,31 @@ const s = StyleSheet.create({
   emptyBox:      { alignItems: 'center', paddingVertical: 32, gap: 10, backgroundColor: C.surface, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
   emptyText:     { fontSize: 13, color: C.onSurfaceVariant, textAlign: 'center' },
 
-  /* Why Wildvora */
-  whyGrid:  { flexDirection: 'row', flexWrap: 'wrap', gap: 12 },
-  whyItem:  { width: (width - 52) / 2, backgroundColor: C.surface, borderRadius: 14, padding: 16, borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
-  whyIconBg:{ width: 40, height: 40, borderRadius: 10, justifyContent: 'center', alignItems: 'center', marginBottom: 12 },
-  whyTitle: { fontSize: 13, fontWeight: '700', color: C.onSurface, marginBottom: 4, lineHeight: 17 },
-  whyDesc:  { fontSize: 11, color: C.onSurfaceVariant, lineHeight: 15 },
+  /* Why Wildvora — numbered editorial rows */
+  whySection:    { marginTop: 32, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.outlineVariant },
+  whySectionHdr: { paddingHorizontal: 22, paddingTop: 24, marginBottom: 8 },
+  whyRow:        { flexDirection: 'row', alignItems: 'center', paddingHorizontal: 22, paddingVertical: 15, gap: 14 },
+  whyNum:        { fontSize: 11, fontWeight: '800', color: '#D1D5DB', letterSpacing: 0.5, width: 20 },
+  whyIconDot:    { width: 34, height: 34, borderRadius: 17, justifyContent: 'center', alignItems: 'center' },
+  whyRowBody:    { flex: 1 },
+  whyRowTitle:   { fontSize: 14, fontWeight: '700', color: C.onSurface, marginBottom: 2 },
+  whyRowDesc:    { fontSize: 12, color: C.onSurfaceVariant, lineHeight: 17 },
+  whyDivider:    { height: StyleSheet.hairlineWidth, backgroundColor: C.outlineVariant, marginHorizontal: 22 },
 
-  /* Safety guides */
-  safetyList:   { gap: 10, paddingBottom: 4 },
-  safetyCard:   { width: 148, backgroundColor: C.surface, borderRadius: 14, padding: 14, borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant },
-  safetyIconBg: { width: 36, height: 36, borderRadius: 9, justifyContent: 'center', alignItems: 'center', marginBottom: 10 },
-  safetyTitle:  { fontSize: 12, fontWeight: '700', color: C.onSurface, lineHeight: 16 },
-  safetyDesc:   { fontSize: 10, color: C.onSurfaceVariant, marginTop: 3, lineHeight: 14 },
+  /* Safety & Prep Guides — accent-bar cards */
+  safetySection:     { borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: C.outlineVariant, marginTop: 32, paddingBottom: 8 },
+  safetySectionHdr:  { paddingHorizontal: 22, paddingTop: 24, marginBottom: 16 },
+  safetyStack:       { paddingHorizontal: 22, gap: 12 },
+  safetyCard:        { flexDirection: 'row', alignItems: 'center', backgroundColor: C.surface, borderRadius: 14, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 8, elevation: 3 },
+  safetyCardBar:     { width: 4, alignSelf: 'stretch' },
+  safetyCardBody:    { flex: 1, paddingHorizontal: 14, paddingVertical: 14 },
+  safetyCardHeader:  { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 10 },
+  safetyCardIconWrap:{ width: 26, height: 26, borderRadius: 7, justifyContent: 'center', alignItems: 'center' },
+  safetyCardCat:     { fontSize: 12, fontWeight: '700' },
+  safetyReadTime:    { fontSize: 11, color: C.onSurfaceVariant, fontWeight: '500' },
+  safetyCardTitle:   { fontSize: 15, fontWeight: '700', color: C.onSurface, letterSpacing: -0.2, marginBottom: 4 },
+  safetyCardDesc:    { fontSize: 12, color: C.onSurfaceVariant, lineHeight: 17 },
+  safetyCardArrow:   { paddingRight: 14 },
 
   /* Pro card */
   proCard:    { margin: 20, marginTop: 32, backgroundColor: C.primary, borderRadius: 18, padding: 28, alignItems: 'center' },
