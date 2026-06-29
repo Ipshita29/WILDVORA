@@ -12,6 +12,10 @@ import { experienceAPI, userAPI } from '../services/api';
 import { getRecentlyViewed } from '../utils/recentlyViewed';
 
 const { width } = Dimensions.get('window');
+const INTEREST_CARD_WIDTH = Math.min(width * 0.44, 200);
+const FEATURED_CARD_WIDTH = Math.min(width * 0.72, 320);
+
+
 
 const C = {
   primary:          '#1A5F45',
@@ -511,6 +515,8 @@ export default function HomeScreen({ navigation }) {
               )}
               showsHorizontalScrollIndicator={false}
               contentContainerStyle={{ paddingRight: 8 }}
+              snapToInterval={FEATURED_CARD_WIDTH + 14}
+              decelerationRate="fast"
             />
           </View>
         )}
@@ -526,7 +532,7 @@ export default function HomeScreen({ navigation }) {
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={s.interestStrip}
             decelerationRate="fast"
-            snapToInterval={width * 0.44 + 12}
+            snapToInterval={INTEREST_CARD_WIDTH + 12}
           >
             {INTEREST_FILTERS.map(f => {
               const active = activeFilter === f.key;
@@ -736,7 +742,7 @@ const s = StyleSheet.create({
   durationText: { fontSize: 11, fontWeight: '600', color: C.onSurfaceVariant },
 
   /* Featured cards */
-  featCard:    { width: width * 0.72, marginRight: 14, backgroundColor: C.surface, borderRadius: 16, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 3 },
+  featCard:    { width: FEATURED_CARD_WIDTH, marginRight: 14, backgroundColor: C.surface, borderRadius: 16, overflow: 'hidden', borderWidth: StyleSheet.hairlineWidth, borderColor: C.outlineVariant, shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 3 },
   featImgWrap: { height: 190, position: 'relative' },
   featImg:     { width: '100%', height: '100%' },
   featGradient:{ ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.15)' },
@@ -769,7 +775,7 @@ const s = StyleSheet.create({
   interestSection:     { paddingTop: 32 },
   interestSectionHdr:  { paddingHorizontal: 22, marginBottom: 18 },
   interestStrip:       { paddingHorizontal: 22, gap: 12 },
-  interestTile:        { width: width * 0.44, height: 190, borderRadius: 18, padding: 16, overflow: 'hidden', justifyContent: 'flex-start' },
+  interestTile:        { width: INTEREST_CARD_WIDTH, height: 190, borderRadius: 18, padding: 16, overflow: 'hidden', justifyContent: 'flex-start' },
   interestTileActive:  { shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.22, shadowRadius: 10, elevation: 6 },
   interestWatermark:   { position: 'absolute', right: -8, bottom: -8 },
   interestCheckBadge:  { position: 'absolute', top: 12, right: 12 },
