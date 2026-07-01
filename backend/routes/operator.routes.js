@@ -18,6 +18,9 @@ const {
   respondToReview,
   getInquiries,
   getMessageThreads,
+  getLocalServices,
+  linkLocalService,
+  unlinkLocalService,
 } = require('../controllers/OperatorController');
 
 // All operator routes are protected and restricted to operators/hosts
@@ -39,5 +42,8 @@ router.get('/reviews', getReviews);
 router.patch('/reviews/:id/reply', respondToReview);
 router.get('/inquiries', getInquiries);
 router.get('/message-threads', getMessageThreads);
+router.get('/marketplace', getLocalServices);
+router.post('/marketplace/:id/link', linkLocalService);
+router.post('/marketplace/:id/unlink', unlinkLocalService);
 
 module.exports = router;

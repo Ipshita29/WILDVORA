@@ -32,4 +32,7 @@ export const hostAPI = {
   updateBookingStatus: (id, status, statusNote = '') => api.patch(`/operator/bookings/${id}/status`, { status, statusNote }),
   getReviews:          ()           => api.get('/operator/reviews'),
   respondToReview:     (id, text)   => api.patch(`/operator/reviews/${id}/reply`, { hostReply: text }),
+  getMarketplace:      ()           => api.get('/operator/marketplace'),
+  linkService:         (id)         => api.post(`/operator/marketplace/${id}/link`),
+  unlinkService:       (id)         => api.post(`/operator/marketplace/${id}/unlink`),
 };

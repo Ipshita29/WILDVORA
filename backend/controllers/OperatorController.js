@@ -6,6 +6,7 @@ const Payout = require('../models/Payout');
 const Notification = require('../models/Notification');
 const Inquiry = require('../models/Inquiry');
 const Message = require('../models/Message');
+const LocalService = require('../models/LocalService');
 
 // Helper to get operator experience IDs
 const getOperatorExperienceIds = async (operatorId) => {
@@ -667,6 +668,53 @@ const getInquiries = async (req, res) => {
   }
 };
 
+// @route GET /api/operator/marketplace
+// Fetch all marketplace services and check if operator is collaborating
+const getLocalServices = async (req, res) => {
+  try {
+    const services = await LocalService.find().lean();
+    const mapped = services.map(s => ({
+      ...s,
+      collaborating: s.collaborators?.map(id => id.toString()).includes(req.user._id.toString()) || false
+    }));
+    res.json({ success: true, services: mapped });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route POST /api/operator/marketplace/:id/link
+// Link local service to operator profile (collaboration)
+const linkLocalService = async (req, res) => {
+  try {
+    const service = await LocalService.findById(req.params.id);
+    if (!service) return res.status(404).json({ success: false, message: 'Local service not found' });
+
+    if (!service.collaborators.includes(req.user._id)) {
+      service.collaborators.push(req.user._id);
+      await service.save();
+    }
+    res.json({ success: true, message: 'Linked successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// @route POST /api/operator/marketplace/:id/unlink
+// Unlink local service from operator profile
+const unlinkLocalService = async (req, res) => {
+  try {
+    const service = await LocalService.findById(req.params.id);
+    if (!service) return res.status(404).json({ success: false, message: 'Local service not found' });
+
+    service.collaborators = service.collaborators.filter(id => id.toString() !== req.user._id.toString());
+    await service.save();
+    res.json({ success: true, message: 'Unlinked successfully' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 module.exports = {
   getStats,
   getListings,
@@ -683,4 +731,7 @@ module.exports = {
   respondToReview,
   getInquiries,
   getMessageThreads,
+  getLocalServices,
+  linkLocalService,
+  unlinkLocalService,
 };
