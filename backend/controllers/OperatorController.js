@@ -18,62 +18,162 @@ const getOperatorExperienceIds = async (operatorId) => {
 const getStats = async (req, res) => {
   try {
     const operatorId = req.user._id;
-    const expIds = await getOperatorExperienceIds(operatorId);
+    const experiences = await Experience.find({ host: operatorId });
+    const expIds = experiences.map((exp) => exp._id);
 
     const now = new Date();
     const todayStr = now.toISOString().split('T')[0];
 
     // Start of today
     const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    // Start of week
-    const startOfWeek = new Date(startOfToday.getTime() - startOfToday.getDay() * 24 * 60 * 60 * 1000);
     // Start of month
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
 
     // Bookings today
     const bookingsTodayCount = await Booking.countDocuments({
       experience: { $in: expIds },
-      status: { $in: ['confirmed', 'completed'] },
+      status: { $in: ['confirmed', 'completed', 'ongoing'] },
       startDate: todayStr
     });
 
-    // Upcoming bookings this week (starts in next 7 days)
-    const sevenDaysLater = new Date(startOfToday.getTime() + 7 * 24 * 60 * 60 * 1000);
-    const bookingsThisWeek = await Booking.find({
+    // All active/past bookings for stats
+    const allBookings = await Booking.find({
       experience: { $in: expIds },
-      status: 'confirmed'
-    });
-    const upcomingThisWeekCount = bookingsThisWeek.filter(b => {
-      const bDate = new Date(b.startDate);
-      return bDate >= startOfToday && bDate <= sevenDaysLater;
-    }).length;
+      status: { $in: ['confirmed', 'completed', 'ongoing', 'pending'] }
+    }).populate('experience').populate('user', 'name email');
 
-    // Revenue this month (paid bookings created or completed this month)
-    const paidBookingsThisMonth = await Booking.find({
-      experience: { $in: expIds },
-      paymentStatus: 'paid',
-      status: { $in: ['confirmed', 'completed'] },
-      createdAt: { $gte: startOfMonth }
-    });
+    // Upcoming Bookings (confirmed or pending, starting in future)
+    const upcomingBookings = allBookings
+      .filter(b => ['confirmed', 'pending'].includes(b.status) && b.startDate >= todayStr)
+      .sort((a, b) => a.startDate.localeCompare(b.startDate))
+      .slice(0, 5);
+
+    // Revenue calculations
+    const paidBookings = allBookings.filter(b => b.paymentStatus === 'paid' && b.status !== 'cancelled');
+    const totalRevenue = paidBookings.reduce((sum, b) => sum + b.totalPrice, 0);
+
+    const paidBookingsThisMonth = paidBookings.filter(b => new Date(b.createdAt) >= startOfMonth);
     const revenueThisMonth = paidBookingsThisMonth.reduce((sum, b) => sum + b.totalPrice, 0);
 
-    // Total listings and average rating
-    const totalListings = expIds.length;
-    const experiences = await Experience.find({ host: operatorId });
-    const totalReviews = experiences.reduce((sum, e) => sum + e.reviewCount, 0);
-    const avgRating = totalListings > 0
-      ? experiences.reduce((sum, e) => sum + e.rating, 0) / totalListings
-      : 0;
+    // 6-month revenue chart breakdown
+    const revenueChart = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const monthLabel = d.toLocaleString('en-US', { month: 'short' });
+      const monthStart = new Date(d.getFullYear(), d.getMonth(), 1);
+      const monthEnd = new Date(d.getFullYear(), d.getMonth() + 1, 0, 23, 59, 59, 999);
+
+      const monthRevenue = paidBookings
+        .filter(b => {
+          const bDate = new Date(b.createdAt);
+          return bDate >= monthStart && bDate <= monthEnd;
+        })
+        .reduce((sum, b) => sum + b.totalPrice, 0);
+
+      revenueChart.push({ month: monthLabel, revenue: monthRevenue });
+    }
+
+    // Occupancy/utilization rate
+    let totalCapacity = 0;
+    experiences.forEach(e => {
+      const datesCount = Array.isArray(e.availableDates) ? e.availableDates.length : 1;
+      totalCapacity += (e.maxGroupSize || 12) * (datesCount || 1);
+    });
+    const totalBookedGuests = allBookings
+      .filter(b => ['confirmed', 'completed', 'ongoing'].includes(b.status))
+      .reduce((sum, b) => sum + (b.adults || 1) + (b.children || 0), 0);
+    const occupancyRate = totalCapacity > 0 ? Math.round((totalBookedGuests / totalCapacity) * 100) : 0;
+
+    // Popular experiences (by booking count or guest count)
+    const expBookingStats = {};
+    experiences.forEach(e => {
+      expBookingStats[e._id.toString()] = {
+        _id: e._id,
+        title: e.title,
+        coverImage: e.coverImage || (e.images && e.images[0]) || '',
+        category: e.category,
+        price: e.price,
+        rating: e.rating,
+        bookingCount: 0,
+        guestCount: 0
+      };
+    });
+
+    allBookings.forEach(b => {
+      if (b.experience && expBookingStats[b.experience._id.toString()]) {
+        expBookingStats[b.experience._id.toString()].bookingCount += 1;
+        expBookingStats[b.experience._id.toString()].guestCount += (b.adults || 1) + (b.children || 0);
+      }
+    });
+
+    const popularExperiences = Object.values(expBookingStats)
+      .sort((a, b) => b.bookingCount - a.bookingCount)
+      .slice(0, 5);
+
+    // Latest reviews
+    const recentReviews = await Review.find({ experience: { $in: expIds } })
+      .sort({ createdAt: -1 })
+      .limit(5)
+      .populate('experience', 'title coverImage category')
+      .populate('user', 'name');
+
+    // Pending Actions
+    const pendingActions = [];
+
+    // 1. Unconfirmed Bookings
+    const pendingBookings = allBookings.filter(b => b.status === 'pending');
+    if (pendingBookings.length > 0) {
+      pendingActions.push({
+        type: 'confirm_bookings',
+        title: 'Confirm Pending Bookings',
+        message: `You have ${pendingBookings.length} pending booking requests that need confirmation.`,
+        count: pendingBookings.length
+      });
+    }
+
+    // 2. Draft/Changes Requested experiences
+    const actionRequiredListings = experiences.filter(e => ['changes_requested', 'rejected', 'draft'].includes(e.status));
+    actionRequiredListings.forEach(e => {
+      pendingActions.push({
+        type: 'update_listing',
+        title: `Action required: ${e.title}`,
+        message: e.status === 'changes_requested'
+          ? `Admin requested changes for this listing: "${e.rejectionReason || 'Please review.'}"`
+          : `Listing is in ${e.status} state. Update details to list it live.`,
+        referenceId: e._id
+      });
+    });
+
+    // 3. Profile actions (GST / business registration / guide certification checks)
+    const needsOperatorInfo = experiences.some(e => {
+      return !e.operatorInfo || !e.operatorInfo.businessRegistrationNumber;
+    });
+    if (needsOperatorInfo) {
+      pendingActions.push({
+        type: 'upload_documents',
+        title: 'Upload Business Registration',
+        message: 'Provide your business registration number / CIN in experience builder to complete verification.'
+      });
+    }
 
     res.json({
       success: true,
       stats: {
         bookingsToday: bookingsTodayCount,
-        upcomingThisWeek: upcomingThisWeekCount,
+        upcomingThisWeek: upcomingBookings.length,
         revenueThisMonth,
-        totalListings,
-        totalReviews,
-        averageRating: Math.round(avgRating * 10) / 10
+        totalRevenue,
+        totalListings: experiences.length,
+        totalReviews: experiences.reduce((sum, e) => sum + e.reviewCount, 0),
+        averageRating: experiences.length > 0
+          ? Math.round((experiences.reduce((sum, e) => sum + e.rating, 0) / experiences.length) * 10) / 10
+          : 0,
+        occupancyRate,
+        upcomingBookings,
+        revenueChart,
+        popularExperiences,
+        recentReviews,
+        pendingActions
       }
     });
   } catch (err) {
