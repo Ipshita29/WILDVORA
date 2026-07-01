@@ -118,6 +118,9 @@ export default function ListingForm() {
     // Operator Info
     businessRegistrationNumber: '', gstNumber: '', tourismRegistration: '',
     yearsOfOperation: '', guideCertifications: '',
+    // Experience Builder fields
+    activities: '', stayOptions: '', meals: '', campfire: 'No', localExperiences: '',
+    equipmentIncluded: '', pickupDrop: '', bestSeason: '', packingChecklist: '',
   });
 
   useEffect(() => {
@@ -160,6 +163,16 @@ export default function ListingForm() {
           tourismRegistration:     exp.operatorInfo?.tourismRegistration    || '',
           yearsOfOperation:        exp.operatorInfo?.yearsOfOperation       || '',
           guideCertifications:     exp.operatorInfo?.guideCertifications    || '',
+          // Experience Builder fields
+          activities:          exp.activities?.join(', ')       || '',
+          stayOptions:         exp.stayOptions?.join(', ')      || '',
+          meals:               exp.meals?.join(', ')            || '',
+          campfire:            exp.campfire                     || 'No',
+          localExperiences:    exp.localExperiences?.join(', ') || '',
+          equipmentIncluded:   exp.equipmentIncluded?.join(', ')|| '',
+          pickupDrop:          exp.pickupDrop                   || '',
+          bestSeason:          exp.bestSeason                   || '',
+          packingChecklist:    exp.packingChecklist?.join(', ') || '',
         });
         if (exp.coverImage) setCoverImage({ preview: exp.coverImage, url: exp.coverImage });
         const advImgs = exp.adventureImages?.length ? exp.adventureImages : (exp.images || []);
@@ -316,6 +329,16 @@ export default function ListingForm() {
         yearsOfOperation:           formData.yearsOfOperation ? Number(formData.yearsOfOperation) : undefined,
         guideCertifications:        formData.guideCertifications,
       },
+      // Experience Builder mapping
+      activities:        formData.activities.split(',').map(s => s.trim()).filter(Boolean),
+      stayOptions:       formData.stayOptions.split(',').map(s => s.trim()).filter(Boolean),
+      meals:             formData.meals.split(',').map(s => s.trim()).filter(Boolean),
+      campfire:          formData.campfire,
+      localExperiences:  formData.localExperiences.split(',').map(s => s.trim()).filter(Boolean),
+      equipmentIncluded: formData.equipmentIncluded.split(',').map(s => s.trim()).filter(Boolean),
+      pickupDrop:        formData.pickupDrop,
+      bestSeason:        formData.bestSeason,
+      packingChecklist:  formData.packingChecklist.split(',').map(s => s.trim()).filter(Boolean),
     };
 
     try {
@@ -574,6 +597,84 @@ export default function ListingForm() {
                     onChange={handleChange} placeholder="e.g. No heart conditions, no vertigo"
                     disabled={isPending} className={`${inputCls} ${dis}`} />
                 </div>
+              </div>
+            </SectionCard>
+
+            {/* ── Experience Builder ── */}
+            <SectionCard>
+              <SectionHeader>Experience Builder Details</SectionHeader>
+              <p className="text-xs text-gray-400 -mt-2 mb-4">
+                List the activities, stay options, meals, campfire details, equipment, pickup logistics, and seasonal info.
+              </p>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Activities Included</Label>
+                  <input type="text" name="activities" value={formData.activities} onChange={handleChange}
+                    placeholder="e.g. Ridge trekking, River crossing, Nature walk"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+                <div>
+                  <Label>Stay Options</Label>
+                  <input type="text" name="stayOptions" value={formData.stayOptions} onChange={handleChange}
+                    placeholder="e.g. Dome Tents (Twin sharing), Wooden Cottages"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Meals Included</Label>
+                  <input type="text" name="meals" value={formData.meals} onChange={handleChange}
+                    placeholder="e.g. Breakfast, Lunch, High tea, Dinner"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+                <div>
+                  <Label>Campfire Details</Label>
+                  <select name="campfire" value={formData.campfire} onChange={handleChange}
+                    disabled={isPending} className={`${inputCls} ${dis}`}>
+                    <option value="No">No Campfire</option>
+                    <option value="Yes">Yes, Included</option>
+                    <option value="Yes (Paid addon)">Yes (Paid Add-on)</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Local Experiences Included</Label>
+                  <input type="text" name="localExperiences" value={formData.localExperiences} onChange={handleChange}
+                    placeholder="e.g. Local village lunch, Folklore evening story"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+                <div>
+                  <Label>Equipment Included</Label>
+                  <input type="text" name="equipmentIncluded" value={formData.equipmentIncluded} onChange={handleChange}
+                    placeholder="e.g. Trekking pole, Sleeping bag, Headlamp"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <Label>Pickup & Drop Logistics</Label>
+                  <input type="text" name="pickupDrop" value={formData.pickupDrop} onChange={handleChange}
+                    placeholder="e.g. Pick up Solang valley, Drop at Manali Mall road"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+                <div>
+                  <Label>Best Season</Label>
+                  <input type="text" name="bestSeason" value={formData.bestSeason} onChange={handleChange}
+                    placeholder="e.g. June - September"
+                    disabled={isPending} className={`${inputCls} ${dis}`} />
+                </div>
+              </div>
+
+              <div>
+                <Label>Packing Checklist</Label>
+                <input type="text" name="packingChecklist" value={formData.packingChecklist} onChange={handleChange}
+                  placeholder="e.g. Heavy jacket, Woolen socks, Sunscreen, Power bank"
+                  disabled={isPending} className={`${inputCls} ${dis}`} />
               </div>
             </SectionCard>
 
